@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.1] - 2024-11-18
 
+### Added
+- 📦 Note about extraction from [astro-v5-template](https://github.com/casoon/astro-v5-template)
+
 ### Improved
 - 🎨 Redesigned accessibility tab to show summary counts instead of detailed lists
 - 📊 Enhanced details tab with session info, memory visualization, and network status

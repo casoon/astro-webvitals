@@ -5,6 +5,8 @@
 
 A lightweight Web Vitals monitoring component for Astro with debug overlay and analytics support.
 
+> 📦 This component was extracted from the [astro-v5-template](https://github.com/casoon/astro-v5-template) to be available as a standalone package.
+
 Inspired by [AuditMySite Studio](https://github.com/casoon/auditmysite_studio).
 
 ## Features
@@ -291,6 +293,7 @@ MIT © [CASOON](https://github.com/casoon)
 
 ## Related Projects
 
+- [Astro v5 Template](https://github.com/casoon/astro-v5-template) - The original template this component was extracted from
 - [AuditMySite Studio](https://github.com/casoon/auditmysite_studio) - Comprehensive website auditing tool
 - [Astro](https://astro.build) - The web framework for content-driven websites
 

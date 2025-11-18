@@ -25,11 +25,13 @@ Inspired by [AuditMySite Studio](https://github.com/casoon/auditmysite_studio).
   - **Core Vitals**: All metrics including DNS, TCP, DOM, LOAD times
   - **Accessibility**: WCAG issue summary with counts
   - **Details**: Session info, memory usage, network status
+  - **Console**: Error detection and custom logging mode
 - Responsive mobile design (< 700px):
   - Full-width footer bar that slides up
   - Doesn't overlay content
   - 60vh max height for better mobile viewing
-- Desktop floating box with customizable position
+  - Auto-switches on viewport resize (no refresh needed)
+- Desktop floating box with customizable position (top/bottom, left/right)
 - Color-coded indicators (✅ Good, ⚠️ Needs Improvement, ❌ Poor)
 - Close button (×) to dismiss overlay
 
@@ -48,6 +50,13 @@ Inspired by [AuditMySite Studio](https://github.com/casoon/auditmysite_studio).
 - Automatic WCAG 2.1 checking
 - Detects missing alt texts, labels, and heading issues
 - Summary view with issue counts
+
+🔍 **Console & Error Detection** (New in v0.1.3)
+- Automatic console error capture
+- Custom logging API for development
+- Scrollable message history (last 50 entries)
+- Color-coded log levels (info, warn, error)
+- Clear messages and toggle console mode
 - Helps maintain accessibility standards
 
 ## Installation
@@ -114,6 +123,19 @@ Choose where the debug overlay appears:
 ```
 
 Available positions: `top-right`, `top-left`, `bottom-right`, `bottom-left`
+
+### Console Logging API (v0.1.3+)
+
+When console mode is enabled in the debug overlay, you can use the custom logging API:
+
+```javascript
+// Enable console mode via the Console tab in debug overlay first, then:
+webVitalsLog.info('Info message');
+webVitalsLog.warn('Warning message');  
+webVitalsLog.error('Error message');
+```
+
+The component also automatically captures all `console.error()` calls, making it easy to spot errors on mobile devices where dev tools are not available.
 
 ### Analytics Integration
 
@@ -340,7 +362,19 @@ If you find this package useful, please consider:
 
 ## Changelog
 
-### 0.1.2 (Latest)
+### 0.1.3 (Latest)
+- **Console & Error Detection**: New Console tab for error tracking
+- **Custom Logging API**: `webVitalsLog.info()`, `.warn()`, `.error()`
+- **Responsive Mode Fix**: Auto-updates position on viewport resize without refresh
+- **Desktop Position Options**: All four corners (top/bottom, left/right)
+- **Console Features**: 
+  - Automatic `console.error()` capture
+  - 50 message history with timestamps
+  - Clear messages and toggle console mode
+  - Color-coded log levels
+  - Mobile-friendly error debugging
+
+### 0.1.2
 - Mobile responsive design (< 700px)
 - Fixed TTFB calculation
 - Added DNS, TCP, DOM, LOAD metrics

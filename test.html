@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebVitals Test Page</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 16px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .error-btn {
+      background: #dc3545;
+    }
+    .error-btn:hover {
+      background: #c82333;
+    }
+    .warn-btn {
+      background: #ffc107;
+      color: #333;
+    }
+    .warn-btn:hover {
+      background: #e0a800;
+    }
+    .info-btn {
+      background: #17a2b8;
+    }
+    .info-btn:hover {
+      background: #138496;
+    }
+    img {
+      max-width: 300px;
+      margin: 10px;
+    }
+    input {
+      margin: 10px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebVitals Component Test Page</h1>
+
+  <div class="test-section">
+    <h2>Console Testing</h2>
+    <p>Test the console error detection and custom logging features:</p>
+
+    <button class="error-btn" onclick="console.error('Test error message', { details: 'error object' })">
+      Trigger Console Error
+    </button>
+
+    <button onclick="console.error('Another error')">
+      Another Error
+    </button>
+
+    <button class="info-btn" onclick="if (window.webVitalsLog) webVitalsLog.info('Info message from test'); else alert('Enable console mode first')">
+      Log Info (Console Mode)
+    </button>
+
+    <button class="warn-btn" onclick="if (window.webVitalsLog) webVitalsLog.warn('Warning from test'); else alert('Enable console mode first')">
+      Log Warning (Console Mode)
+    </button>
+
+    <button class="error-btn" onclick="if (window.webVitalsLog) webVitalsLog.error('Error from test'); else alert('Enable console mode first')">
+      Log Error (Console Mode)
+    </button>
+
+    <button onclick="undefinedFunction()">
+      Trigger JS Error
+    </button>
+  </div>
+
+  <div class="test-section">
+    <h2>Accessibility Testing</h2>
+    <p>Elements with accessibility issues for WCAG testing:</p>
+
+    <!-- Missing alt text -->
+    <img src="https://via.placeholder.com/150" />
+
+    <!-- Image with alt text (correct) -->
+    <img src="https://via.placeholder.com/150" alt="Placeholder image" />
+
+    <!-- Input without label -->
+    <input type="text" placeholder="No label" />
+
+    <!-- Input with label (correct) -->
+    <label for="testInput">Test Input:</label>
+    <input type="text" id="testInput" />
+
+    <!-- Button without text -->
+    <button></button>
+
+    <!-- Link without text -->
+    <a href="#"></a>
+  </div>
+
+  <div class="test-section">
+    <h2>Performance Testing</h2>
+    <p>Actions to test Web Vitals metrics:</p>
+
+    <button onclick="heavyOperation()">
+      Heavy Operation (affects INP)
+    </button>
+
+    <button onclick="addLargeElement()">
+      Add Large Element (affects CLS)
+    </button>
+
+    <button onclick="window.location.reload()">
+      Reload Page
+    </button>
+  </div>
+
+  <div class="test-section">
+    <h2>Responsive Testing</h2>
+    <p>Current viewport: <span id="viewport"></span></p>
+    <p>Resize your browser window or use DevTools responsive mode to test mobile/desktop switching.</p>
+  </div>
+
+  <script>
+    // Heavy operation for testing INP
+    function heavyOperation() {
+      const start = Date.now();
+      while (Date.now() - start < 500) {
+        // Blocking operation
+      }
+      console.log('Heavy operation completed');
+    }
+
+    // Add large element for CLS
+    function addLargeElement() {
+      const div = document.createElement('div');
+      div.style.width = '100%';
+      div.style.height = '200px';
+      div.style.background = 'linear-gradient(45deg, #007bff, #17a2b8)';
+      div.style.margin = '20px 0';
+      div.style.borderRadius = '8px';
+      div.innerHTML = '<p style="color: white; text-align: center; padding: 80px 0;">New Element (causes layout shift)</p>';
+      document.querySelector('.test-section').insertAdjacentElement('afterbegin', div);
+    }
+
+    // Update viewport display
+    function updateViewport() {
+      const span = document.getElementById('viewport');
+      if (span) {
+        span.textContent = `${window.innerWidth} x ${window.innerHeight}`;
+        if (window.innerWidth < 700) {
+          span.textContent += ' (Mobile)';
+        } else {
+          span.textContent += ' (Desktop)';
+        }
+      }
+    }
+
+    window.addEventListener('resize', updateViewport);
+    updateViewport();
+  </script>
+
+  <!-- Include the built WebVitals component -->
+  <!-- This would normally be included via Astro, but for testing we'll simulate it -->
+  <script>
+    console.log('Test page loaded. The WebVitals component should be initialized with debug mode enabled.');
+    console.log('Open the WebVitals overlay to see metrics, accessibility issues, and console messages.');
+  </script>
+</body>
+</html>

@@ -120,13 +120,15 @@ const shouldTrack = (!isDev || trackInDev || debug) && Math.random() < sampleRat
 // Detect if mobile
 const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
-const positionStyles = {
+// Position styles will be determined dynamically based on viewport
+const desktopPositions = {
   'top-right': 'top: 16px; right: 16px;',
   'top-left': 'top: 16px; left: 16px;',
   'bottom-right': 'bottom: 16px; right: 16px;',
-  'bottom-left': 'bottom: 16px; left: 16px;',
-  'mobile-bottom': 'bottom: 0; left: 0; right: 0;' // Full width at bottom for mobile
+  'bottom-left': 'bottom: 16px; left: 16px;'
 };
+
+const mobilePosition = 'bottom: 0; left: 0; right: 0;'; // Full width at bottom for mobile
 
 const defaultBudgets = {
   LCP: 2500,
@@ -143,7 +145,9 @@ const defaultBudgets = {
   <script is:inline define:vars={{
     debug,
     endpoint,
-    positionStyle: positionStyles[position],
+    position,
+    desktopPositions,
+    mobilePosition,
     batchReporting,
     batchInterval,
     checkAccessibility,
@@ -163,10 +167,85 @@ const defaultBudgets = {
       let debugContainer;
       let batchTimer;
       let isExpanded = false;
-      let activeTab = 'vitals'; // vitals, accessibility, details
+      let activeTab = 'vitals'; // vitals, accessibility, details, console
 
       // Check if mobile (responsive under 700px)
-      const isMobile = window.innerWidth < 700;
+      let isMobile = window.innerWidth < 700;
+      let consoleErrors = [];
+      let consoleMode = false; // Toggle for console mode
+
+      // Listen for viewport changes
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const newIsMobile = window.innerWidth < 700;
+          if (newIsMobile !== isMobile) {
+            isMobile = newIsMobile;
+            if (debugContainer) {
+              updateDebugOverlay();
+            }
+          }
+        }, 250); // Debounce resize events
+      });
+
+      // Console error detection
+      const originalError = console.error;
+      console.error = function(...args) {
+        originalError.apply(console, args);
+        const error = {
+          type: 'error',
+          message: args.map(arg =>
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' '),
+          timestamp: new Date().toISOString(),
+          stack: new Error().stack
+        };
+        consoleErrors.push(error);
+        if (consoleErrors.length > 100) {
+          consoleErrors.shift(); // Keep max 100 errors
+        }
+        if (debugContainer && activeTab === 'console') {
+          updateDebugOverlay();
+        }
+      };
+
+      // Custom console logging
+      window.webVitalsLog = {
+        info: function(...args) {
+          if (consoleMode) {
+            consoleErrors.push({
+              type: 'info',
+              message: args.join(' '),
+              timestamp: new Date().toISOString()
+            });
+            if (consoleErrors.length > 100) consoleErrors.shift();
+            if (debugContainer && activeTab === 'console') updateDebugOverlay();
+          }
+        },
+        warn: function(...args) {
+          if (consoleMode) {
+            consoleErrors.push({
+              type: 'warn',
+              message: args.join(' '),
+              timestamp: new Date().toISOString()
+            });
+            if (consoleErrors.length > 100) consoleErrors.shift();
+            if (debugContainer && activeTab === 'console') updateDebugOverlay();
+          }
+        },
+        error: function(...args) {
+          if (consoleMode) {
+            consoleErrors.push({
+              type: 'error',
+              message: args.join(' '),
+              timestamp: new Date().toISOString()
+            });
+            if (consoleErrors.length > 100) consoleErrors.shift();
+            if (debugContainer && activeTab === 'console') updateDebugOverlay();
+          }
+        }
+      };
 
       // Initialize debug overlay
       if (debug) {
@@ -205,11 +284,10 @@ const defaultBudgets = {
         const scoreEmoji = score >= 80 ? '✅' : score >= 60 ? '⚠️' : '❌';
 
         // Mobile-specific styles
+        const currentPositionStyle = isMobile ? mobilePosition : desktopPositions[position];
         const containerStyles = isMobile ? `
           position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
+          ${mobilePosition}
           background: rgba(17, 24, 39, 0.98);
           color: white;
           border-radius: ${isExpanded ? '16px 16px 0 0' : '0'};
@@ -226,7 +304,7 @@ const defaultBudgets = {
           overflow: hidden;
         ` : `
           position: fixed;
-          ${positionStyle}
+          ${desktopPositions[position]}
           background: rgba(17, 24, 39, 0.95);
           color: white;
           border-radius: 12px;
@@ -365,6 +443,31 @@ const defaultBudgets = {
                     transition: all 0.2s;
                   ">Details</button>
                 ` : ''}
+
+                <button onclick="window.setWebVitalsTab('console')" style="
+                  background: none;
+                  border: none;
+                  color: ${activeTab === 'console' ? '#60A5FA' : '#9CA3AF'};
+                  padding: 8px 12px;
+                  cursor: pointer;
+                  font-size: 11px;
+                  font-weight: 500;
+                  border-bottom: 2px solid ${activeTab === 'console' ? '#60A5FA' : 'transparent'};
+                  transition: all 0.2s;
+                  position: relative;
+                ">
+                  Console
+                  ${consoleErrors.filter(e => e.type === 'error').length > 0 ? `<span style="
+                    position: absolute;
+                    top: 4px;
+                    right: 4px;
+                    background: #EF4444;
+                    color: white;
+                    border-radius: 10px;
+                    padding: 1px 5px;
+                    font-size: 9px;
+                  ">${consoleErrors.filter(e => e.type === 'error').length}</span>` : ''}
+                </button>
               </div>
 
               <!-- Content -->
@@ -372,6 +475,7 @@ const defaultBudgets = {
                 ${activeTab === 'vitals' ? getVitalsContent() : ''}
                 ${activeTab === 'accessibility' ? getAccessibilityContent() : ''}
                 ${activeTab === 'details' ? getDetailsContent() : ''}
+                ${activeTab === 'console' ? getConsoleContent() : ''}
               </div>
 
               <!-- Footer -->
@@ -581,6 +685,136 @@ const defaultBudgets = {
         `;
       }
 
+      function getConsoleContent() {
+        if (consoleErrors.length === 0) {
+          return `
+            <div style="text-align: center; padding: 20px;">
+              <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
+              <div style="color: #9CA3AF; font-weight: 500;">No console messages</div>
+              <div style="color: #6B7280; font-size: 11px; margin-top: 8px;">
+                ${consoleMode ? 'Console mode enabled' : 'Capturing errors only'}
+              </div>
+              <button
+                onclick="window.toggleConsoleMode()"
+                style="
+                  margin-top: 12px;
+                  background: ${consoleMode ? '#10B981' : '#4B5563'};
+                  border: none;
+                  color: white;
+                  padding: 6px 12px;
+                  border-radius: 6px;
+                  font-size: 11px;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                "
+              >${consoleMode ? 'Console Mode ON' : 'Enable Console Mode'}</button>
+              ${consoleMode ? `
+                <div style="margin-top: 12px; padding: 10px; background: rgba(31, 41, 55, 0.5); border-radius: 6px; text-align: left;">
+                  <div style="font-size: 10px; color: #60A5FA; margin-bottom: 6px;">Usage:</div>
+                  <code style="font-size: 9px; color: #E5E7EB; display: block; margin-bottom: 4px;">
+                    webVitalsLog.info('Info message')
+                  </code>
+                  <code style="font-size: 9px; color: #E5E7EB; display: block; margin-bottom: 4px;">
+                    webVitalsLog.warn('Warning')
+                  </code>
+                  <code style="font-size: 9px; color: #E5E7EB; display: block;">
+                    webVitalsLog.error('Error')
+                  </code>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+
+        const typeColors = {
+          'error': '#EF4444',
+          'warn': '#F59E0B',
+          'info': '#60A5FA'
+        };
+
+        const typeIcons = {
+          'error': '❌',
+          'warn': '⚠️',
+          'info': 'ℹ️'
+        };
+
+        return `
+          <div style="padding: 4px;">
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 8px;
+              padding: 6px;
+              background: rgba(31, 41, 55, 0.3);
+              border-radius: 6px;
+            ">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="font-size: 11px; color: #9CA3AF;">
+                  ${consoleErrors.length} message${consoleErrors.length !== 1 ? 's' : ''}
+                </span>
+                <button
+                  onclick="window.clearConsoleErrors()"
+                  style="
+                    background: #4B5563;
+                    border: none;
+                    color: white;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    font-size: 10px;
+                    cursor: pointer;
+                  "
+                >Clear</button>
+              </div>
+              <button
+                onclick="window.toggleConsoleMode()"
+                style="
+                  background: ${consoleMode ? '#10B981' : '#4B5563'};
+                  border: none;
+                  color: white;
+                  padding: 4px 10px;
+                  border-radius: 4px;
+                  font-size: 10px;
+                  cursor: pointer;
+                "
+              >${consoleMode ? 'Mode: ON' : 'Mode: OFF'}</button>
+            </div>
+            <div style="max-height: 300px; overflow-y: auto;">
+              ${consoleErrors.slice(-50).reverse().map(log => `
+                <div style="
+                  margin-bottom: 6px;
+                  padding: 8px;
+                  background: rgba(31, 41, 55, 0.5);
+                  border-radius: 6px;
+                  border-left: 3px solid ${typeColors[log.type] || '#6B7280'};
+                  font-size: 11px;
+                ">
+                  <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 4px;
+                  ">
+                    <span style="color: ${typeColors[log.type] || '#6B7280'};">
+                      ${typeIcons[log.type] || '📝'} ${log.type.toUpperCase()}
+                    </span>
+                    <span style="color: #6B7280; font-size: 9px;">
+                      ${new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div style="
+                    color: #E5E7EB;
+                    word-wrap: break-word;
+                    font-family: 'SF Mono', Monaco, monospace;
+                    white-space: pre-wrap;
+                  ">${log.message}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
       function getDetailsContent() {
         let content = '<div style="padding: 8px;">';
 
@@ -695,6 +929,16 @@ const defaultBudgets = {
 
       window.setWebVitalsTab = function(tab) {
         activeTab = tab;
+        updateDebugOverlay();
+      };
+
+      window.toggleConsoleMode = function() {
+        consoleMode = !consoleMode;
+        updateDebugOverlay();
+      };
+
+      window.clearConsoleErrors = function() {
+        consoleErrors.length = 0;
         updateDebugOverlay();
       };
 

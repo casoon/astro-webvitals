@@ -1,0 +1,63 @@
+{
+  "name": "@casoon/astro-webvitals",
+  "version": "0.1.0",
+  "description": "A lightweight Web Vitals monitoring component for Astro with debug overlay and analytics support",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./WebVitals.astro": "./src/WebVitals.astro"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "pnpm run type-check",
+    "type-check": "tsc --noEmit",
+    "test": "echo 'Tests coming soon'",
+    "lint": "eslint src --ext .ts,.astro",
+    "format": "prettier --write .",
+    "prepublishOnly": "pnpm run build"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "keywords": [
+    "astro",
+    "astro-component",
+    "web-vitals",
+    "performance",
+    "core-web-vitals",
+    "lcp",
+    "fid",
+    "cls",
+    "performance-monitoring",
+    "analytics",
+    "seo"
+  ],
+  "author": {
+    "name": "CASOON",
+    "url": "https://github.com/casoon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casoon/astro-webvitals"
+  },
+  "bugs": {
+    "url": "https://github.com/casoon/astro-webvitals/issues"
+  },
+  "homepage": "https://github.com/casoon/astro-webvitals#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "astro": "^4.0.0 || ^5.0.0"
+  },
+  "devDependencies": {
+    "astro": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

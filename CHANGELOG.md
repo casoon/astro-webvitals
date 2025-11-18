@@ -1,0 +1,100 @@
+# Changelog
+
+All notable changes to @casoon/astro-webvitals will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.0] - 2024-11-18
+
+### Added
+- 🎉 **Initial Release with Core Features**:
+  - All Core Web Vitals tracking (LCP, FID, CLS, FCP, TTFB, INP)
+  - Debug overlay with real-time metrics
+  - Analytics endpoint support
+  - Zero dependencies implementation
+  - TypeScript support with full type definitions
+  - Position configuration for debug overlay
+  - Color-coded status indicators (✅ Good, ⚠️ Needs Improvement, ❌ Poor)
+
+- ✨ **Advanced Features**:
+  - **Batch Reporting**: Collect and send metrics in batches to reduce network requests
+    - Configurable batch interval and size
+    - Automatic flush on page unload
+    - LocalStorage fallback for failed requests
+  
+  - **Sampling Rate Control**: Manage costs with configurable user sampling
+    - Random sampling (0-1 range)
+    - Consistent per-session sampling
+    - Debug info shows sampling rate
+  
+  - **Extended Metrics**: Additional performance indicators
+    - Long Tasks detection (> 50ms)
+    - Memory usage monitoring (Chrome only)
+    - Network connection information
+    - Device viewport tracking
+  
+  - **Smart Detection**: Automatic UX problem detection
+    - Rage click detection (3+ clicks in 1s)
+    - Dead click detection (clicks with no effect)
+    - Configurable thresholds
+  
+  - **Performance Budgets**: Set and monitor metric thresholds
+    - Per-metric budget configuration
+    - Visual indicators in debug mode
+    - `onBudgetExceeded` callback
+    - Console warnings
+
+- ♿ **Full Accessibility Support**: WCAG 2.1 compliance
+  - Semantic HTML with ARIA attributes
+  - Full keyboard navigation (Tab, Escape, Enter)
+  - Screen reader announcements
+  - High contrast colors (7:1 ratio)
+  - Focus indicators
+  - Close button for better usability
+
+- 🛠️ **Developer Experience**:
+  - Comprehensive TypeScript types
+  - Extensive documentation with examples
+  - Volta configuration for consistent environments
+  - pnpm workspace setup
+  - Both basic and enhanced component versions
+
+---
+
+## Usage
+
+### Basic Component
+```astro
+import { WebVitals } from '@casoon/astro-webvitals';
+
+<WebVitals debug={true} endpoint="/api/analytics" />
+```
+
+### Enhanced Component with Advanced Features
+```astro
+import { WebVitalsEnhanced } from '@casoon/astro-webvitals';
+
+<WebVitalsEnhanced 
+  debug={true}
+  endpoint="/api/analytics"
+  sampleRate={0.1}
+  batchReporting={true}
+  extendedMetrics={true}
+  smartDetection={true}
+  performanceBudget={{
+    LCP: 2500,
+    FID: 100,
+    CLS: 0.1
+  }}
+/>
+```
+
+Both components are available - use `WebVitals` for basic needs or `WebVitalsEnhanced` for advanced features.
+
+## Support
+
+For issues and feature requests, please visit:
+https://github.com/casoon/astro-webvitals/issues

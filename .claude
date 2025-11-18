@@ -1,0 +1,139 @@
+# Astro WebVitals Component
+
+## Projekt-Übersicht
+Eine leichtgewichtige Web Vitals Monitoring-Komponente für Astro mit Debug-Overlay und Analytics-Support. Zero-Dependencies, performant und production-ready.
+
+## Kern-Features
+- **Core Web Vitals Tracking**: LCP, FID, CLS, FCP, TTFB, INP
+- **Debug Overlay**: Echtzeit-Metriken mit Farbkodierung
+- **Analytics Integration**: Flexibles Endpoint-System
+- **Performance-fokussiert**: Keine Dependencies, minimale Bundle-Größe
+
+## Architektur
+
+### Komponenten-Struktur
+```
+src/
+├── WebVitals.astro    # Hauptkomponente mit inline JavaScript
+└── index.ts           # TypeScript Exports und Interfaces
+```
+
+### Technische Details
+- **Inline Script**: Vermeidet zusätzliche Netzwerk-Requests
+- **Performance Observer API**: Native Browser-APIs für Metriken
+- **Conditional Rendering**: Nur aktiv wenn benötigt (`shouldTrack`)
+- **Keep-Alive Requests**: Zuverlässige Datenübertragung
+
+## Verwendungszweck
+
+### Development
+- Performance-Debugging während Entwicklung
+- Sofortiges visuelles Feedback
+- Identifikation von Bottlenecks
+
+### Production
+- Real User Monitoring (RUM)
+- SEO-Optimierung (Core Web Vitals = Google Ranking-Faktor)
+- User Experience Analytics
+
+## Implementierungs-Beispiele
+
+### Basic Setup
+```astro
+import { WebVitals } from '@casoon/astro-webvitals';
+<WebVitals />
+```
+
+### Development mit Debug
+```astro
+<WebVitals debug={import.meta.env.DEV} position="bottom-right" />
+```
+
+### Production mit Analytics
+```astro
+<WebVitals endpoint="/api/analytics/vitals" />
+```
+
+## Verbesserungspotenzial
+
+### Kurzfristig
+1. **Batch-Reporting**: Metriken sammeln und gebündelt senden
+2. **Local Storage Fallback**: Bei Netzwerkproblemen zwischenspeichern
+3. **Sampling Rate**: Nur Prozentsatz der User tracken (Kosten sparen)
+
+### Mittelfristig
+1. **Erweiterte Metriken**:
+   - Long Tasks (> 50ms)
+   - Memory Usage
+   - Network Information
+   - Custom Business Metrics
+
+2. **Smart Features**:
+   - Rage-Click Detection
+   - Dead-Click Detection
+   - Scroll-Depth Tracking
+   - Element Attribution (was verursacht CLS?)
+
+3. **Visualisierung**:
+   - Mini-Charts im Overlay
+   - Trend-Anzeige
+   - Percentile (p50, p75, p95)
+
+### Langfristig
+1. **Performance Budgets**: Alerts bei Schwellwerten
+2. **A/B Testing Integration**: Metriken nach Varianten
+3. **Session Recording Integration**: Bei schlechten Metriken
+4. **AI-basierte Insights**: Automatische Performance-Empfehlungen
+
+## Best Practices
+
+### Do's
+- ✅ In Layout-Komponente einbinden (einmal pro Seite)
+- ✅ Endpoint nur in Production setzen
+- ✅ Debug-Mode in Development nutzen
+- ✅ Metriken regelmäßig analysieren
+
+### Don'ts
+- ❌ Mehrfach auf einer Seite einbinden
+- ❌ Debug-Mode in Production aktivieren
+- ❌ Sensible Daten in Metriken senden
+- ❌ Zu hohe Sampling-Rate (wenn implementiert)
+
+## Testing-Strategie
+
+### Unit Tests (zu implementieren)
+- Mock Performance Observer API
+- Testen der Metrik-Berechnungen
+- Endpoint-Kommunikation
+
+### E2E Tests
+- Playwright/Cypress mit Performance-Checks
+- Verschiedene Browser/Devices
+- Slow Network Simulation
+
+## Deployment Checklist
+- [ ] Environment-spezifische Konfiguration
+- [ ] Analytics-Endpoint eingerichtet
+- [ ] CORS-Headers konfiguriert (falls nötig)
+- [ ] Rate-Limiting für Endpoint
+- [ ] Monitoring für Endpoint-Verfügbarkeit
+
+## Verwandte Projekte
+- **AuditMySite Studio**: Umfassendes Website-Audit-Tool
+- **web-vitals Library**: Google's offizielle Library (Alternative)
+- **Lighthouse CI**: Automatisierte Performance-Tests
+
+## Support & Dokumentation
+- GitHub: https://github.com/casoon/astro-webvitals
+- NPM: https://www.npmjs.com/package/@casoon/astro-webvitals
+- Web Vitals Docs: https://web.dev/vitals/
+
+## Kontext für AI-Assistenten
+Diese Komponente ist production-ready und folgt Best Practices. Bei Erweiterungen sollte auf:
+1. **Bundle-Größe**: Minimal halten, keine unnötigen Dependencies
+2. **Performance**: Keine blockierenden Operationen
+3. **Browser-Support**: Modern Browsers (Chrome 60+, Firefox 60+, Safari 14+)
+4. **TypeScript**: Types exportiert für bessere DX
+5. **Astro-Kompatibilität**: v4.0.0+ und v5.0.0+
+
+geachtet werden.

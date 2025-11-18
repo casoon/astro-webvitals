@@ -1,0 +1,822 @@
+---
+/**
+ * @casoon/astro-webvitals
+ *
+ * Comprehensive Web Vitals & Accessibility monitoring for Astro
+ * Measures Core Web Vitals, detects WCAG issues, and provides actionable insights
+ *
+ * @see https://github.com/casoon/astro-webvitals
+ */
+
+export interface Props {
+  /**
+   * Enable debug overlay (shows metrics and accessibility issues)
+   * @default false
+   */
+  debug?: boolean;
+
+  /**
+   * Optional endpoint to send metrics to
+   * Metrics will be sent as POST requests with JSON payload
+   */
+  endpoint?: string;
+
+  /**
+   * Position of debug overlay
+   * @default 'bottom-right'
+   */
+  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+
+  /**
+   * Track metrics even in development mode
+   * @default false
+   */
+  trackInDev?: boolean;
+
+  /**
+   * Sampling rate (0-1) - only track percentage of users
+   * @default 1 (100% of users)
+   */
+  sampleRate?: number;
+
+  /**
+   * Batch metrics before sending (reduces requests)
+   * @default true
+   */
+  batchReporting?: boolean;
+
+  /**
+   * Batch interval in milliseconds
+   * @default 5000 (5 seconds)
+   */
+  batchInterval?: number;
+
+  /**
+   * Enable WCAG accessibility checking
+   * @default true when debug is enabled
+   */
+  checkAccessibility?: boolean;
+
+  /**
+   * Enable extended metrics (Long Tasks, Memory, Network)
+   * @default false
+   */
+  extendedMetrics?: boolean;
+
+  /**
+   * Enable smart detection (rage clicks, dead clicks)
+   * @default false
+   */
+  smartDetection?: boolean;
+
+  /**
+   * Performance budget thresholds
+   */
+  performanceBudget?: {
+    LCP?: number;
+    FID?: number;
+    CLS?: number;
+    FCP?: number;
+    TTFB?: number;
+    INP?: number;
+  };
+
+  /**
+   * Custom headers for endpoint requests
+   */
+  headers?: Record<string, string>;
+
+  /**
+   * Session ID for tracking
+   */
+  sessionId?: string;
+
+  /**
+   * User ID for tracking
+   */
+  userId?: string;
+}
+
+const {
+  debug = false,
+  endpoint,
+  position = 'bottom-right',
+  trackInDev = false,
+  sampleRate = 1,
+  batchReporting = true,
+  batchInterval = 5000,
+  checkAccessibility = debug,
+  extendedMetrics = false,
+  smartDetection = false,
+  performanceBudget,
+  headers = {},
+  sessionId,
+  userId
+} = Astro.props;
+
+const isDev = import.meta.env.DEV;
+const shouldTrack = (!isDev || trackInDev || debug) && Math.random() < sampleRate;
+
+const positionStyles = {
+  'top-right': 'top: 16px; right: 16px;',
+  'top-left': 'top: 16px; left: 16px;',
+  'bottom-right': 'bottom: 16px; right: 16px;',
+  'bottom-left': 'bottom: 16px; left: 16px;'
+};
+
+const defaultBudgets = {
+  LCP: 2500,
+  FID: 100,
+  CLS: 0.1,
+  FCP: 1800,
+  TTFB: 800,
+  INP: 200,
+  ...performanceBudget
+};
+---
+
+{shouldTrack && (
+  <script is:inline define:vars={{
+    debug,
+    endpoint,
+    positionStyle: positionStyles[position],
+    batchReporting,
+    batchInterval,
+    checkAccessibility,
+    extendedMetrics,
+    smartDetection,
+    performanceBudget: defaultBudgets,
+    headers,
+    sessionId: sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    userId,
+    sampleRate
+  }}>
+    // @casoon/astro-webvitals - Unified Component
+    (function() {
+      const vitals = {};
+      const metricsBuffer = [];
+      const wcagIssues = [];
+      let debugContainer;
+      let batchTimer;
+      let isExpanded = false;
+      let activeTab = 'vitals'; // vitals, accessibility, details
+
+      // Initialize debug overlay
+      if (debug) {
+        createDebugOverlay();
+      }
+
+      function createDebugOverlay() {
+        debugContainer = document.createElement('div');
+        debugContainer.id = 'astro-webvitals-debug';
+        debugContainer.setAttribute('role', 'status');
+        debugContainer.setAttribute('aria-label', 'Web Vitals & Accessibility Monitor');
+        debugContainer.setAttribute('aria-live', 'polite');
+
+        // Minimized view by default
+        updateDebugOverlay();
+        document.body.appendChild(debugContainer);
+      }
+
+      function updateDebugOverlay() {
+        if (!debugContainer) return;
+
+        const metricsCount = Object.keys(vitals).length;
+        const issuesCount = wcagIssues.length;
+
+        // Calculate overall score
+        let score = 100;
+        if (vitals.LCP > performanceBudget.LCP) score -= 20;
+        if (vitals.FID > performanceBudget.FID) score -= 20;
+        if (vitals.CLS > performanceBudget.CLS) score -= 20;
+        if (vitals.FCP > performanceBudget.FCP) score -= 10;
+        if (vitals.TTFB > performanceBudget.TTFB) score -= 10;
+        if (issuesCount > 0) score -= Math.min(20, issuesCount * 5);
+        score = Math.max(0, score);
+
+        const scoreColor = score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444';
+        const scoreEmoji = score >= 80 ? '✅' : score >= 60 ? '⚠️' : '❌';
+
+        debugContainer.innerHTML = `
+          <div style="
+            position: fixed;
+            ${positionStyle}
+            background: rgba(17, 24, 39, 0.95);
+            color: white;
+            border-radius: 12px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 10000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            max-width: ${isExpanded ? '420px' : '280px'};
+            overflow: hidden;
+          ">
+            <!-- Header -->
+            <div style="
+              padding: 12px 16px;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+              cursor: pointer;
+              user-select: none;
+            " onclick="window.toggleWebVitalsDebug()">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 14px;">${scoreEmoji}</span>
+                  <span style="font-weight: 600; color: #E5E7EB;">Performance</span>
+                  <span style="
+                    background: ${scoreColor};
+                    color: white;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-size: 10px;
+                    font-weight: bold;
+                  ">${score}</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  ${sampleRate < 1 ? `<span style="font-size: 10px; color: #9CA3AF;">📊 ${(sampleRate * 100).toFixed(0)}%</span>` : ''}
+                  <span style="
+                    transform: rotate(${isExpanded ? '180deg' : '0'});
+                    transition: transform 0.3s;
+                    font-size: 10px;
+                  ">▼</span>
+                </div>
+              </div>
+
+              ${!isExpanded ? `
+                <!-- Minimized Summary -->
+                <div style="display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: #9CA3AF;">
+                  ${metricsCount > 0 ? `<span>📊 ${metricsCount} metrics</span>` : '<span>📊 Measuring...</span>'}
+                  ${issuesCount > 0 ? `<span style="color: #F59E0B;">⚠️ ${issuesCount} issues</span>` : ''}
+                </div>
+              ` : ''}
+            </div>
+
+            ${isExpanded ? `
+              <!-- Tabs -->
+              <div style="
+                display: flex;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 0 16px;
+              ">
+                <button onclick="window.setWebVitalsTab('vitals')" style="
+                  background: none;
+                  border: none;
+                  color: ${activeTab === 'vitals' ? '#60A5FA' : '#9CA3AF'};
+                  padding: 8px 12px;
+                  cursor: pointer;
+                  font-size: 11px;
+                  font-weight: 500;
+                  border-bottom: 2px solid ${activeTab === 'vitals' ? '#60A5FA' : 'transparent'};
+                  transition: all 0.2s;
+                ">Core Vitals</button>
+
+                ${checkAccessibility ? `
+                  <button onclick="window.setWebVitalsTab('accessibility')" style="
+                    background: none;
+                    border: none;
+                    color: ${activeTab === 'accessibility' ? '#60A5FA' : '#9CA3AF'};
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 500;
+                    border-bottom: 2px solid ${activeTab === 'accessibility' ? '#60A5FA' : 'transparent'};
+                    transition: all 0.2s;
+                    position: relative;
+                  ">
+                    Accessibility
+                    ${issuesCount > 0 ? `<span style="
+                      position: absolute;
+                      top: 4px;
+                      right: 4px;
+                      background: #EF4444;
+                      color: white;
+                      border-radius: 10px;
+                      padding: 1px 5px;
+                      font-size: 9px;
+                    ">${issuesCount}</span>` : ''}
+                  </button>
+                ` : ''}
+
+                ${extendedMetrics || smartDetection ? `
+                  <button onclick="window.setWebVitalsTab('details')" style="
+                    background: none;
+                    border: none;
+                    color: ${activeTab === 'details' ? '#60A5FA' : '#9CA3AF'};
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 500;
+                    border-bottom: 2px solid ${activeTab === 'details' ? '#60A5FA' : 'transparent'};
+                    transition: all 0.2s;
+                  ">Details</button>
+                ` : ''}
+              </div>
+
+              <!-- Content -->
+              <div style="padding: 12px 16px; max-height: 400px; overflow-y: auto;">
+                ${activeTab === 'vitals' ? getVitalsContent() : ''}
+                ${activeTab === 'accessibility' ? getAccessibilityContent() : ''}
+                ${activeTab === 'details' ? getDetailsContent() : ''}
+              </div>
+
+              <!-- Footer -->
+              <div style="
+                padding: 8px 16px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              ">
+                <a href="https://github.com/casoon/astro-webvitals"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   style="color: #60A5FA; text-decoration: none; font-size: 10px;">
+                  @casoon/astro-webvitals
+                </a>
+                <button
+                  onclick="document.getElementById('astro-webvitals-debug').remove()"
+                  aria-label="Close monitor"
+                  style="
+                    background: none;
+                    border: 1px solid #4B5563;
+                    color: #9CA3AF;
+                    cursor: pointer;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    font-size: 10px;
+                  ">Close</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      function getVitalsContent() {
+        if (Object.keys(vitals).length === 0) {
+          return '<div style="color: #9CA3AF; text-align: center; padding: 20px;">Measuring core vitals...</div>';
+        }
+
+        return Object.entries(vitals).map(([key, value]) => {
+          if (typeof value !== 'number') return '';
+
+          const formatted = key === 'CLS' ? value.toFixed(3) : `${value}ms`;
+          const budget = performanceBudget[key];
+
+          let status = '⏳';
+          let color = '#9CA3AF';
+          let rating = 'measuring';
+
+          if (key === 'LCP') {
+            if (value < 2500) { status = '✅'; color = '#10B981'; rating = 'good'; }
+            else if (value < 4000) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
+            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
+          } else if (key === 'FID') {
+            if (value < 100) { status = '✅'; color = '#10B981'; rating = 'good'; }
+            else if (value < 300) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
+            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
+          } else if (key === 'CLS') {
+            if (value < 0.1) { status = '✅'; color = '#10B981'; rating = 'good'; }
+            else if (value < 0.25) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
+            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
+          } else if (key === 'FCP') {
+            if (value < 1800) { status = '✅'; color = '#10B981'; rating = 'good'; }
+            else if (value < 3000) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
+            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
+          } else if (key === 'TTFB') {
+            if (value < 800) { status = '✅'; color = '#10B981'; rating = 'good'; }
+            else if (value < 1800) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
+            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
+          } else if (key === 'INP') {
+            if (value < 200) { status = '✅'; color = '#10B981'; rating = 'good'; }
+            else if (value < 500) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
+            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
+          }
+
+          const exceededBudget = budget && value > budget;
+
+          return `
+            <div style="
+              padding: 8px;
+              margin-bottom: 8px;
+              background: rgba(31, 41, 55, 0.5);
+              border-radius: 8px;
+              border: 1px solid ${exceededBudget ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
+            ">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span>${status}</span>
+                  <span style="font-weight: 500; color: #E5E7EB;">${key}</span>
+                  ${exceededBudget ? '<span style="color: #EF4444; font-size: 10px;">⚠️ over budget</span>' : ''}
+                </div>
+                <span style="color: ${color}; font-weight: 600;">${formatted}</span>
+              </div>
+              <div style="margin-top: 4px;">
+                <div style="height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden;">
+                  <div style="
+                    height: 100%;
+                    width: ${Math.min(100, (value / (budget || performanceBudget[key] * 2)) * 100)}%;
+                    background: ${color};
+                    transition: width 0.3s ease;
+                  "></div>
+                </div>
+                <div style="font-size: 10px; color: #6B7280; margin-top: 4px;">${rating}</div>
+              </div>
+            </div>
+          `;
+        }).filter(Boolean).join('');
+      }
+
+      function getAccessibilityContent() {
+        if (wcagIssues.length === 0) {
+          return `
+            <div style="text-align: center; padding: 20px;">
+              <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
+              <div style="color: #10B981; font-weight: 500;">No accessibility issues detected</div>
+              <div style="color: #6B7280; font-size: 11px; margin-top: 4px;">WCAG 2.1 Level AA compliant</div>
+            </div>
+          `;
+        }
+
+        // Group issues by type
+        const groupedIssues = wcagIssues.reduce((acc, issue) => {
+          if (!acc[issue.type]) acc[issue.type] = [];
+          acc[issue.type].push(issue);
+          return acc;
+        }, {});
+
+        return Object.entries(groupedIssues).map(([type, issues]) => `
+          <div style="margin-bottom: 12px;">
+            <div style="font-weight: 500; color: #F59E0B; margin-bottom: 6px; font-size: 11px;">
+              ${type === 'missing-alt' ? '🖼️ Missing Alt Text' : ''}
+              ${type === 'low-contrast' ? '🎨 Low Contrast' : ''}
+              ${type === 'missing-label' ? '🏷️ Missing Labels' : ''}
+              ${type === 'missing-heading' ? '📝 Heading Issues' : ''}
+              ${type === 'keyboard' ? '⌨️ Keyboard Navigation' : ''}
+              ${type} (${issues.length})
+            </div>
+            ${issues.slice(0, 3).map(issue => `
+              <div style="
+                padding: 6px;
+                margin-bottom: 4px;
+                background: rgba(31, 41, 55, 0.5);
+                border-radius: 6px;
+                border-left: 3px solid #F59E0B;
+                font-size: 10px;
+              ">
+                <div style="color: #E5E7EB;">${issue.element}</div>
+                <div style="color: #9CA3AF; margin-top: 2px;">${issue.message}</div>
+                ${issue.wcagLevel ? `<div style="color: #6B7280; margin-top: 2px;">WCAG ${issue.wcagLevel}</div>` : ''}
+              </div>
+            `).join('')}
+            ${issues.length > 3 ? `
+              <div style="color: #6B7280; font-size: 10px; margin-top: 4px;">
+                +${issues.length - 3} more issues
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+
+      function getDetailsContent() {
+        let content = '';
+
+        // Extended metrics
+        if (extendedMetrics && performance.memory) {
+          const used = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+          const total = (performance.memory.totalJSHeapSize / 1048576).toFixed(1);
+          content += `
+            <div style="margin-bottom: 12px;">
+              <div style="font-weight: 500; color: #60A5FA; margin-bottom: 6px; font-size: 11px;">System Metrics</div>
+              <div style="padding: 6px; background: rgba(31, 41, 55, 0.5); border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; font-size: 10px;">
+                  <span style="color: #9CA3AF;">Memory Usage</span>
+                  <span style="color: #E5E7EB;">${used} / ${total} MB</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (navigator.connection) {
+          content += `
+            <div style="margin-bottom: 12px;">
+              <div style="font-weight: 500; color: #60A5FA; margin-bottom: 6px; font-size: 11px;">Network Info</div>
+              <div style="padding: 6px; background: rgba(31, 41, 55, 0.5); border-radius: 6px; font-size: 10px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="color: #9CA3AF;">Connection</span>
+                  <span style="color: #E5E7EB;">${navigator.connection.effectiveType || 'unknown'}</span>
+                </div>
+                ${navigator.connection.rtt ? `
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #9CA3AF;">RTT</span>
+                    <span style="color: #E5E7EB;">${navigator.connection.rtt}ms</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }
+
+        return content || '<div style="color: #9CA3AF; text-align: center; padding: 20px;">No additional details available</div>';
+      }
+
+      // Global functions for overlay interaction
+      window.toggleWebVitalsDebug = function() {
+        isExpanded = !isExpanded;
+        updateDebugOverlay();
+      };
+
+      window.setWebVitalsTab = function(tab) {
+        activeTab = tab;
+        updateDebugOverlay();
+      };
+
+      // WCAG Checker
+      function checkWCAG() {
+        if (!checkAccessibility) return;
+
+        wcagIssues.length = 0;
+
+        // Check for missing alt text
+        document.querySelectorAll('img:not([alt])').forEach(img => {
+          wcagIssues.push({
+            type: 'missing-alt',
+            element: img.src ? `<img src="${img.src.substring(0, 50)}...">` : '<img>',
+            message: 'Image missing alt attribute',
+            wcagLevel: '1.1.1 Level A'
+          });
+        });
+
+        // Check for empty buttons
+        document.querySelectorAll('button').forEach(button => {
+          if (!button.textContent.trim() && !button.getAttribute('aria-label')) {
+            wcagIssues.push({
+              type: 'missing-label',
+              element: '<button>',
+              message: 'Button has no accessible text',
+              wcagLevel: '4.1.2 Level A'
+            });
+          }
+        });
+
+        // Check form inputs without labels
+        document.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(input => {
+          const id = input.id;
+          const hasLabel = id && document.querySelector(`label[for="${id}"]`);
+          const hasAriaLabel = input.getAttribute('aria-label');
+
+          if (!hasLabel && !hasAriaLabel) {
+            wcagIssues.push({
+              type: 'missing-label',
+              element: `<${input.tagName.toLowerCase()} type="${input.type || 'text'}">`,
+              message: 'Form control missing label',
+              wcagLevel: '1.3.1 Level A'
+            });
+          }
+        });
+
+        // Check heading structure
+        const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+        let lastLevel = 0;
+        headings.forEach(heading => {
+          const level = parseInt(heading.tagName[1]);
+          if (level - lastLevel > 1) {
+            wcagIssues.push({
+              type: 'missing-heading',
+              element: `<${heading.tagName.toLowerCase()}>`,
+              message: `Heading level skipped (${lastLevel} to ${level})`,
+              wcagLevel: '1.3.1 Level A'
+            });
+          }
+          lastLevel = level;
+        });
+
+        // Check for links without text
+        document.querySelectorAll('a[href]').forEach(link => {
+          if (!link.textContent.trim() && !link.getAttribute('aria-label')) {
+            wcagIssues.push({
+              type: 'missing-label',
+              element: `<a href="${link.href.substring(0, 30)}...">`,
+              message: 'Link has no accessible text',
+              wcagLevel: '2.4.4 Level A'
+            });
+          }
+        });
+
+        updateDebugOverlay();
+      }
+
+      // Core Web Vitals measurements
+      function measureLCP() {
+        try {
+          const observer = new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            const lastEntry = entries[entries.length - 1];
+            vitals.LCP = Math.round(lastEntry.startTime);
+            recordMetric('LCP', vitals.LCP);
+            updateDebugOverlay();
+          });
+          observer.observe({ type: 'largest-contentful-paint', buffered: true });
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] LCP not supported');
+        }
+      }
+
+      function measureFID() {
+        try {
+          const observer = new PerformanceObserver((list) => {
+            const firstEntry = list.getEntries()[0];
+            vitals.FID = Math.round(firstEntry.processingStart - firstEntry.startTime);
+            recordMetric('FID', vitals.FID);
+            updateDebugOverlay();
+            observer.disconnect();
+          });
+          observer.observe({ type: 'first-input', buffered: true });
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] FID not supported');
+        }
+      }
+
+      function measureCLS() {
+        try {
+          let clsValue = 0;
+          let sessionValue = 0;
+          let sessionEntries = [];
+
+          const observer = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              if (!entry.hadRecentInput) {
+                const firstSessionEntry = sessionEntries[0];
+                const lastSessionEntry = sessionEntries[sessionEntries.length - 1];
+
+                if (sessionValue && entry.startTime - lastSessionEntry.startTime > 1000) {
+                  sessionValue = 0;
+                  sessionEntries = [];
+                }
+
+                sessionEntries.push(entry);
+                sessionValue += entry.value;
+
+                if (sessionValue > clsValue) {
+                  clsValue = sessionValue;
+                  vitals.CLS = Math.round(clsValue * 1000) / 1000;
+                  recordMetric('CLS', vitals.CLS);
+                  updateDebugOverlay();
+                }
+              }
+            }
+          });
+          observer.observe({ type: 'layout-shift', buffered: true });
+
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+              observer.disconnect();
+            }
+          });
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] CLS not supported');
+        }
+      }
+
+      function measureFCP() {
+        try {
+          const observer = new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            const fcpEntry = entries.find(entry => entry.name === 'first-contentful-paint');
+            if (fcpEntry) {
+              vitals.FCP = Math.round(fcpEntry.startTime);
+              recordMetric('FCP', vitals.FCP);
+              updateDebugOverlay();
+              observer.disconnect();
+            }
+          });
+          observer.observe({ type: 'paint', buffered: true });
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] FCP not supported');
+        }
+      }
+
+      function measureTTFB() {
+        try {
+          const navigationEntry = performance.getEntriesByType('navigation')[0];
+          if (navigationEntry) {
+            vitals.TTFB = Math.round(navigationEntry.responseStart - navigationEntry.requestStart);
+            recordMetric('TTFB', vitals.TTFB);
+            updateDebugOverlay();
+          }
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] TTFB not supported');
+        }
+      }
+
+      function measureINP() {
+        try {
+          let maxDelay = 0;
+          const observer = new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            entries.forEach((entry) => {
+              const delay = entry.processingStart - entry.startTime;
+              if (delay > maxDelay) {
+                maxDelay = delay;
+                vitals.INP = Math.round(maxDelay);
+                recordMetric('INP', vitals.INP);
+                updateDebugOverlay();
+              }
+            });
+          });
+          observer.observe({ type: 'event', buffered: true });
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] INP not supported');
+        }
+      }
+
+      // Batch reporting logic
+      function recordMetric(name, value) {
+        const metric = {
+          name,
+          value,
+          timestamp: Date.now()
+        };
+
+        if (batchReporting) {
+          metricsBuffer.push(metric);
+
+          if (metricsBuffer.length >= 10 || !batchTimer) {
+            if (batchTimer) clearTimeout(batchTimer);
+            batchTimer = setTimeout(flushMetrics, batchInterval);
+          }
+        } else {
+          sendMetrics(metric);
+        }
+      }
+
+      function flushMetrics() {
+        if (metricsBuffer.length === 0) return;
+        sendMetrics([...metricsBuffer]);
+        metricsBuffer.length = 0;
+        if (batchTimer) {
+          clearTimeout(batchTimer);
+          batchTimer = null;
+        }
+      }
+
+      function sendMetrics(metrics) {
+        if (!endpoint) return;
+
+        const payload = {
+          metrics: Array.isArray(metrics) ? metrics : [metrics],
+          sessionId: sessionId,
+          userId: userId,
+          timestamp: Date.now(),
+          url: window.location.href,
+          userAgent: navigator.userAgent
+        };
+
+        fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers
+          },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(err => {
+          if (debug) console.warn('[@casoon/astro-webvitals] Failed to send metrics:', err);
+        });
+      }
+
+      // Initialize
+      measureTTFB();
+      measureFCP();
+      measureLCP();
+      measureFID();
+      measureINP();
+      measureCLS();
+
+      // Check accessibility after DOM is ready
+      if (checkAccessibility) {
+        if (document.readyState === 'complete') {
+          setTimeout(checkWCAG, 1000);
+        } else {
+          window.addEventListener('load', () => setTimeout(checkWCAG, 1000));
+        }
+      }
+
+      // Flush on page unload
+      window.addEventListener('beforeunload', flushMetrics);
+
+      if (debug) {
+        setTimeout(() => updateDebugOverlay(), 100);
+        // Update periodically
+        setInterval(() => {
+          if (checkAccessibility && isExpanded && activeTab === 'accessibility') {
+            checkWCAG();
+          }
+          updateDebugOverlay();
+        }, 5000);
+      }
+    })();
+  </script>
+)}

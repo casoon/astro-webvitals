@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2024-11-18
+
+### Added
+- 📱 **Mobile responsive design** - Full-width footer bar for viewports < 700px
+- 📊 **Navigation Timing Metrics** - DNS, TCP, DOM, LOAD measurements
+- ⏱️ **LCP timeout** - Finalizes after 3 seconds of no changes
+- ❌ **Close button** - Dismissible overlay (reopens on reload)
+
+### Fixed
+- 🐛 **TTFB calculation** - Now correctly measures from fetchStart to responseStart
+- 📏 **Mobile layout** - Footer bar slides up instead of overlaying content
+- 🔍 **Metrics visibility** - All metrics show immediately or with pending state
+
+### Improved
+- 📱 Mobile UX with slide-up animation
+- 📊 More comprehensive timing metrics available immediately
+- 🎨 Better visual hierarchy with grouped metrics
+
 ## [0.1.1] - 2024-11-18
 
 ### Added

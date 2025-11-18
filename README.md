@@ -22,11 +22,16 @@ Inspired by [AuditMySite Studio](https://github.com/casoon/auditmysite_studio).
 🎨 **Debug Overlay**
 - Compact minimized view with performance score (0-100)
 - Expandable interface with tabbed organization:
-  - **Core Vitals**: Real-time metrics with progress bars
+  - **Core Vitals**: All metrics including DNS, TCP, DOM, LOAD times
   - **Accessibility**: WCAG issue summary with counts
   - **Details**: Session info, memory usage, network status
+- Responsive mobile design (< 700px):
+  - Full-width footer bar that slides up
+  - Doesn't overlay content
+  - 60vh max height for better mobile viewing
+- Desktop floating box with customizable position
 - Color-coded indicators (✅ Good, ⚠️ Needs Improvement, ❌ Poor)
-- Customizable position (top/bottom, left/right)
+- Close button (×) to dismiss overlay
 
 📊 **Analytics Ready**
 - Send metrics to your analytics endpoint
@@ -172,6 +177,22 @@ export const POST: APIRoute = async ({ request }) => {
 | `checkAccessibility` | `boolean` | `true` (when debug) | Enable WCAG accessibility checking |
 | `extendedMetrics` | `boolean` | `false` | Track memory and network metrics |
 | `performanceBudget` | `object` | Default thresholds | Custom performance thresholds |
+
+## Metrics Tracked
+
+### Core Web Vitals
+- **LCP** (Largest Contentful Paint) - Loading performance
+- **FID** (First Input Delay) - Interactivity
+- **CLS** (Cumulative Layout Shift) - Visual stability
+- **FCP** (First Contentful Paint) - First render
+- **TTFB** (Time to First Byte) - Server response
+- **INP** (Interaction to Next Paint) - Overall responsiveness
+
+### Navigation Timing Metrics
+- **DNS** - DNS resolution time
+- **TCP** - TCP connection establishment
+- **DOM** - DOM processing time
+- **LOAD** - Total page load time
 
 ## Metrics Explained
 
@@ -319,7 +340,15 @@ If you find this package useful, please consider:
 
 ## Changelog
 
-### 0.1.1 (Latest)
+### 0.1.2 (Latest)
+- Mobile responsive design (< 700px)
+- Fixed TTFB calculation
+- Added DNS, TCP, DOM, LOAD metrics
+- LCP observer with timeout for finalization
+- Close button for overlay
+- Mobile footer bar design
+
+### 0.1.1
 - Improved accessibility tab with summary counts
 - Enhanced details tab with session and network info
 - Better UI organization and readability

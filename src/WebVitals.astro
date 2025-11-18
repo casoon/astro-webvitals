@@ -117,11 +117,15 @@ const {
 const isDev = import.meta.env.DEV;
 const shouldTrack = (!isDev || trackInDev || debug) && Math.random() < sampleRate;
 
+// Detect if mobile
+const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
 const positionStyles = {
   'top-right': 'top: 16px; right: 16px;',
   'top-left': 'top: 16px; left: 16px;',
   'bottom-right': 'bottom: 16px; right: 16px;',
-  'bottom-left': 'bottom: 16px; left: 16px;'
+  'bottom-left': 'bottom: 16px; left: 16px;',
+  'mobile-bottom': 'bottom: 0; left: 0; right: 0;' // Full width at bottom for mobile
 };
 
 const defaultBudgets = {
@@ -161,6 +165,9 @@ const defaultBudgets = {
       let isExpanded = false;
       let activeTab = 'vitals'; // vitals, accessibility, details
 
+      // Check if mobile (responsive under 700px)
+      const isMobile = window.innerWidth < 700;
+
       // Initialize debug overlay
       if (debug) {
         createDebugOverlay();
@@ -197,23 +204,45 @@ const defaultBudgets = {
         const scoreColor = score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444';
         const scoreEmoji = score >= 80 ? '✅' : score >= 60 ? '⚠️' : '❌';
 
+        // Mobile-specific styles
+        const containerStyles = isMobile ? `
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: rgba(17, 24, 39, 0.98);
+          color: white;
+          border-radius: ${isExpanded ? '16px 16px 0 0' : '0'};
+          font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+          font-size: 12px;
+          z-index: 10000;
+          box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-bottom: none;
+          transition: all 0.3s ease;
+          max-width: 100%;
+          transform: translateY(${isExpanded ? '0' : 'calc(100% - 48px)'});
+          overflow: hidden;
+        ` : `
+          position: fixed;
+          ${positionStyle}
+          background: rgba(17, 24, 39, 0.95);
+          color: white;
+          border-radius: 12px;
+          font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+          font-size: 12px;
+          z-index: 10000;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+          max-width: ${isExpanded ? '420px' : '280px'};
+          overflow: hidden;
+        `;
+
         debugContainer.innerHTML = `
-          <div style="
-            position: fixed;
-            ${positionStyle}
-            background: rgba(17, 24, 39, 0.95);
-            color: white;
-            border-radius: 12px;
-            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-            font-size: 12px;
-            z-index: 10000;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-            max-width: ${isExpanded ? '420px' : '280px'};
-            overflow: hidden;
-          ">
+          <div style="${containerStyles}">
             <!-- Header -->
             <div style="
               padding: 12px 16px;
@@ -236,6 +265,30 @@ const defaultBudgets = {
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
                   ${sampleRate < 1 ? `<span style="font-size: 10px; color: #9CA3AF;">📊 ${(sampleRate * 100).toFixed(0)}%</span>` : ''}
+                  <button
+                    onclick="event.stopPropagation(); document.getElementById('astro-webvitals-debug').remove();"
+                    style="
+                      background: transparent;
+                      border: none;
+                      color: #6B7280;
+                      cursor: pointer;
+                      padding: 0;
+                      width: 16px;
+                      height: 16px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      border-radius: 4px;
+                      transition: all 0.2s;
+                      font-size: 16px;
+                      line-height: 1;
+                      font-weight: bold;
+                    "
+                    onmouseover="this.style.color='#EF4444'; this.style.background='rgba(239, 68, 68, 0.1)';"
+                    onmouseout="this.style.color='#6B7280'; this.style.background='transparent';"
+                    aria-label="Close performance monitor"
+                    title="Close (reopens on page reload)"
+                  >×</button>
                   <span style="
                     transform: rotate(${isExpanded ? '180deg' : '0'});
                     transition: transform 0.3s;
@@ -315,7 +368,7 @@ const defaultBudgets = {
               </div>
 
               <!-- Content -->
-              <div style="padding: 12px 16px; max-height: 400px; overflow-y: auto;">
+              <div style="padding: 12px 16px; max-height: ${isMobile ? '60vh' : '400px'}; overflow-y: auto;">
                 ${activeTab === 'vitals' ? getVitalsContent() : ''}
                 ${activeTab === 'accessibility' ? getAccessibilityContent() : ''}
                 ${activeTab === 'details' ? getDetailsContent() : ''}
@@ -354,12 +407,47 @@ const defaultBudgets = {
       }
 
       function getVitalsContent() {
+        // Define all metrics we track
+        const allMetrics = ['LCP', 'FID', 'CLS', 'FCP', 'TTFB', 'INP'];
+
         if (Object.keys(vitals).length === 0) {
           return '<div style="color: #9CA3AF; text-align: center; padding: 20px;">Measuring core vitals...</div>';
         }
 
-        return Object.entries(vitals).map(([key, value]) => {
-          if (typeof value !== 'number') return '';
+        return allMetrics.map((key) => {
+          const value = vitals[key];
+          const hasValue = typeof value === 'number';
+
+          // Show placeholder for metrics not yet measured
+          if (!hasValue) {
+            const metricInfo = {
+              'FID': 'Waiting for first input...',
+              'INP': 'Waiting for interaction...',
+              'CLS': 'Monitoring layout shifts...',
+              'LCP': 'Measuring...',
+              'FCP': 'Measuring...',
+              'TTFB': 'Measuring...'
+            };
+
+            return `
+              <div style="
+                padding: 8px;
+                margin-bottom: 8px;
+                background: rgba(31, 41, 55, 0.3);
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                opacity: 0.6;
+              ">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>⏳</span>
+                    <span style="font-weight: 500; color: #9CA3AF;">${key}</span>
+                  </div>
+                  <span style="color: #6B7280; font-size: 10px; font-style: italic;">${metricInfo[key] || 'Pending...'}</span>
+                </div>
+              </div>
+            `;
+          }
 
           const formatted = key === 'CLS' ? value.toFixed(3) : `${value}ms`;
           const budget = performanceBudget[key];
@@ -688,14 +776,30 @@ const defaultBudgets = {
       // Core Web Vitals measurements
       function measureLCP() {
         try {
+          let lcpTimeout;
           const observer = new PerformanceObserver((list) => {
             const entries = list.getEntries();
             const lastEntry = entries[entries.length - 1];
             vitals.LCP = Math.round(lastEntry.startTime);
             recordMetric('LCP', vitals.LCP);
             updateDebugOverlay();
+
+            // Reset timeout on each new LCP
+            if (lcpTimeout) clearTimeout(lcpTimeout);
+            lcpTimeout = setTimeout(() => {
+              // Finalize LCP after 3 seconds of no changes
+              observer.disconnect();
+              if (debug) console.log('[@casoon/astro-webvitals] LCP finalized at:', vitals.LCP);
+            }, 3000);
           });
           observer.observe({ type: 'largest-contentful-paint', buffered: true });
+
+          // Also disconnect on page hide
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+              observer.disconnect();
+            }
+          });
         } catch (e) {
           if (debug) console.warn('[@casoon/astro-webvitals] LCP not supported');
         }
@@ -779,12 +883,69 @@ const defaultBudgets = {
         try {
           const navigationEntry = performance.getEntriesByType('navigation')[0];
           if (navigationEntry) {
-            vitals.TTFB = Math.round(navigationEntry.responseStart - navigationEntry.requestStart);
+            // Correct TTFB calculation: from fetch start to response start
+            vitals.TTFB = Math.round(navigationEntry.responseStart - navigationEntry.fetchStart);
             recordMetric('TTFB', vitals.TTFB);
             updateDebugOverlay();
           }
         } catch (e) {
           if (debug) console.warn('[@casoon/astro-webvitals] TTFB not supported');
+        }
+      }
+
+      // New metric: DNS Resolution Time
+      function measureDNS() {
+        try {
+          const navEntry = performance.getEntriesByType('navigation')[0];
+          if (navEntry && navEntry.domainLookupEnd > navEntry.domainLookupStart) {
+            vitals.DNS = Math.round(navEntry.domainLookupEnd - navEntry.domainLookupStart);
+            recordMetric('DNS', vitals.DNS);
+            updateDebugOverlay();
+          }
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] DNS not available');
+        }
+      }
+
+      // New metric: TCP Connection Time
+      function measureTCP() {
+        try {
+          const navEntry = performance.getEntriesByType('navigation')[0];
+          if (navEntry && navEntry.connectEnd > navEntry.connectStart) {
+            vitals.TCP = Math.round(navEntry.connectEnd - navEntry.connectStart);
+            recordMetric('TCP', vitals.TCP);
+            updateDebugOverlay();
+          }
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] TCP not available');
+        }
+      }
+
+      // New metric: DOM Processing Time
+      function measureDOM() {
+        try {
+          const navEntry = performance.getEntriesByType('navigation')[0];
+          if (navEntry && navEntry.domInteractive > navEntry.responseEnd) {
+            vitals.DOM = Math.round(navEntry.domInteractive - navEntry.responseEnd);
+            recordMetric('DOM', vitals.DOM);
+            updateDebugOverlay();
+          }
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] DOM not available');
+        }
+      }
+
+      // New metric: Page Load Complete Time
+      function measureLOAD() {
+        try {
+          const navEntry = performance.getEntriesByType('navigation')[0];
+          if (navEntry && navEntry.loadEventEnd > 0) {
+            vitals.LOAD = Math.round(navEntry.loadEventEnd - navEntry.navigationStart);
+            recordMetric('LOAD', vitals.LOAD);
+            updateDebugOverlay();
+          }
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] LOAD not available');
         }
       }
 
@@ -864,13 +1025,28 @@ const defaultBudgets = {
         });
       }
 
-      // Initialize
+      // Initialize all measurements
+      // Navigation timing metrics (available immediately)
+      measureDNS();
+      measureTCP();
       measureTTFB();
+      measureDOM();
+
+      // Paint metrics
       measureFCP();
       measureLCP();
+
+      // Interaction metrics
       measureFID();
       measureINP();
       measureCLS();
+
+      // Load complete (might take a while)
+      if (document.readyState === 'complete') {
+        measureLOAD();
+      } else {
+        window.addEventListener('load', measureLOAD);
+      }
 
       // Check accessibility after DOM is ready
       if (checkAccessibility) {

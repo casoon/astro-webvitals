@@ -439,60 +439,102 @@ const defaultBudgets = {
           `;
         }
 
-        // Group issues by type
-        const groupedIssues = wcagIssues.reduce((acc, issue) => {
-          if (!acc[issue.type]) acc[issue.type] = [];
-          acc[issue.type].push(issue);
+        // Group and count issues by type
+        const issueCounts = wcagIssues.reduce((acc, issue) => {
+          acc[issue.type] = (acc[issue.type] || 0) + 1;
           return acc;
         }, {});
 
-        return Object.entries(groupedIssues).map(([type, issues]) => `
-          <div style="margin-bottom: 12px;">
-            <div style="font-weight: 500; color: #F59E0B; margin-bottom: 6px; font-size: 11px;">
-              ${type === 'missing-alt' ? '🖼️ Missing Alt Text' : ''}
-              ${type === 'low-contrast' ? '🎨 Low Contrast' : ''}
-              ${type === 'missing-label' ? '🏷️ Missing Labels' : ''}
-              ${type === 'missing-heading' ? '📝 Heading Issues' : ''}
-              ${type === 'keyboard' ? '⌨️ Keyboard Navigation' : ''}
-              ${type} (${issues.length})
+        const issueLabels = {
+          'missing-alt': '🖼️ Missing Alt Text',
+          'low-contrast': '🎨 Low Contrast',
+          'missing-label': '🏷️ Missing Labels',
+          'missing-heading': '📝 Heading Issues',
+          'keyboard': '⌨️ Keyboard Navigation'
+        };
+
+        return `
+          <div style="padding: 8px;">
+            <div style="margin-bottom: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+              <div style="font-size: 12px; font-weight: 500; color: #F59E0B; margin-bottom: 4px;">
+                ⚠️ ${wcagIssues.length} Total Issues Found
+              </div>
             </div>
-            ${issues.slice(0, 3).map(issue => `
+            ${Object.entries(issueCounts).map(([type, count]) => `
               <div style="
-                padding: 6px;
-                margin-bottom: 4px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px;
+                margin-bottom: 6px;
                 background: rgba(31, 41, 55, 0.5);
                 border-radius: 6px;
                 border-left: 3px solid #F59E0B;
-                font-size: 10px;
               ">
-                <div style="color: #E5E7EB;">${issue.element}</div>
-                <div style="color: #9CA3AF; margin-top: 2px;">${issue.message}</div>
-                ${issue.wcagLevel ? `<div style="color: #6B7280; margin-top: 2px;">WCAG ${issue.wcagLevel}</div>` : ''}
+                <span style="color: #E5E7EB; font-size: 11px;">
+                  ${issueLabels[type] || type}
+                </span>
+                <span style="
+                  background: rgba(245, 158, 11, 0.2);
+                  color: #F59E0B;
+                  padding: 2px 8px;
+                  border-radius: 12px;
+                  font-size: 11px;
+                  font-weight: 600;
+                ">${count}</span>
               </div>
             `).join('')}
-            ${issues.length > 3 ? `
-              <div style="color: #6B7280; font-size: 10px; margin-top: 4px;">
-                +${issues.length - 3} more issues
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+              <div style="font-size: 10px; color: #6B7280;">
+                💡 Tip: Fix missing alt texts and labels first for quick accessibility wins
               </div>
-            ` : ''}
+            </div>
           </div>
-        `).join('');
+        `;
       }
 
       function getDetailsContent() {
-        let content = '';
+        let content = '<div style="padding: 8px;">';
+
+        // Page Info
+        content += `
+          <div style="margin-bottom: 16px;">
+            <div style="font-weight: 500; color: #60A5FA; margin-bottom: 8px; font-size: 11px;">📊 Session Info</div>
+            <div style="padding: 8px; background: rgba(31, 41, 55, 0.5); border-radius: 6px; font-size: 10px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: #9CA3AF;">URL</span>
+                <span style="color: #E5E7EB; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${window.location.pathname}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: #9CA3AF;">Viewport</span>
+                <span style="color: #E5E7EB;">${window.innerWidth} × ${window.innerHeight}</span>
+              </div>
+              ${sampleRate < 1 ? `
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #9CA3AF;">Sampling Rate</span>
+                  <span style="color: #E5E7EB;">${(sampleRate * 100).toFixed(0)}%</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
 
         // Extended metrics
         if (extendedMetrics && performance.memory) {
           const used = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
           const total = (performance.memory.totalJSHeapSize / 1048576).toFixed(1);
+          const percent = ((performance.memory.usedJSHeapSize / performance.memory.totalJSHeapSize) * 100).toFixed(0);
+
           content += `
-            <div style="margin-bottom: 12px;">
-              <div style="font-weight: 500; color: #60A5FA; margin-bottom: 6px; font-size: 11px;">System Metrics</div>
-              <div style="padding: 6px; background: rgba(31, 41, 55, 0.5); border-radius: 6px;">
-                <div style="display: flex; justify-content: space-between; font-size: 10px;">
-                  <span style="color: #9CA3AF;">Memory Usage</span>
-                  <span style="color: #E5E7EB;">${used} / ${total} MB</span>
+            <div style="margin-bottom: 16px;">
+              <div style="font-weight: 500; color: #60A5FA; margin-bottom: 8px; font-size: 11px;">💾 Memory</div>
+              <div style="padding: 8px; background: rgba(31, 41, 55, 0.5); border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 4px;">
+                  <span style="color: #9CA3AF;">JS Heap</span>
+                  <span style="color: #E5E7EB;">${used} / ${total} MB (${percent}%)</span>
+                </div>
+                <div style="height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden;">
+                  <div style="height: 100%; width: ${percent}%; background: ${percent < 70 ? '#10B981' : percent < 90 ? '#F59E0B' : '#EF4444'};"></div>
                 </div>
               </div>
             </div>
@@ -500,18 +542,29 @@ const defaultBudgets = {
         }
 
         if (navigator.connection) {
+          const conn = navigator.connection;
+          const connectionQuality = conn.effectiveType === '4g' ? '🟢' :
+                                   conn.effectiveType === '3g' ? '🟡' :
+                                   conn.effectiveType === '2g' ? '🟠' : '🔴';
+
           content += `
-            <div style="margin-bottom: 12px;">
-              <div style="font-weight: 500; color: #60A5FA; margin-bottom: 6px; font-size: 11px;">Network Info</div>
-              <div style="padding: 6px; background: rgba(31, 41, 55, 0.5); border-radius: 6px; font-size: 10px;">
+            <div style="margin-bottom: 16px;">
+              <div style="font-weight: 500; color: #60A5FA; margin-bottom: 8px; font-size: 11px;">🌐 Network</div>
+              <div style="padding: 8px; background: rgba(31, 41, 55, 0.5); border-radius: 6px; font-size: 10px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                   <span style="color: #9CA3AF;">Connection</span>
-                  <span style="color: #E5E7EB;">${navigator.connection.effectiveType || 'unknown'}</span>
+                  <span style="color: #E5E7EB;">${connectionQuality} ${conn.effectiveType || 'unknown'}</span>
                 </div>
-                ${navigator.connection.rtt ? `
+                ${conn.rtt ? `
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="color: #9CA3AF;">Latency</span>
+                    <span style="color: #E5E7EB;">${conn.rtt}ms</span>
+                  </div>
+                ` : ''}
+                ${conn.downlink ? `
                   <div style="display: flex; justify-content: space-between;">
-                    <span style="color: #9CA3AF;">RTT</span>
-                    <span style="color: #E5E7EB;">${navigator.connection.rtt}ms</span>
+                    <span style="color: #9CA3AF;">Speed</span>
+                    <span style="color: #E5E7EB;">${conn.downlink} Mbps</span>
                   </div>
                 ` : ''}
               </div>
@@ -519,7 +572,31 @@ const defaultBudgets = {
           `;
         }
 
-        return content || '<div style="color: #9CA3AF; text-align: center; padding: 20px;">No additional details available</div>';
+        // Config info
+        if (endpoint || batchReporting) {
+          content += `
+            <div style="margin-bottom: 16px;">
+              <div style="font-weight: 500; color: #60A5FA; margin-bottom: 8px; font-size: 11px;">⚙️ Configuration</div>
+              <div style="padding: 8px; background: rgba(31, 41, 55, 0.5); border-radius: 6px; font-size: 10px;">
+                ${endpoint ? `
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="color: #9CA3AF;">Analytics</span>
+                    <span style="color: #10B981;">✅ Active</span>
+                  </div>
+                ` : ''}
+                ${batchReporting ? `
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #9CA3AF;">Batching</span>
+                    <span style="color: #E5E7EB;">Every ${batchInterval/1000}s</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }
+
+        content += '</div>';
+        return content;
       }
 
       // Global functions for overlay interaction

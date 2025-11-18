@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2024-11-18
+
+### Improved
+- 🎨 Redesigned accessibility tab to show summary counts instead of detailed lists
+- 📊 Enhanced details tab with session info, memory visualization, and network status
+- 🔧 Cleaner UI for accessibility issues with grouped counts by type
+- 📝 Added helpful tips in accessibility tab
+- 🌐 Better network status indicators with visual quality markers
+- 💾 Memory usage now shows percentage with color-coded progress bar
+- ⚙️ Configuration status visible in details tab
+
+### Fixed
+- Accessibility tab now shows clean issue counts instead of verbose element details
+- Details tab now provides useful session and configuration information
+- Improved readability with better spacing and organization
+
 ## [0.1.0] - 2024-11-18
 
 ### Added

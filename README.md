@@ -18,10 +18,13 @@ Inspired by [AuditMySite Studio](https://github.com/casoon/auditmysite_studio).
 - INP (Interaction to Next Paint)
 
 🎨 **Debug Overlay**
-- Real-time metrics display
-- Color-coded status indicators (✅ Good, ⚠️ Needs Improvement, ❌ Poor)
-- Customizable position
-- Non-intrusive design
+- Compact minimized view with performance score (0-100)
+- Expandable interface with tabbed organization:
+  - **Core Vitals**: Real-time metrics with progress bars
+  - **Accessibility**: WCAG issue summary with counts
+  - **Details**: Session info, memory usage, network status
+- Color-coded indicators (✅ Good, ⚠️ Needs Improvement, ❌ Poor)
+- Customizable position (top/bottom, left/right)
 
 📊 **Analytics Ready**
 - Send metrics to your analytics endpoint
@@ -30,9 +33,15 @@ Inspired by [AuditMySite Studio](https://github.com/casoon/auditmysite_studio).
 
 🚀 **Performance Focused**
 - Zero dependencies
-- Minimal bundle size
+- Minimal bundle size (~11KB gzipped)
 - Uses native Performance APIs
 - No impact on your site's performance
+
+♿ **Accessibility Monitoring**
+- Automatic WCAG 2.1 checking
+- Detects missing alt texts, labels, and heading issues
+- Summary view with issue counts
+- Helps maintain accessibility standards
 
 ## Installation
 
@@ -151,10 +160,16 @@ export const POST: APIRoute = async ({ request }) => {
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `debug` | `boolean` | `false` | Show debug overlay with real-time metrics |
+| `debug` | `boolean` | `false` | Show debug overlay with metrics and accessibility issues |
 | `endpoint` | `string` | `undefined` | URL to send metrics to (POST request) |
-| `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'top-right'` | Position of debug overlay |
-| `trackInDev` | `boolean` | `false` | Track metrics in development mode (without debug) |
+| `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'bottom-right'` | Position of debug overlay |
+| `trackInDev` | `boolean` | `false` | Track metrics in development mode |
+| `sampleRate` | `number` | `1` | Percentage of users to track (0-1) |
+| `batchReporting` | `boolean` | `true` | Batch metrics before sending |
+| `batchInterval` | `number` | `5000` | Batch interval in milliseconds |
+| `checkAccessibility` | `boolean` | `true` (when debug) | Enable WCAG accessibility checking |
+| `extendedMetrics` | `boolean` | `false` | Track memory and network metrics |
+| `performanceBudget` | `object` | Default thresholds | Custom performance thresholds |
 
 ## Metrics Explained
 
@@ -287,11 +302,31 @@ If you find this package useful, please consider:
 - 💡 Suggesting new features
 - 📖 Improving documentation
 
+## Debug Overlay Interface
+
+### Minimized View
+- Shows performance score (0-100)
+- Displays metric count and issue warnings
+- Click to expand for details
+
+### Expanded View - Tabs
+1. **Core Vitals**: All 6 metrics with visual progress bars
+2. **Accessibility**: WCAG issues grouped by type with counts
+3. **Details**: Session info, memory usage, network status, configuration
+
 ## Changelog
 
+### 0.1.1 (Latest)
+- Improved accessibility tab with summary counts
+- Enhanced details tab with session and network info
+- Better UI organization and readability
+- Memory usage visualization with progress bars
+
 ### 0.1.0
-- Initial release
-- Core Web Vitals tracking
-- Debug overlay
-- Analytics endpoint support
-- TypeScript types
+- Initial release with unified component
+- Core Web Vitals tracking (LCP, FID, CLS, FCP, TTFB, INP)
+- WCAG accessibility checker
+- Collapsible debug overlay with tabs
+- Batch reporting and sampling rate
+- TypeScript support without any types
+- Production-ready with 11.4KB package size

@@ -1,6 +1,7 @@
-# Source files
-*.ts
-!*.d.ts
+# TypeScript source files (but keep declaration files)
+src/*.ts
+!src/*.d.ts
+!src/index.ts
 
 # Config files
 .gitignore

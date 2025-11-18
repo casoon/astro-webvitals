@@ -1,28 +1,32 @@
 # Astro WebVitals Component
 
 ## Projekt-Übersicht
-Eine leichtgewichtige Web Vitals Monitoring-Komponente für Astro mit Debug-Overlay und Analytics-Support. Zero-Dependencies, performant und production-ready.
+Eine umfassende Web Vitals & Accessibility Monitoring-Komponente für Astro. Zero-Dependencies, performant und production-ready mit integriertem WCAG-Checker.
 
 ## Kern-Features
 - **Core Web Vitals Tracking**: LCP, FID, CLS, FCP, TTFB, INP
-- **Debug Overlay**: Echtzeit-Metriken mit Farbkodierung
-- **Analytics Integration**: Flexibles Endpoint-System
-- **Performance-fokussiert**: Keine Dependencies, minimale Bundle-Größe
+- **WCAG Accessibility Checker**: Findet fehlende Alt-Texte, Labels, und andere A11y-Probleme
+- **Kompaktes Debug Overlay**: Minimiert/Erweitert mit Tab-Organisation
+- **Performance Score**: 0-100 Punkte Bewertung mit visueller Anzeige
+- **Analytics Integration**: Flexibles Endpoint-System mit Batch-Support
+- **Zero Dependencies**: Keine externen Abhängigkeiten, ~10KB minified
 
 ## Architektur
 
 ### Komponenten-Struktur
 ```
 src/
-├── WebVitals.astro    # Hauptkomponente mit inline JavaScript
+├── WebVitals.astro    # Vereinheitlichte Komponente mit allen Features
 └── index.ts           # TypeScript Exports und Interfaces
 ```
 
 ### Technische Details
 - **Inline Script**: Vermeidet zusätzliche Netzwerk-Requests
 - **Performance Observer API**: Native Browser-APIs für Metriken
+- **WCAG Checker**: Automatische Accessibility-Prüfung im DOM
 - **Conditional Rendering**: Nur aktiv wenn benötigt (`shouldTrack`)
-- **Keep-Alive Requests**: Zuverlässige Datenübertragung
+- **Batch Reporting**: Sammelt Metriken und sendet gebündelt
+- **Tab-basiertes UI**: Organisierte Darstellung ohne Überladung
 
 ## Verwendungszweck
 
@@ -54,36 +58,34 @@ import { WebVitals } from '@casoon/astro-webvitals';
 <WebVitals endpoint="/api/analytics/vitals" />
 ```
 
-## Verbesserungspotenzial
+## Aktuelle Features (v0.1.0)
 
-### Kurzfristig
-1. **Batch-Reporting**: Metriken sammeln und gebündelt senden
-2. **Local Storage Fallback**: Bei Netzwerkproblemen zwischenspeichern
-3. **Sampling Rate**: Nur Prozentsatz der User tracken (Kosten sparen)
+### ✅ Bereits implementiert
+- **Core Web Vitals**: Alle wichtigen Metriken (LCP, FID, CLS, FCP, TTFB, INP)
+- **WCAG Checker**: Findet fehlende Alt-Texte, Labels, Heading-Probleme
+- **Batch Reporting**: Reduziert Netzwerk-Requests
+- **Sampling Rate**: Kontrolle über Tracking-Prozentsatz
+- **Performance Budgets**: Schwellwerte mit Alerts
+- **Smart Detection**: Rage-Clicks, Dead-Clicks (optional)
+- **Extended Metrics**: Memory, Network Info (optional)
+- **Kompaktes UI**: Minimiert/Erweitert mit Tabs
 
-### Mittelfristig
-1. **Erweiterte Metriken**:
-   - Long Tasks (> 50ms)
-   - Memory Usage
-   - Network Information
-   - Custom Business Metrics
+### 🎯 Zukünftige Erweiterungen
+1. **Erweiterte WCAG-Checks**:
+   - Kontrast-Prüfung
+   - ARIA-Attribute Validierung
+   - Fokus-Reihenfolge
+   - Keyboard-Navigation Tests
 
-2. **Smart Features**:
-   - Rage-Click Detection
-   - Dead-Click Detection
-   - Scroll-Depth Tracking
-   - Element Attribution (was verursacht CLS?)
+2. **Visualisierung**:
+   - Historische Trends
+   - Vergleiche zwischen Seiten
+   - Heatmaps für Problembereiche
 
-3. **Visualisierung**:
-   - Mini-Charts im Overlay
-   - Trend-Anzeige
-   - Percentile (p50, p75, p95)
-
-### Langfristig
-1. **Performance Budgets**: Alerts bei Schwellwerten
-2. **A/B Testing Integration**: Metriken nach Varianten
-3. **Session Recording Integration**: Bei schlechten Metriken
-4. **AI-basierte Insights**: Automatische Performance-Empfehlungen
+3. **AI-Integration**:
+   - Automatische Performance-Empfehlungen
+   - Predictive Analytics
+   - Anomalie-Erkennung
 
 ## Best Practices
 
@@ -128,12 +130,51 @@ import { WebVitals } from '@casoon/astro-webvitals';
 - NPM: https://www.npmjs.com/package/@casoon/astro-webvitals
 - Web Vitals Docs: https://web.dev/vitals/
 
+## UI/UX Design
+
+### Debug Overlay States
+1. **Minimiert (Default)**:
+   - Zeigt Performance Score (0-100)
+   - Anzahl gemessener Metriken
+   - Anzahl gefundener Issues
+   - Klick zum Erweitern
+
+2. **Erweitert**:
+   - **Tab: Core Vitals**: Metriken mit Fortschrittsbalken
+   - **Tab: Accessibility**: WCAG-Issues gruppiert nach Typ
+   - **Tab: Details**: Extended Metrics (Memory, Network)
+
+### Farbschema
+- **Grün (#10B981)**: Good performance (80-100 Score)
+- **Orange (#F59E0B)**: Needs improvement (60-79 Score)
+- **Rot (#EF4444)**: Poor performance (0-59 Score)
+- **Blau (#60A5FA)**: Aktive Tabs und Links
+
 ## Kontext für AI-Assistenten
-Diese Komponente ist production-ready und folgt Best Practices. Bei Erweiterungen sollte auf:
+
+Diese Komponente ist production-ready und folgt Best Practices. Bei Erweiterungen sollte auf folgende Punkte geachtet werden:
+
+### Technische Anforderungen
 1. **Bundle-Größe**: Minimal halten, keine unnötigen Dependencies
 2. **Performance**: Keine blockierenden Operationen
 3. **Browser-Support**: Modern Browsers (Chrome 60+, Firefox 60+, Safari 14+)
-4. **TypeScript**: Types exportiert für bessere DX
+4. **TypeScript**: Vollständige Typisierung ohne `any`
 5. **Astro-Kompatibilität**: v4.0.0+ und v5.0.0+
 
-geachtet werden.
+### Code-Qualität
+- **Keine `any` Types**: Alle TypeScript-Interfaces sind vollständig typisiert
+- **Inline Scripts**: Optimiert für minimale Netzwerk-Requests
+- **Error Handling**: Graceful degradation bei nicht unterstützten APIs
+- **Accessibility**: WCAG 2.1 Level AA konform im Debug-Overlay
+
+### Wichtige Dateien
+- `src/WebVitals.astro`: Hauptkomponente (einzige Komponente)
+- `src/index.ts`: TypeScript Definitionen
+- `docs/`: Umfassende Dokumentation
+- `.claude`: Diese Datei mit Projekt-Kontext
+
+### Aktuelle Version
+- **Version**: 0.1.0
+- **Status**: Production-ready
+- **Package Manager**: pnpm
+- **Node Version**: 20.18.0 (via Volta)

@@ -174,6 +174,9 @@ const defaultBudgets = {
       let consoleErrors = [];
       let consoleMode = false; // Toggle for console mode
 
+      // Track which accessibility issues are expanded
+      let expandedIssues = new Set();
+
       // Listen for viewport changes
       let resizeTimeout;
       window.addEventListener('resize', () => {
@@ -258,6 +261,47 @@ const defaultBudgets = {
         debugContainer.setAttribute('role', 'status');
         debugContainer.setAttribute('aria-label', 'Web Vitals & Accessibility Monitor');
         debugContainer.setAttribute('aria-live', 'polite');
+
+        // Add global styles for animations
+        if (!document.getElementById('wv-styles')) {
+          const styleSheet = document.createElement('style');
+          styleSheet.id = 'wv-styles';
+          styleSheet.textContent = `
+            @keyframes wv-pulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.5; }
+            }
+            .wv-pulse {
+              animation: wv-pulse 1.5s ease-in-out infinite;
+            }
+            @keyframes wv-spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+            .wv-spin {
+              animation: wv-spin 1s linear infinite;
+            }
+            #astro-webvitals-debug * {
+              box-sizing: border-box;
+            }
+            #astro-webvitals-debug::-webkit-scrollbar {
+              width: 4px;
+              height: 4px;
+            }
+            #astro-webvitals-debug::-webkit-scrollbar-track {
+              background: rgba(255, 255, 255, 0.05);
+              border-radius: 2px;
+            }
+            #astro-webvitals-debug::-webkit-scrollbar-thumb {
+              background: rgba(96, 165, 250, 0.5);
+              border-radius: 2px;
+            }
+            #astro-webvitals-debug::-webkit-scrollbar-thumb:hover {
+              background: rgba(96, 165, 250, 0.8);
+            }
+          `;
+          document.head.appendChild(styleSheet);
+        }
 
         // Minimized view by default
         updateDebugOverlay();
@@ -510,114 +554,313 @@ const defaultBudgets = {
         `;
       }
 
-      function getVitalsContent() {
-        // Define all metrics we track
-        const allMetrics = ['LCP', 'FID', 'CLS', 'FCP', 'TTFB', 'INP'];
+      // Helper to get metric rating info
+      function getMetricRating(key, value) {
+        const thresholds = {
+          LCP: { good: 2500, poor: 4000 },
+          FID: { good: 100, poor: 300 },
+          CLS: { good: 0.1, poor: 0.25 },
+          FCP: { good: 1800, poor: 3000 },
+          TTFB: { good: 800, poor: 1800 },
+          INP: { good: 200, poor: 500 }
+        };
 
-        if (Object.keys(vitals).length === 0) {
-          return '<div style="color: #9CA3AF; text-align: center; padding: 20px;">Measuring core vitals...</div>';
+        const t = thresholds[key];
+        if (!t) return { status: '⏳', color: '#9CA3AF', rating: 'measuring', percent: 0 };
+
+        if (value <= t.good) {
+          return { status: '✅', color: '#10B981', rating: 'good', percent: Math.min(100, (value / t.good) * 100) };
+        } else if (value <= t.poor) {
+          return { status: '⚠️', color: '#F59E0B', rating: 'needs improvement', percent: 50 + ((value - t.good) / (t.poor - t.good)) * 50 };
+        } else {
+          return { status: '❌', color: '#EF4444', rating: 'poor', percent: 100 };
         }
+      }
 
-        return allMetrics.map((key) => {
-          const value = vitals[key];
-          const hasValue = typeof value === 'number';
+      // Render radial gauge SVG
+      function renderRadialGauge(score, size = 80) {
+        const radius = (size - 8) / 2;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (score / 100) * circumference;
+        const color = score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444';
 
-          // Show placeholder for metrics not yet measured
-          if (!hasValue) {
-            const metricInfo = {
-              'FID': 'Waiting for first input...',
-              'INP': 'Waiting for interaction...',
-              'CLS': 'Monitoring layout shifts...',
-              'LCP': 'Measuring...',
-              'FCP': 'Measuring...',
-              'TTFB': 'Measuring...'
-            };
+        return `
+          <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform: rotate(-90deg);">
+            <circle
+              cx="${size/2}" cy="${size/2}" r="${radius}"
+              fill="none"
+              stroke="rgba(255,255,255,0.1)"
+              stroke-width="6"
+            />
+            <circle
+              cx="${size/2}" cy="${size/2}" r="${radius}"
+              fill="none"
+              stroke="url(#gaugeGradient)"
+              stroke-width="6"
+              stroke-linecap="round"
+              stroke-dasharray="${circumference}"
+              stroke-dashoffset="${offset}"
+              style="transition: stroke-dashoffset 0.5s ease;"
+            />
+            <defs>
+              <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="${color}" />
+                <stop offset="100%" stop-color="${color}88" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            font-size: 18px;
+            font-weight: bold;
+            color: ${color};
+          ">${score}</div>
+        `;
+      }
 
+      function getVitalsContent() {
+        // Core Web Vitals (the 3 main ones)
+        const coreMetrics = ['LCP', 'FID', 'CLS'];
+        // Additional metrics
+        const additionalMetrics = ['FCP', 'TTFB', 'INP'];
+        // Navigation timing metrics
+        const navMetrics = ['DNS', 'TCP', 'DOM', 'LOAD'];
+
+        // Calculate overall score for radial gauge
+        let score = 100;
+        let measuredCount = 0;
+
+        ['LCP', 'FID', 'CLS', 'FCP', 'TTFB', 'INP'].forEach(key => {
+          if (typeof vitals[key] === 'number') {
+            measuredCount++;
+            const rating = getMetricRating(key, vitals[key]);
+            if (rating.rating === 'poor') score -= 15;
+            else if (rating.rating === 'needs improvement') score -= 8;
+          }
+        });
+        score = Math.max(0, Math.min(100, score));
+
+        let html = '';
+
+        // Radial gauge header
+        html += `
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 12px;
+          ">
+            <div style="position: relative; width: 80px; height: 80px;">
+              ${renderRadialGauge(score)}
+            </div>
+            <div style="margin-left: 16px;">
+              <div style="font-size: 12px; color: #9CA3AF; margin-bottom: 4px;">Performance Score</div>
+              <div style="font-size: 11px; color: #6B7280;">${measuredCount}/6 metrics measured</div>
+              ${measuredCount < 6 ? '<div style="font-size: 10px; color: #60A5FA; margin-top: 4px;">Interact with the page for more metrics</div>' : ''}
+            </div>
+          </div>
+        `;
+
+        // Core Web Vitals section
+        html += `<div style="font-size: 11px; color: #60A5FA; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+          <span>📊</span> Core Web Vitals
+        </div>`;
+
+        html += coreMetrics.map(key => renderMetricRow(key)).join('');
+
+        // Additional metrics section
+        html += `<div style="font-size: 11px; color: #60A5FA; font-weight: 600; margin: 12px 0 8px 0; display: flex; align-items: center; gap: 6px;">
+          <span>📈</span> Additional Metrics
+        </div>`;
+
+        html += additionalMetrics.map(key => renderMetricRow(key)).join('');
+
+        // Navigation timing section (if any are available)
+        const hasNavMetrics = navMetrics.some(key => typeof vitals[key] === 'number');
+        if (hasNavMetrics) {
+          html += `<div style="font-size: 11px; color: #60A5FA; font-weight: 600; margin: 12px 0 8px 0; display: flex; align-items: center; gap: 6px;">
+            <span>🌐</span> Navigation Timing
+          </div>`;
+
+          html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">`;
+          html += navMetrics.map(key => {
+            const value = vitals[key];
+            if (typeof value !== 'number') return '';
             return `
               <div style="
                 padding: 8px;
-                margin-bottom: 8px;
                 background: rgba(31, 41, 55, 0.3);
+                border-radius: 6px;
+                text-align: center;
+              ">
+                <div style="font-size: 10px; color: #9CA3AF;">${key}</div>
+                <div style="font-size: 14px; color: #E5E7EB; font-weight: 600;">${value}ms</div>
+              </div>
+            `;
+          }).join('');
+          html += `</div>`;
+        }
+
+        return html;
+      }
+
+      function renderMetricRow(key) {
+        const value = vitals[key];
+        const hasValue = typeof value === 'number';
+        const budget = performanceBudget[key];
+
+        // Metric descriptions for better UX
+        const metricDescriptions = {
+          'LCP': { name: 'Largest Contentful Paint', hint: 'Loading performance' },
+          'FID': { name: 'First Input Delay', hint: 'Input responsiveness' },
+          'CLS': { name: 'Cumulative Layout Shift', hint: 'Visual stability' },
+          'FCP': { name: 'First Contentful Paint', hint: 'Initial render' },
+          'TTFB': { name: 'Time to First Byte', hint: 'Server response' },
+          'INP': { name: 'Interaction to Next Paint', hint: 'Overall responsiveness' }
+        };
+
+        const metricInfo = metricDescriptions[key] || { name: key, hint: '' };
+
+        // Show placeholder for metrics not yet measured
+        if (!hasValue) {
+          const waitingInfo = {
+            'FID': { icon: '👆', text: 'Click or tap to measure', action: true },
+            'INP': { icon: '👆', text: 'Interact to measure', action: true },
+            'CLS': { icon: '📐', text: '0.000', isGood: true },
+            'LCP': { icon: '⏳', text: 'Measuring...', loading: true },
+            'FCP': { icon: '⏳', text: 'Measuring...', loading: true },
+            'TTFB': { icon: '⏳', text: 'Measuring...', loading: true }
+          };
+
+          const info = waitingInfo[key] || { icon: '⏳', text: 'Pending...' };
+
+          // For CLS, show 0 as default (no shifts = good)
+          if (key === 'CLS') {
+            return `
+              <div style="
+                padding: 10px;
+                margin-bottom: 6px;
+                background: rgba(31, 41, 55, 0.4);
                 border-radius: 8px;
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                opacity: 0.6;
+                border: 1px solid rgba(16, 185, 129, 0.2);
               ">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span>⏳</span>
-                    <span style="font-weight: 500; color: #9CA3AF;">${key}</span>
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span>✅</span>
+                      <span style="font-weight: 600; color: #E5E7EB;">${key}</span>
+                    </div>
+                    <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${metricInfo.hint}</div>
                   </div>
-                  <span style="color: #6B7280; font-size: 10px; font-style: italic;">${metricInfo[key] || 'Pending...'}</span>
+                  <div style="text-align: right;">
+                    <span style="color: #10B981; font-weight: 600;">0.000</span>
+                    <div style="font-size: 9px; color: #10B981;">good</div>
+                  </div>
+                </div>
+                <div style="margin-top: 6px; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden;">
+                  <div style="height: 100%; width: 5%; background: #10B981;"></div>
                 </div>
               </div>
             `;
           }
 
-          const formatted = key === 'CLS' ? value.toFixed(3) : `${value}ms`;
-          const budget = performanceBudget[key];
-
-          let status = '⏳';
-          let color = '#9CA3AF';
-          let rating = 'measuring';
-
-          if (key === 'LCP') {
-            if (value < 2500) { status = '✅'; color = '#10B981'; rating = 'good'; }
-            else if (value < 4000) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
-            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
-          } else if (key === 'FID') {
-            if (value < 100) { status = '✅'; color = '#10B981'; rating = 'good'; }
-            else if (value < 300) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
-            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
-          } else if (key === 'CLS') {
-            if (value < 0.1) { status = '✅'; color = '#10B981'; rating = 'good'; }
-            else if (value < 0.25) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
-            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
-          } else if (key === 'FCP') {
-            if (value < 1800) { status = '✅'; color = '#10B981'; rating = 'good'; }
-            else if (value < 3000) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
-            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
-          } else if (key === 'TTFB') {
-            if (value < 800) { status = '✅'; color = '#10B981'; rating = 'good'; }
-            else if (value < 1800) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
-            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
-          } else if (key === 'INP') {
-            if (value < 200) { status = '✅'; color = '#10B981'; rating = 'good'; }
-            else if (value < 500) { status = '⚠️'; color = '#F59E0B'; rating = 'needs improvement'; }
-            else { status = '❌'; color = '#EF4444'; rating = 'poor'; }
+          // For interaction-based metrics (FID, INP), show call-to-action
+          if (info.action) {
+            return `
+              <div style="
+                padding: 10px;
+                margin-bottom: 6px;
+                background: rgba(31, 41, 55, 0.3);
+                border-radius: 8px;
+                border: 1px dashed rgba(96, 165, 250, 0.3);
+              ">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span>${info.icon}</span>
+                      <span style="font-weight: 500; color: #9CA3AF;">${key}</span>
+                    </div>
+                    <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${metricInfo.hint}</div>
+                  </div>
+                  <div style="
+                    background: rgba(96, 165, 250, 0.1);
+                    color: #60A5FA;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 10px;
+                  ">${info.text}</div>
+                </div>
+              </div>
+            `;
           }
 
-          const exceededBudget = budget && value > budget;
-
+          // Loading state for other metrics
           return `
             <div style="
-              padding: 8px;
-              margin-bottom: 8px;
-              background: rgba(31, 41, 55, 0.5);
+              padding: 10px;
+              margin-bottom: 6px;
+              background: rgba(31, 41, 55, 0.3);
               border-radius: 8px;
-              border: 1px solid ${exceededBudget ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
+              border: 1px solid rgba(255, 255, 255, 0.05);
+              opacity: 0.7;
             ">
               <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span>${status}</span>
-                  <span style="font-weight: 500; color: #E5E7EB;">${key}</span>
-                  ${exceededBudget ? '<span style="color: #EF4444; font-size: 10px;">⚠️ over budget</span>' : ''}
+                <div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="wv-pulse">${info.icon}</span>
+                    <span style="font-weight: 500; color: #9CA3AF;">${key}</span>
+                  </div>
+                  <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${metricInfo.hint}</div>
                 </div>
-                <span style="color: ${color}; font-weight: 600;">${formatted}</span>
-              </div>
-              <div style="margin-top: 4px;">
-                <div style="height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden;">
-                  <div style="
-                    height: 100%;
-                    width: ${Math.min(100, (value / (budget || performanceBudget[key] * 2)) * 100)}%;
-                    background: ${color};
-                    transition: width 0.3s ease;
-                  "></div>
-                </div>
-                <div style="font-size: 10px; color: #6B7280; margin-top: 4px;">${rating}</div>
+                <span style="color: #6B7280; font-size: 11px;">${info.text}</span>
               </div>
             </div>
           `;
-        }).filter(Boolean).join('');
+        }
+
+        // Metric has a value - render with rating
+        const formatted = key === 'CLS' ? value.toFixed(3) : `${value}ms`;
+        const rating = getMetricRating(key, value);
+        const exceededBudget = budget && value > budget;
+
+        return `
+          <div style="
+            padding: 10px;
+            margin-bottom: 6px;
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 8px;
+            border: 1px solid ${exceededBudget ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.05)'};
+          ">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span>${rating.status}</span>
+                  <span style="font-weight: 600; color: #E5E7EB;">${key}</span>
+                  ${exceededBudget ? '<span style="color: #EF4444; font-size: 9px; margin-left: 4px;">over budget</span>' : ''}
+                </div>
+                <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${metricInfo.hint}</div>
+              </div>
+              <div style="text-align: right;">
+                <span style="color: ${rating.color}; font-weight: 600;">${formatted}</span>
+                <div style="font-size: 9px; color: ${rating.color};">${rating.rating}</div>
+              </div>
+            </div>
+            <div style="margin-top: 6px; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden;">
+              <div style="
+                height: 100%;
+                width: ${Math.min(100, rating.percent)}%;
+                background: linear-gradient(90deg, ${rating.color}, ${rating.color}88);
+                transition: width 0.3s ease;
+              "></div>
+            </div>
+          </div>
+        `;
       }
 
       function getAccessibilityContent() {
@@ -631,54 +874,186 @@ const defaultBudgets = {
           `;
         }
 
-        // Group and count issues by type
-        const issueCounts = wcagIssues.reduce((acc, issue) => {
-          acc[issue.type] = (acc[issue.type] || 0) + 1;
+        // Group issues by type with full details
+        const groupedIssues = wcagIssues.reduce((acc, issue, index) => {
+          if (!acc[issue.type]) {
+            acc[issue.type] = [];
+          }
+          acc[issue.type].push({ ...issue, id: index });
           return acc;
         }, {});
 
-        const issueLabels = {
-          'missing-alt': '🖼️ Missing Alt Text',
-          'low-contrast': '🎨 Low Contrast',
-          'missing-label': '🏷️ Missing Labels',
-          'missing-heading': '📝 Heading Issues',
-          'keyboard': '⌨️ Keyboard Navigation'
+        const issueInfo = {
+          'missing-alt': {
+            icon: '🖼️',
+            label: 'Missing Alt Text',
+            description: 'Images should have descriptive alt text for screen readers.',
+            link: 'https://web.dev/image-alt/'
+          },
+          'low-contrast': {
+            icon: '🎨',
+            label: 'Low Contrast',
+            description: 'Text should have sufficient contrast ratio for readability.',
+            link: 'https://web.dev/color-contrast/'
+          },
+          'missing-label': {
+            icon: '🏷️',
+            label: 'Missing Labels',
+            description: 'Form elements and interactive controls need accessible labels.',
+            link: 'https://web.dev/label/'
+          },
+          'missing-heading': {
+            icon: '📝',
+            label: 'Heading Issues',
+            description: 'Heading levels should follow a logical hierarchy without skipping levels.',
+            link: 'https://web.dev/heading-order/'
+          },
+          'keyboard': {
+            icon: '⌨️',
+            label: 'Keyboard Navigation',
+            description: 'All interactive elements must be accessible via keyboard.',
+            link: 'https://web.dev/keyboard-access/'
+          }
         };
 
         return `
-          <div style="padding: 8px;">
-            <div style="margin-bottom: 12px; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
-              <div style="font-size: 12px; font-weight: 500; color: #F59E0B; margin-bottom: 4px;">
-                ⚠️ ${wcagIssues.length} Total Issues Found
+          <div style="padding: 4px;">
+            <!-- Summary header -->
+            <div style="
+              margin-bottom: 12px;
+              padding: 10px;
+              background: rgba(245, 158, 11, 0.1);
+              border-radius: 8px;
+              border: 1px solid rgba(245, 158, 11, 0.3);
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+            ">
+              <div>
+                <div style="font-size: 12px; font-weight: 600; color: #F59E0B;">
+                  ⚠️ ${wcagIssues.length} Issue${wcagIssues.length !== 1 ? 's' : ''} Found
+                </div>
+                <div style="font-size: 10px; color: #9CA3AF; margin-top: 2px;">
+                  Click to expand details
+                </div>
               </div>
-            </div>
-            ${Object.entries(issueCounts).map(([type, count]) => `
               <div style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 8px;
-                margin-bottom: 6px;
-                background: rgba(31, 41, 55, 0.5);
-                border-radius: 6px;
-                border-left: 3px solid #F59E0B;
-              ">
-                <span style="color: #E5E7EB; font-size: 11px;">
-                  ${issueLabels[type] || type}
-                </span>
-                <span style="
-                  background: rgba(245, 158, 11, 0.2);
-                  color: #F59E0B;
-                  padding: 2px 8px;
-                  border-radius: 12px;
-                  font-size: 11px;
-                  font-weight: 600;
-                ">${count}</span>
-              </div>
-            `).join('')}
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-              <div style="font-size: 10px; color: #6B7280;">
-                💡 Tip: Fix missing alt texts and labels first for quick accessibility wins
+                background: rgba(245, 158, 11, 0.2);
+                color: #F59E0B;
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+              ">${Object.keys(groupedIssues).length} categories</div>
+            </div>
+
+            <!-- Issue categories -->
+            ${Object.entries(groupedIssues).map(([type, issues]) => {
+              const info = issueInfo[type] || { icon: '❓', label: type, description: '', link: '' };
+              const isExpanded = expandedIssues.has(type);
+
+              return `
+                <div style="margin-bottom: 8px;">
+                  <!-- Category header (clickable) -->
+                  <div
+                    onclick="window.toggleAccessibilityIssue('${type}')"
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      padding: 10px 12px;
+                      background: ${isExpanded ? 'rgba(245, 158, 11, 0.15)' : 'rgba(31, 41, 55, 0.5)'};
+                      border-radius: ${isExpanded ? '8px 8px 0 0' : '8px'};
+                      border-left: 3px solid ${issues.length > 3 ? '#EF4444' : '#F59E0B'};
+                      cursor: pointer;
+                      transition: all 0.2s;
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span>${info.icon}</span>
+                      <span style="color: #E5E7EB; font-size: 12px; font-weight: 500;">${info.label}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="
+                        background: ${issues.length > 3 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'};
+                        color: ${issues.length > 3 ? '#EF4444' : '#F59E0B'};
+                        padding: 2px 8px;
+                        border-radius: 12px;
+                        font-size: 11px;
+                        font-weight: 600;
+                      ">${issues.length}</span>
+                      <span style="
+                        transform: rotate(${isExpanded ? '180deg' : '0deg'});
+                        transition: transform 0.2s;
+                        font-size: 10px;
+                        color: #9CA3AF;
+                      ">▼</span>
+                    </div>
+                  </div>
+
+                  <!-- Expanded details -->
+                  ${isExpanded ? `
+                    <div style="
+                      background: rgba(31, 41, 55, 0.3);
+                      border-radius: 0 0 8px 8px;
+                      border: 1px solid rgba(255, 255, 255, 0.05);
+                      border-top: none;
+                      padding: 10px;
+                    ">
+                      <!-- Description -->
+                      <div style="
+                        font-size: 11px;
+                        color: #9CA3AF;
+                        margin-bottom: 10px;
+                        padding-bottom: 10px;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                      ">
+                        ${info.description}
+                        ${info.link ? `<a href="${info.link}" target="_blank" rel="noopener noreferrer" style="color: #60A5FA; margin-left: 4px;">Learn more →</a>` : ''}
+                      </div>
+
+                      <!-- Individual issues -->
+                      ${issues.slice(0, 10).map((issue, i) => `
+                        <div style="
+                          font-size: 10px;
+                          color: #E5E7EB;
+                          padding: 6px 8px;
+                          margin-bottom: 4px;
+                          background: rgba(31, 41, 55, 0.5);
+                          border-radius: 4px;
+                          font-family: 'SF Mono', Monaco, monospace;
+                          word-break: break-all;
+                        ">
+                          <span style="color: #6B7280;">${i + 1}.</span>
+                          <span style="color: #F59E0B;">${issue.element || 'Element'}</span>
+                          ${issue.message ? `<div style="color: #9CA3AF; margin-top: 2px; font-size: 9px;">${issue.message}</div>` : ''}
+                        </div>
+                      `).join('')}
+
+                      ${issues.length > 10 ? `
+                        <div style="font-size: 10px; color: #6B7280; text-align: center; padding: 4px;">
+                          ... and ${issues.length - 10} more
+                        </div>
+                      ` : ''}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+
+            <!-- Tips -->
+            <div style="
+              margin-top: 12px;
+              padding: 10px;
+              background: rgba(96, 165, 250, 0.1);
+              border-radius: 8px;
+              border: 1px solid rgba(96, 165, 250, 0.2);
+            ">
+              <div style="font-size: 10px; color: #60A5FA; font-weight: 500; margin-bottom: 4px;">💡 Quick Wins</div>
+              <div style="font-size: 10px; color: #9CA3AF;">
+                ${wcagIssues.some(i => i.type === 'missing-alt') ? '• Add alt text to images for screen readers<br>' : ''}
+                ${wcagIssues.some(i => i.type === 'missing-label') ? '• Add labels to form inputs and buttons<br>' : ''}
+                ${wcagIssues.some(i => i.type === 'missing-heading') ? '• Fix heading hierarchy (h1 → h2 → h3)' : ''}
               </div>
             </div>
           </div>
@@ -939,6 +1314,15 @@ const defaultBudgets = {
 
       window.clearConsoleErrors = function() {
         consoleErrors.length = 0;
+        updateDebugOverlay();
+      };
+
+      window.toggleAccessibilityIssue = function(type) {
+        if (expandedIssues.has(type)) {
+          expandedIssues.delete(type);
+        } else {
+          expandedIssues.add(type);
+        }
         updateDebugOverlay();
       };
 

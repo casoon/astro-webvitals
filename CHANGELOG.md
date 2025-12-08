@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2024-12-09
+
+### Added
+- 📊 **Radial Gauge Visualization** - Performance score displayed as circular gauge with gradient
+- 📈 **Improved Metrics Layout** - Grouped sections for Core Web Vitals, Additional Metrics, and Navigation Timing
+- 🔍 **Expandable Accessibility Details** - Click to expand issue categories with individual element details
+- 🔗 **Learn More Links** - Direct links to web.dev documentation for each accessibility issue type
+- 💡 **Quick Wins Section** - Actionable tips based on detected accessibility issues
+- ✨ **Metric Descriptions** - Each metric now shows a helpful hint (e.g., "Loading performance", "Visual stability")
+
+### Improved
+- 🎯 **Better Initial State for Metrics** - CLS shows 0.000 (good) by default instead of "waiting"
+- 👆 **Interaction-based Metrics** - FID/INP now show clear call-to-action ("Click or tap to measure")
+- 🎨 **Enhanced Color Scheme** - Gradient progress bars, improved contrast, purple scrollbar accent
+- 📱 **Scrollbar Styling** - Custom styled scrollbars matching the dark theme
+- ⏳ **Pulse Animation** - Loading indicators now have smooth pulse animation
+- 📊 **Score Counter** - Shows how many metrics are measured (e.g., "4/6 metrics measured")
+
+### Fixed
+- 🐛 **CLS Initial Display** - No longer shows "Monitoring layout shifts..." when there are no shifts
+
+## [0.1.3] - 2024-12-01
+
+### Added
+- 🖥️ **Console & Error Detection** - New Console tab capturing console.error() calls
+- 📝 **Custom Logging API** - webVitalsLog.info(), .warn(), .error() for custom messages
+- 🔄 **Console Mode Toggle** - Enable/disable custom logging capture
+
 ## [0.1.2] - 2024-11-18
 
 ### Added

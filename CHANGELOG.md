@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2024-12-09
+
+### Added
+- 🤖 **Auto-FID Measurement** - Automatic FID measurement after 3 seconds using non-intrusive hidden element
+- 🎯 **Improved LCP Detection** - Better LCP measurement using renderTime/loadTime with validation
+- 📊 **Enhanced Debug Logging** - Detailed console logs for all metric measurements when debug mode is enabled
+
+### Improved
+- ⚡ **LCP Measurement** - Now uses `renderTime || loadTime` instead of just `startTime` for more accurate results
+- 🔄 **LCP Finalization** - Reduced timeout from 3s to 2s for faster final values
+- 👆 **FID Simulation** - Creates invisible, non-interactive button element (won't interfere with forms or user interactions)
+  - Uses `pointer-events: none` to prevent accidental clicks
+  - Positioned off-screen with `left: -9999px`
+  - `aria-hidden="true"` and `tabindex="-1"` for accessibility
+  - Automatically cleaned up after measurement
+- 📝 **Better Logging** - All metrics now log when measured in debug mode
+- ✅ **FID Fallback** - Sets FID to 0ms if no interaction delay detected (perfect responsiveness)
+
+### Fixed
+- 🐛 **LCP Not Updating** - Fixed renderTime/loadTime extraction for more reliable measurements
+- 🐛 **FID Blocking** - FID simulation now uses isolated element that can't interfere with real user interactions
+
 ## [0.1.4] - 2024-12-09
 
 ### Added

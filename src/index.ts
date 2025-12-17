@@ -68,6 +68,8 @@ export interface PerformanceBudget {
 export interface WebVitalsProps {
   /** Enable debug overlay showing metrics in real-time */
   debug?: boolean;
+  /** Dock a console log viewer at the bottom of the page */
+  consoleDock?: boolean;
   /** Optional endpoint to send metrics to (POST request) */
   endpoint?: string;
   /** Position of debug overlay */
@@ -84,6 +86,8 @@ export interface WebVitalsProps {
   maxBatchSize?: number;
   /** Enable WCAG accessibility checking */
   checkAccessibility?: boolean;
+  /** Highlight elements that fail WCAG checks */
+  highlightAccessibility?: boolean;
   /** Enable extended metrics (Long Tasks, Memory, Network) */
   extendedMetrics?: boolean;
   /** Enable smart detection (rage clicks, dead clicks) */

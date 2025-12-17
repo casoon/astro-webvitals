@@ -16,6 +16,12 @@ export interface Props {
   debug?: boolean;
 
   /**
+   * Dock a resizable console log viewer at the bottom of the page
+   * @default false
+   */
+  consoleDock?: boolean;
+
+  /**
    * Optional endpoint to send metrics to
    * Metrics will be sent as POST requests with JSON payload
    */
@@ -56,6 +62,12 @@ export interface Props {
    * @default true when debug is enabled
    */
   checkAccessibility?: boolean;
+
+  /**
+   * Highlight elements on the page that have WCAG issues
+   * @default false
+   */
+  highlightAccessibility?: boolean;
 
   /**
    * Enable extended metrics (Long Tasks, Memory, Network)
@@ -99,6 +111,7 @@ export interface Props {
 
 const {
   debug = false,
+  consoleDock = false,
   endpoint,
   position = 'bottom-right',
   trackInDev = false,
@@ -106,6 +119,7 @@ const {
   batchReporting = true,
   batchInterval = 5000,
   checkAccessibility = debug,
+  highlightAccessibility = false,
   extendedMetrics = false,
   smartDetection = false,
   performanceBudget,
@@ -115,7 +129,7 @@ const {
 } = Astro.props;
 
 const isDev = import.meta.env.DEV;
-const shouldTrack = (!isDev || trackInDev || debug) && Math.random() < sampleRate;
+const shouldTrack = (!isDev || trackInDev || debug || consoleDock || highlightAccessibility) && Math.random() < sampleRate;
 
 // Detect if mobile
 const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -144,6 +158,7 @@ const defaultBudgets = {
 {shouldTrack && (
   <script is:inline define:vars={{
     debug,
+    consoleDock,
     endpoint,
     position,
     desktopPositions,
@@ -151,6 +166,7 @@ const defaultBudgets = {
     batchReporting,
     batchInterval,
     checkAccessibility,
+    highlightAccessibility,
     extendedMetrics,
     smartDetection,
     performanceBudget: defaultBudgets,
@@ -172,7 +188,17 @@ const defaultBudgets = {
       // Check if mobile (responsive under 700px)
       let isMobile = window.innerWidth < 700;
       let consoleErrors = [];
-      let consoleMode = false; // Toggle for console mode
+      let consoleDockEnabled = false;
+      let consoleDockHeight = 160;
+      let consoleDockEl;
+      let consoleDockLogEl;
+      const highlightedNodes = new Set();
+      let highlightEnabled = !!highlightAccessibility;
+      const lcpHiddenOnStart = document.visibilityState === 'hidden';
+      let lcpUnsupported = false;
+      let lcpUsedFallback = false;
+      let lcpEstimated = false;
+      let seoInfo = null;
 
       // Track which accessibility issues are expanded
       let expandedIssues = new Set();
@@ -192,67 +218,58 @@ const defaultBudgets = {
         }, 250); // Debounce resize events
       });
 
-      // Console error detection
-      const originalError = console.error;
-      console.error = function(...args) {
-        originalError.apply(console, args);
-        const error = {
-          type: 'error',
-          message: args.map(arg =>
-            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-          ).join(' '),
+      // Console log capture
+      const originalConsole = {
+        log: console.log.bind(console),
+        info: console.info.bind(console),
+        warn: console.warn.bind(console),
+        error: console.error.bind(console)
+      };
+
+      function pushConsoleEntry(type, args) {
+        const message = args.map(arg =>
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ');
+
+        consoleErrors.push({
+          type,
+          message,
           timestamp: new Date().toISOString(),
-          stack: new Error().stack
-        };
-        consoleErrors.push(error);
-        if (consoleErrors.length > 100) {
-          consoleErrors.shift(); // Keep max 100 errors
+          stack: type === 'error' ? new Error().stack : undefined
+        });
+
+        if (consoleErrors.length > 200) {
+          consoleErrors.shift(); // Keep max 200 entries
         }
         if (debugContainer && activeTab === 'console') {
           updateDebugOverlay();
         }
-      };
-
-      // Custom console logging
-      window.webVitalsLog = {
-        info: function(...args) {
-          if (consoleMode) {
-            consoleErrors.push({
-              type: 'info',
-              message: args.join(' '),
-              timestamp: new Date().toISOString()
-            });
-            if (consoleErrors.length > 100) consoleErrors.shift();
-            if (debugContainer && activeTab === 'console') updateDebugOverlay();
-          }
-        },
-        warn: function(...args) {
-          if (consoleMode) {
-            consoleErrors.push({
-              type: 'warn',
-              message: args.join(' '),
-              timestamp: new Date().toISOString()
-            });
-            if (consoleErrors.length > 100) consoleErrors.shift();
-            if (debugContainer && activeTab === 'console') updateDebugOverlay();
-          }
-        },
-        error: function(...args) {
-          if (consoleMode) {
-            consoleErrors.push({
-              type: 'error',
-              message: args.join(' '),
-              timestamp: new Date().toISOString()
-            });
-            if (consoleErrors.length > 100) consoleErrors.shift();
-            if (debugContainer && activeTab === 'console') updateDebugOverlay();
-          }
+        if (consoleDockEnabled) {
+          updateConsoleDock();
         }
+      }
+
+      ['log', 'info', 'warn', 'error'].forEach(type => {
+        console[type] = function(...args) {
+          originalConsole[type](...args);
+          pushConsoleEntry(type, args);
+        };
+      });
+
+      // Custom console logging helper
+      window.webVitalsLog = {
+        info: (...args) => pushConsoleEntry('info', args),
+        warn: (...args) => pushConsoleEntry('warn', args),
+        error: (...args) => pushConsoleEntry('error', args)
       };
 
       // Initialize debug overlay
       if (debug) {
         createDebugOverlay();
+      }
+
+      if (consoleDock) {
+        createConsoleDock();
       }
 
       function createDebugOverlay() {
@@ -283,6 +300,12 @@ const defaultBudgets = {
             }
             #astro-webvitals-debug * {
               box-sizing: border-box;
+            }
+            .wv-a11y-highlight {
+              outline: 2px solid #F59E0B;
+              outline-offset: 2px;
+              position: relative;
+              box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35);
             }
             #astro-webvitals-debug::-webkit-scrollbar {
               width: 4px;
@@ -344,6 +367,7 @@ const defaultBudgets = {
           border-bottom: none;
           transition: all 0.3s ease;
           max-width: 100%;
+          height: ${isExpanded ? '60vh' : 'auto'};
           transform: translateY(${isExpanded ? '0' : 'calc(100% - 48px)'});
           overflow: hidden;
         ` : `
@@ -359,7 +383,8 @@ const defaultBudgets = {
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           transition: all 0.3s ease;
-          max-width: ${isExpanded ? '420px' : '280px'};
+          width: ${isExpanded ? '420px' : '280px'};
+          min-height: ${isExpanded ? '420px' : 'auto'};
           overflow: hidden;
         `;
 
@@ -447,6 +472,18 @@ const defaultBudgets = {
                   transition: all 0.2s;
                 ">Core Vitals</button>
 
+                <button onclick="window.setWebVitalsTab('seo')" style="
+                  background: none;
+                  border: none;
+                  color: ${activeTab === 'seo' ? '#60A5FA' : '#9CA3AF'};
+                  padding: 8px 12px;
+                  cursor: pointer;
+                  font-size: 11px;
+                  font-weight: 500;
+                  border-bottom: 2px solid ${activeTab === 'seo' ? '#60A5FA' : 'transparent'};
+                  transition: all 0.2s;
+                ">SEO</button>
+
                 ${checkAccessibility ? `
                   <button onclick="window.setWebVitalsTab('accessibility')" style="
                     background: none;
@@ -515,8 +552,9 @@ const defaultBudgets = {
               </div>
 
               <!-- Content -->
-              <div style="padding: 12px 16px; max-height: ${isMobile ? '60vh' : '400px'}; overflow-y: auto;">
+              <div id="wv-content" style="padding: 12px 16px; height: ${isMobile ? '60vh' : '400px'}; overflow-y: auto;">
                 ${activeTab === 'vitals' ? getVitalsContent() : ''}
+                ${activeTab === 'seo' ? getSEOContent() : ''}
                 ${activeTab === 'accessibility' ? getAccessibilityContent() : ''}
                 ${activeTab === 'details' ? getDetailsContent() : ''}
                 ${activeTab === 'console' ? getConsoleContent() : ''}
@@ -621,6 +659,17 @@ const defaultBudgets = {
         `;
       }
 
+      function escapeHTML(str) {
+        if (typeof str !== 'string') return '';
+        return str.replace(/[&<>"']/g, ch => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[ch] || ch));
+      }
+
       function getVitalsContent() {
         // Core Web Vitals (the 3 main ones)
         const coreMetrics = ['LCP', 'FID', 'CLS'];
@@ -632,6 +681,7 @@ const defaultBudgets = {
         // Calculate overall score for radial gauge
         let score = 100;
         let measuredCount = 0;
+        const hasLCP = typeof vitals.LCP === 'number';
 
         ['LCP', 'FID', 'CLS', 'FCP', 'TTFB', 'INP'].forEach(key => {
           if (typeof vitals[key] === 'number') {
@@ -666,6 +716,30 @@ const defaultBudgets = {
             </div>
           </div>
         `;
+
+        if (!hasLCP) {
+          html += `
+            <div style="
+              margin-bottom: 12px;
+              padding: 10px 12px;
+              background: rgba(96, 165, 250, 0.08);
+              border: 1px solid rgba(96, 165, 250, 0.2);
+              border-radius: 10px;
+              color: #E5E7EB;
+              font-size: 11px;
+            ">
+              <div style="font-weight: 600; color: #93C5FD; margin-bottom: 6px;">LCP not observed yet</div>
+              <div style="color: #9CA3AF; line-height: 1.5;">
+                ${lcpUnsupported ? '• Browser does not expose LCP entries (unsupported)<br>' : ''}
+                ${lcpHiddenOnStart ? '• Page started hidden; reload with the tab visible<br>' : ''}
+                • Ensure a visible hero (image or large heading) is on the page<br>
+                • Use same-origin hero assets or send <code style="color:#E5E7EB;">Timing-Allow-Origin</code> for images<br>
+                • Avoid file:// loads; test over http/https
+                ${lcpEstimated ? '<br>• Using estimated value until a real LCP is seen' : ''}
+              </div>
+            </div>
+          `;
+        }
 
         // Core Web Vitals section
         html += `<div style="font-size: 11px; color: #60A5FA; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
@@ -828,6 +902,13 @@ const defaultBudgets = {
         const formatted = key === 'CLS' ? value.toFixed(3) : `${value}ms`;
         const rating = getMetricRating(key, value);
         const exceededBudget = budget && value > budget;
+        const lcpTag = key === 'LCP'
+          ? lcpUsedFallback
+            ? '<span style="color: #F59E0B; font-size: 9px; margin-left: 4px;">(FCP fallback)</span>'
+            : lcpEstimated
+              ? '<span style="color: #F59E0B; font-size: 9px; margin-left: 4px;">(estimated)</span>'
+              : ''
+          : '';
 
         return `
           <div style="
@@ -843,6 +924,7 @@ const defaultBudgets = {
                   <span>${rating.status}</span>
                   <span style="font-weight: 600; color: #E5E7EB;">${key}</span>
                   ${exceededBudget ? '<span style="color: #EF4444; font-size: 9px; margin-left: 4px;">over budget</span>' : ''}
+                  ${lcpTag}
                 </div>
                 <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${metricInfo.hint}</div>
               </div>
@@ -858,6 +940,343 @@ const defaultBudgets = {
                 background: linear-gradient(90deg, ${rating.color}, ${rating.color}88);
                 transition: width 0.3s ease;
               "></div>
+            </div>
+          </div>
+        `;
+      }
+
+      function analyzeSEO() {
+        const doc = document;
+        const head = doc.head || doc.getElementsByTagName('head')[0];
+        const getMeta = (name) => head.querySelector(`meta[name="${name}"]`)?.getAttribute('content')?.trim() || '';
+        const getProp = (prop) => head.querySelector(`meta[property="${prop}"]`)?.getAttribute('content')?.trim() || '';
+
+        const title = (doc.title || '').trim();
+        const metaDescription = getMeta('description');
+        const canonical = head.querySelector('link[rel="canonical"]')?.getAttribute('href') || '';
+        const robotsMeta = getMeta('robots');
+        const viewport = getMeta('viewport');
+        const lang = doc.documentElement.getAttribute('lang') || '';
+        const dir = doc.documentElement.getAttribute('dir') || '';
+
+        const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6')).map(h => ({
+          tag: h.tagName.toLowerCase(),
+          text: h.textContent.trim(),
+          empty: !h.textContent.trim()
+        }));
+        const h1Count = headings.filter(h => h.tag === 'h1').length;
+        const emptyHeadings = headings.filter(h => h.empty);
+
+        const ldScripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
+        const ldResults = ldScripts.map((script, i) => {
+          const raw = script.textContent || '';
+          let parsed = null;
+          let error = null;
+          let warnings = [];
+          try {
+            parsed = JSON.parse(raw);
+            const ctx = parsed['@context'];
+            const type = parsed['@type'] || (Array.isArray(parsed['@graph']) ? parsed['@graph'][0]?.['@type'] : undefined);
+            if (!ctx) warnings.push('Missing @context');
+            if (!type) warnings.push('Missing @type');
+
+            const typeLower = (Array.isArray(type) ? type[0] : type || '').toString().toLowerCase();
+            const hasField = (key) => parsed[key] || (Array.isArray(parsed['@graph']) && parsed['@graph'].some(item => item[key]));
+
+            if (typeLower.includes('article')) {
+              ['headline', 'image', 'author'].forEach(f => { if (!hasField(f)) warnings.push(`Article missing ${f}`); });
+            }
+            if (typeLower.includes('product')) {
+              ['name', 'image', 'offers'].forEach(f => { if (!hasField(f)) warnings.push(`Product missing ${f}`); });
+            }
+            if (typeLower.includes('organization')) {
+              ['name', 'logo'].forEach(f => { if (!hasField(f)) warnings.push(`Organization missing ${f}`); });
+            }
+            if (typeLower.includes('website')) {
+              ['name', 'url'].forEach(f => { if (!hasField(f)) warnings.push(`WebSite missing ${f}`); });
+            }
+            if (typeLower.includes('breadcrumblist')) {
+              if (!hasField('itemListElement')) warnings.push('BreadcrumbList missing itemListElement');
+            }
+          } catch (e) {
+            error = e?.message || 'Invalid JSON';
+          }
+          return { index: i + 1, raw, parsed, error, warnings };
+        });
+
+        const og = {
+          title: getProp('og:title'),
+          description: getProp('og:description'),
+          image: getProp('og:image'),
+          url: getProp('og:url'),
+          type: getProp('og:type')
+        };
+
+        const twitter = {
+          card: getMeta('twitter:card'),
+          title: getMeta('twitter:title'),
+          description: getMeta('twitter:description'),
+          image: getMeta('twitter:image')
+        };
+
+        const images = Array.from(doc.querySelectorAll('img')).map((img, idx) => ({
+          idx,
+          src: img.getAttribute('src') || '',
+          alt: img.getAttribute('alt') || '',
+          width: img.getAttribute('width'),
+          height: img.getAttribute('height'),
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight
+        }));
+
+        const missingAlt = images.filter(i => !i.alt?.trim());
+        const missingDimensions = images.filter(i => !i.width && !i.height);
+        const heroMissingDimensions = images[0] && (!images[0].width || !images[0].height);
+
+        const hasNoindex = /noindex/i.test(robotsMeta || '');
+
+        return {
+          analyzedAt: new Date().toISOString(),
+          title,
+          metaDescription,
+          canonical,
+          robotsMeta,
+          viewport,
+          lang,
+          dir,
+          h1Count,
+          emptyHeadings,
+          headings,
+          ldResults,
+          og,
+          twitter,
+          images,
+          missingAlt,
+          missingDimensions,
+          heroMissingDimensions,
+          hasNoindex,
+          xRobots: null,
+          indexable: !hasNoindex
+        };
+      }
+
+      function refreshSEO() {
+        preserveContentScroll(() => {
+          seoInfo = analyzeSEO();
+          updateDebugOverlay();
+        });
+        fetchIndexabilityHeader();
+      }
+
+      function preserveContentScroll(fn) {
+        const content = document.getElementById('wv-content');
+        const scrollTop = content?.scrollTop || 0;
+        fn();
+        const newContent = document.getElementById('wv-content');
+        if (newContent) newContent.scrollTop = scrollTop;
+      }
+
+      async function fetchIndexabilityHeader() {
+        try {
+          const res = await fetch(window.location.href, { method: 'HEAD' });
+          const header = res.headers.get('x-robots-tag');
+          if (header && seoInfo) {
+            seoInfo.xRobots = header;
+            if (/noindex/i.test(header)) {
+              seoInfo.indexable = false;
+            }
+            updateDebugOverlay();
+          }
+        } catch (e) {
+          // ignore network issues
+        }
+      }
+
+      function formatSEOReport() {
+        if (!seoInfo) return 'SEO report not ready';
+        const lines = [];
+        const yes = '✅';
+        const no = '❌';
+        lines.push(`SEO Report - ${new Date().toLocaleString()}`);
+        lines.push('');
+        lines.push(`Title (${seoInfo.title?.length || 0}): ${seoInfo.title || 'missing'}`);
+        lines.push(`Description (${seoInfo.metaDescription?.length || 0}): ${seoInfo.metaDescription || 'missing'}`);
+        lines.push(`Canonical: ${seoInfo.canonical || 'missing'}`);
+        lines.push(`Robots meta: ${seoInfo.robotsMeta || 'none'}`);
+        lines.push(`X-Robots-Tag: ${seoInfo.xRobots || 'n/a'}`);
+        lines.push(`Indexable: ${seoInfo.indexable ? yes : no}`);
+        lines.push(`Lang: ${seoInfo.lang || 'missing'} | Dir: ${seoInfo.dir || 'unset'}`);
+        lines.push(`H1 count: ${seoInfo.h1Count}`);
+        if (seoInfo.emptyHeadings?.length) {
+          lines.push(`Empty headings: ${seoInfo.emptyHeadings.length}`);
+        }
+        lines.push('');
+        lines.push('Open Graph:');
+        lines.push(`  og:title: ${seoInfo.og.title || 'missing'}`);
+        lines.push(`  og:description: ${seoInfo.og.description || 'missing'}`);
+        lines.push(`  og:image: ${seoInfo.og.image || 'missing'}`);
+        lines.push('');
+        lines.push('Twitter:');
+        lines.push(`  card: ${seoInfo.twitter.card || 'missing'}`);
+        lines.push(`  title: ${seoInfo.twitter.title || 'missing'}`);
+        lines.push('');
+        lines.push(`Structured data blocks: ${seoInfo.ldResults.length}`);
+        seoInfo.ldResults.forEach(ld => {
+          lines.push(`  #${ld.index}: ${ld.error ? `${no} parse error: ${ld.error}` : 'ok'}`);
+          if (ld.warnings?.length) {
+            ld.warnings.forEach(w => lines.push(`    ⚠️ ${w}`));
+          }
+        });
+        lines.push('');
+        lines.push(`Images missing alt: ${seoInfo.missingAlt.length}`);
+        lines.push(`Images missing dimensions: ${seoInfo.missingDimensions.length}`);
+        if (seoInfo.heroMissingDimensions) lines.push('Hero image missing dimensions');
+        return lines.join('\n');
+      }
+
+      function getSEOContent() {
+        if (!seoInfo) {
+          return `
+            <div style="padding: 20px; text-align: center; color: #9CA3AF; font-size: 11px;">
+              Collecting SEO data...
+            </div>
+          `;
+        }
+
+        const badge = (text, ok = true) => `<span style="
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(255,255,255,0.05);
+          color: ${ok ? '#E5E7EB' : '#F59E0B'};
+          padding: 4px 8px;
+          border-radius: 999px;
+          font-size: 10px;
+          border: 1px solid rgba(255,255,255,0.08);
+        ">${ok ? '✅' : '⚠️'} ${text}</span>`;
+
+        const listItem = (label, value, ok = true) => `
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px;">
+            <span style="color: #9CA3AF;">${label}</span>
+            <span style="color: ${ok ? '#E5E7EB' : '#F59E0B'};">${value || '—'}</span>
+          </div>
+        `;
+
+        const ogMissing = ['title', 'description', 'image'].filter(k => !seoInfo.og[k]);
+        const twMissing = ['card', 'title', 'description', 'image'].filter(k => !seoInfo.twitter[k]);
+
+        const headingsOutline = seoInfo.headings.slice(0, 8).map(h => `${h.tag.toUpperCase()}: ${escapeHTML(h.text || '(empty)')}`).join('<br>');
+
+        return `
+          <div style="display: grid; gap: 12px;">
+            <div style="padding: 10px; background: rgba(31,41,55,0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="color: #E5E7EB; font-weight: 600; font-size: 12px;">Indexability</div>
+                <span style="
+                  padding: 4px 10px;
+                  border-radius: 999px;
+                  background: ${seoInfo.indexable ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'};
+                  color: ${seoInfo.indexable ? '#10B981' : '#EF4444'};
+                  font-size: 11px;
+                ">${seoInfo.indexable ? 'Indexable' : 'Noindex'}</span>
+              </div>
+              ${listItem('Robots meta', seoInfo.robotsMeta || '—', !seoInfo.hasNoindex)}
+              ${listItem('X-Robots-Tag', seoInfo.xRobots || '—', seoInfo.xRobots ? !/noindex/i.test(seoInfo.xRobots) : true)}
+              ${listItem('Canonical', seoInfo.canonical || '—', !!seoInfo.canonical)}
+            </div>
+
+            <div style="padding: 10px; background: rgba(31,41,55,0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="color: #E5E7EB; font-weight: 600; font-size: 12px; margin-bottom: 8px;">Basics</div>
+              ${listItem('Title', seoInfo.title || 'Missing', !!seoInfo.title)}
+              ${listItem('Title length', `${seoInfo.title?.length || 0} chars`, seoInfo.title?.length >= 30 && seoInfo.title?.length <= 65)}
+              ${listItem('Description', seoInfo.metaDescription || 'Missing', !!seoInfo.metaDescription)}
+              ${listItem('Description length', `${seoInfo.metaDescription?.length || 0} chars`, seoInfo.metaDescription?.length >= 50 && seoInfo.metaDescription?.length <= 160)}
+              ${listItem('Viewport', seoInfo.viewport || 'Missing', !!seoInfo.viewport)}
+              ${listItem('Lang / Dir', `${seoInfo.lang || 'missing'} / ${seoInfo.dir || 'unset'}`, !!seoInfo.lang)}
+            </div>
+
+            <div style="padding: 10px; background: rgba(31,41,55,0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="color: #E5E7EB; font-weight: 600; font-size: 12px; margin-bottom: 8px;">Headings</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+                ${badge(`H1 count: ${seoInfo.h1Count}`, seoInfo.h1Count === 1)}
+                ${seoInfo.emptyHeadings.length ? badge(`Empty headings: ${seoInfo.emptyHeadings.length}`, false) : ''}
+              </div>
+              <div style="color: #9CA3AF; font-size: 10px; line-height: 1.5;">${headingsOutline || 'No headings found'}</div>
+            </div>
+
+            <div style="padding: 10px; background: rgba(31,41,55,0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="color: #E5E7EB; font-weight: 600; font-size: 12px; margin-bottom: 8px;">Open Graph / Twitter</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+                ${badge('OG title', !!seoInfo.og.title)}
+                ${badge('OG desc', !!seoInfo.og.description)}
+                ${badge('OG image', !!seoInfo.og.image)}
+                ${badge('Twitter card', !!seoInfo.twitter.card)}
+                ${badge('Twitter title', !!seoInfo.twitter.title)}
+              </div>
+              ${(ogMissing.length || twMissing.length) ? `<div style="color: #F59E0B; font-size: 10px;">Missing: ${[...ogMissing, ...twMissing].join(', ')}</div>` : ''}
+            </div>
+
+            <div style="padding: 10px; background: rgba(31,41,55,0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="color: #E5E7EB; font-weight: 600; font-size: 12px;">Structured Data</div>
+                <span style="color: #9CA3AF; font-size: 10px;">${seoInfo.ldResults.length} block(s)</span>
+              </div>
+              ${seoInfo.ldResults.length === 0 ? `
+                <div style="color: #9CA3AF; font-size: 11px;">No JSON-LD blocks found.</div>
+              ` : `
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  ${seoInfo.ldResults.slice(0,3).map(ld => `
+                    <div style="
+                      padding: 8px;
+                      background: rgba(255,255,255,0.04);
+                      border-radius: 6px;
+                      border: 1px solid rgba(255,255,255,0.06);
+                      color: ${ld.error ? '#F59E0B' : '#E5E7EB'};
+                      font-size: 11px;
+                    ">
+                      #${ld.index}: ${ld.error ? `Parse error: ${escapeHTML(ld.error)}` : 'Valid JSON'}
+                      ${ld.warnings?.length ? `<div style="color: #F59E0B; font-size: 10px; margin-top: 4px;">Warnings: ${ld.warnings.map(escapeHTML).join(', ')}</div>` : ''}
+                    </div>
+                  `).join('')}
+                  ${seoInfo.ldResults.length > 3 ? `<div style="color: #6B7280; font-size: 10px;">+ ${seoInfo.ldResults.length - 3} more</div>` : ''}
+                </div>
+              `}
+            </div>
+
+            <div style="padding: 10px; background: rgba(31,41,55,0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="color: #E5E7EB; font-weight: 600; font-size: 12px;">Images</div>
+                <span style="color: #9CA3AF; font-size: 10px;">${seoInfo.images.length} found</span>
+              </div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;">
+                ${badge(`Missing alt: ${seoInfo.missingAlt.length}`, seoInfo.missingAlt.length === 0)}
+                ${badge(`Missing dimensions: ${seoInfo.missingDimensions.length}`, seoInfo.missingDimensions.length === 0)}
+                ${badge('Hero dims ok', !seoInfo.heroMissingDimensions)}
+              </div>
+              ${(seoInfo.missingAlt.length || seoInfo.missingDimensions.length) ? `
+                <div style="color: #9CA3AF; font-size: 10px;">First few issues:</div>
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+                  ${seoInfo.missingAlt.slice(0,2).map(img => `
+                    <div style="font-size: 10px; color: #F59E0B;">#${img.idx + 1} missing alt (${escapeHTML(img.src || 'src?')})</div>
+                  `).join('')}
+                  ${seoInfo.missingDimensions.slice(0,2).map(img => `
+                    <div style="font-size: 10px; color: #F59E0B;">#${img.idx + 1} missing width/height (${escapeHTML(img.src || 'src?')})</div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+
+            <div style="padding: 10px; background: rgba(31,41,55,0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+              <div style="color: #9CA3AF; font-size: 11px;">Copy a shareable SEO report</div>
+              <button onclick="window.copySEOReport()" style="
+                background: #4B5563;
+                border: 1px solid #6B7280;
+                color: #E5E7EB;
+                padding: 6px 10px;
+                border-radius: 6px;
+                font-size: 11px;
+                cursor: pointer;
+              ">Copy SEO Report</button>
             </div>
           </div>
         `;
@@ -1003,13 +1422,13 @@ const defaultBudgets = {
                       <!-- Description -->
                       <div style="
                         font-size: 11px;
-                        color: #9CA3AF;
+                        color: #E5E7EB;
                         margin-bottom: 10px;
                         padding-bottom: 10px;
                         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                       ">
                         ${info.description}
-                        ${info.link ? `<a href="${info.link}" target="_blank" rel="noopener noreferrer" style="color: #60A5FA; margin-left: 4px;">Learn more →</a>` : ''}
+                        ${info.link ? `<a href="${info.link}" target="_blank" rel="noopener noreferrer" style="color: #93C5FD; margin-left: 6px; text-decoration: underline;">Learn more →</a>` : ''}
                       </div>
 
                       <!-- Individual issues -->
@@ -1025,7 +1444,7 @@ const defaultBudgets = {
                           word-break: break-all;
                         ">
                           <span style="color: #6B7280;">${i + 1}.</span>
-                          <span style="color: #F59E0B;">${issue.element || 'Element'}</span>
+                          <span style="color: #F59E0B;">${escapeHTML(issue.element || 'Element')}</span>
                           ${issue.message ? `<div style="color: #9CA3AF; margin-top: 2px; font-size: 9px;">${issue.message}</div>` : ''}
                         </div>
                       `).join('')}
@@ -1061,130 +1480,50 @@ const defaultBudgets = {
       }
 
       function getConsoleContent() {
-        if (consoleErrors.length === 0) {
-          return `
-            <div style="text-align: center; padding: 20px;">
-              <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
-              <div style="color: #9CA3AF; font-weight: 500;">No console messages</div>
-              <div style="color: #6B7280; font-size: 11px; margin-top: 8px;">
-                ${consoleMode ? 'Console mode enabled' : 'Capturing errors only'}
-              </div>
-              <button
-                onclick="window.toggleConsoleMode()"
-                style="
-                  margin-top: 12px;
-                  background: ${consoleMode ? '#10B981' : '#4B5563'};
-                  border: none;
-                  color: white;
-                  padding: 6px 12px;
-                  border-radius: 6px;
-                  font-size: 11px;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                "
-              >${consoleMode ? 'Console Mode ON' : 'Enable Console Mode'}</button>
-              ${consoleMode ? `
-                <div style="margin-top: 12px; padding: 10px; background: rgba(31, 41, 55, 0.5); border-radius: 6px; text-align: left;">
-                  <div style="font-size: 10px; color: #60A5FA; margin-bottom: 6px;">Usage:</div>
-                  <code style="font-size: 9px; color: #E5E7EB; display: block; margin-bottom: 4px;">
-                    webVitalsLog.info('Info message')
-                  </code>
-                  <code style="font-size: 9px; color: #E5E7EB; display: block; margin-bottom: 4px;">
-                    webVitalsLog.warn('Warning')
-                  </code>
-                  <code style="font-size: 9px; color: #E5E7EB; display: block;">
-                    webVitalsLog.error('Error')
-                  </code>
-                </div>
-              ` : ''}
-            </div>
-          `;
-        }
-
-        const typeColors = {
-          'error': '#EF4444',
-          'warn': '#F59E0B',
-          'info': '#60A5FA'
-        };
-
-        const typeIcons = {
-          'error': '❌',
-          'warn': '⚠️',
-          'info': 'ℹ️'
-        };
-
         return `
-          <div style="padding: 4px;">
+          <div style="padding: 8px; display: flex; flex-direction: column; gap: 12px;">
             <div style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 8px;
-              padding: 6px;
-              background: rgba(31, 41, 55, 0.3);
-              border-radius: 6px;
+              padding: 10px;
+              background: rgba(31, 41, 55, 0.4);
+              border-radius: 8px;
+              border: 1px solid rgba(255, 255, 255, 0.08);
+              display: grid;
+              grid-template-columns: 1fr;
+              gap: 8px;
             ">
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <span style="font-size: 11px; color: #9CA3AF;">
-                  ${consoleErrors.length} message${consoleErrors.length !== 1 ? 's' : ''}
-                </span>
-                <button
-                  onclick="window.clearConsoleErrors()"
-                  style="
-                    background: #4B5563;
-                    border: none;
-                    color: white;
-                    padding: 2px 8px;
-                    border-radius: 4px;
-                    font-size: 10px;
-                    cursor: pointer;
-                  "
-                >Clear</button>
-              </div>
-              <button
-                onclick="window.toggleConsoleMode()"
-                style="
-                  background: ${consoleMode ? '#10B981' : '#4B5563'};
+              <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.03em;">Quick Actions</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <button onclick="window.toggleConsoleDock()" style="
+                  background: ${consoleDockEnabled ? '#10B981' : '#4B5563'};
                   border: none;
                   color: white;
-                  padding: 4px 10px;
-                  border-radius: 4px;
-                  font-size: 10px;
-                  cursor: pointer;
-                "
-              >${consoleMode ? 'Mode: ON' : 'Mode: OFF'}</button>
-            </div>
-            <div style="max-height: 300px; overflow-y: auto;">
-              ${consoleErrors.slice(-50).reverse().map(log => `
-                <div style="
-                  margin-bottom: 6px;
-                  padding: 8px;
-                  background: rgba(31, 41, 55, 0.5);
+                  padding: 6px 10px;
                   border-radius: 6px;
-                  border-left: 3px solid ${typeColors[log.type] || '#6B7280'};
                   font-size: 11px;
-                ">
-                  <div style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-start;
-                    margin-bottom: 4px;
-                  ">
-                    <span style="color: ${typeColors[log.type] || '#6B7280'};">
-                      ${typeIcons[log.type] || '📝'} ${log.type.toUpperCase()}
-                    </span>
-                    <span style="color: #6B7280; font-size: 9px;">
-                      ${new Date(log.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <div style="
-                    color: #E5E7EB;
-                    word-wrap: break-word;
-                    font-family: 'SF Mono', Monaco, monospace;
-                    white-space: pre-wrap;
-                  ">${log.message}</div>
-                </div>
-              `).join('')}
+                  cursor: pointer;
+                ">${consoleDockEnabled ? 'Close Console Dock' : 'Open Console Dock'}</button>
+                <button onclick="window.toggleHighlightIssues()" style="
+                  background: ${highlightEnabled ? 'rgba(239, 68, 68, 0.15)' : '#1F2937'};
+                  border: 1px solid ${highlightEnabled ? 'rgba(239, 68, 68, 0.4)' : '#374151'};
+                  color: ${highlightEnabled ? '#FCA5A5' : '#E5E7EB'};
+                  padding: 6px 10px;
+                  border-radius: 6px;
+                  font-size: 11px;
+                  cursor: pointer;
+                ">${highlightEnabled ? 'Hide WCAG Highlights' : 'Show WCAG Highlights'}</button>
+                <button onclick="window.clearConsoleErrors()" style="
+                  background: #4B5563;
+                  border: none;
+                  color: white;
+                  padding: 6px 10px;
+                  border-radius: 6px;
+                  font-size: 11px;
+                  cursor: pointer;
+                ">Clear Messages</button>
+              </div>
+              <div style="font-size: 10px; color: #6B7280;">
+                Console output is captured automatically. Open the dock to view logs; it sits at the bottom of the page and can be resized by dragging the handle upward.
+              </div>
             </div>
           </div>
         `;
@@ -1307,14 +1646,10 @@ const defaultBudgets = {
         updateDebugOverlay();
       };
 
-      window.toggleConsoleMode = function() {
-        consoleMode = !consoleMode;
-        updateDebugOverlay();
-      };
-
       window.clearConsoleErrors = function() {
         consoleErrors.length = 0;
         updateDebugOverlay();
+        if (consoleDockEnabled) updateConsoleDock();
       };
 
       window.toggleAccessibilityIssue = function(type) {
@@ -1326,17 +1661,225 @@ const defaultBudgets = {
         updateDebugOverlay();
       };
 
+      window.copySEOReport = async function() {
+        const text = formatSEOReport();
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+          }
+        } catch (e) {
+          console.warn('[@casoon/astro-webvitals] Failed to copy SEO report', e);
+        }
+      };
+
+      window.toggleHighlightIssues = function() {
+        highlightEnabled = !highlightEnabled;
+        if (!highlightEnabled) {
+          clearAccessibilityHighlights();
+        }
+        if (checkAccessibility) {
+          checkWCAG();
+        }
+        updateDebugOverlay();
+      };
+
+      function clearAccessibilityHighlights() {
+        highlightedNodes.forEach(node => {
+          if (node && node.classList) {
+            node.classList.remove('wv-a11y-highlight');
+          }
+        });
+        highlightedNodes.clear();
+      }
+
+      // Console dock controls
+      window.toggleConsoleDock = function(force) {
+        const shouldEnable = typeof force === 'boolean' ? force : !consoleDockEnabled;
+        if (shouldEnable) {
+          createConsoleDock();
+        } else {
+          destroyConsoleDock();
+        }
+      };
+
+      function createConsoleDock() {
+        if (consoleDockEl) return;
+        consoleDockEnabled = true;
+
+        consoleDockEl = document.createElement('div');
+        consoleDockEl.id = 'astro-webvitals-console-dock';
+        consoleDockEl.style.cssText = `
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: ${consoleDockHeight}px;
+          min-height: 120px;
+          max-height: 75vh;
+          background: rgba(12, 17, 30, 0.98);
+          color: #E5E7EB;
+          font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+          z-index: 9999;
+          box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          flex-direction: column;
+          backdrop-filter: blur(6px);
+        `;
+
+        const resizeHandle = document.createElement('div');
+        resizeHandle.style.cssText = `
+          height: 10px;
+          cursor: ns-resize;
+          background: linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        `;
+        resizeHandle.title = 'Ziehen um die Höhe anzupassen';
+        resizeHandle.addEventListener('pointerdown', startDockResize);
+
+        const header = document.createElement('div');
+        header.style.cssText = `
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 6px 12px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          font-size: 12px;
+        `;
+        header.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; color: #9CA3AF;">
+            <span>🪵</span>
+            <span style="color: #E5E7EB; font-weight: 600;">Browser Console</span>
+            <span style="font-size: 11px;">${consoleErrors.length} Logs</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button
+              onclick="window.clearConsoleErrors()"
+              style="
+                background: #1F2937;
+                border: 1px solid #374151;
+                color: #E5E7EB;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                cursor: pointer;
+              "
+            >Clear</button>
+            <button
+              onclick="window.toggleConsoleDock(false)"
+              style="
+                background: #111827;
+                border: 1px solid #374151;
+                color: #9CA3AF;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                cursor: pointer;
+              "
+            >Close</button>
+          </div>
+        `;
+
+        consoleDockLogEl = document.createElement('div');
+        consoleDockLogEl.style.cssText = `
+          flex: 1;
+          overflow: auto;
+          padding: 8px 12px;
+          font-size: 11px;
+          line-height: 1.4;
+        `;
+
+        consoleDockEl.appendChild(resizeHandle);
+        consoleDockEl.appendChild(header);
+        consoleDockEl.appendChild(consoleDockLogEl);
+        document.body.appendChild(consoleDockEl);
+        updateConsoleDock();
+      }
+
+      function updateConsoleDock() {
+        if (!consoleDockEl || !consoleDockLogEl) return;
+
+        const typeColors = {
+          error: '#F87171',
+          warn: '#FBBF24',
+          info: '#60A5FA',
+          log: '#9CA3AF'
+        };
+
+        const counter = consoleDockEl.querySelector('span[style*="Logs"]');
+        if (counter) counter.innerHTML = `${consoleErrors.length} Logs`;
+
+        consoleDockLogEl.innerHTML = consoleErrors.slice(-150).map(log => `
+          <div style="
+            margin-bottom: 6px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            border-left: 3px solid ${typeColors[log.type] || '#6B7280'};
+          ">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 10px; color: #9CA3AF;">
+              <span style="color: ${typeColors[log.type] || '#9CA3AF'};">${(log.type || 'log').toUpperCase()}</span>
+              <span>${new Date(log.timestamp).toLocaleTimeString()}</span>
+            </div>
+            <pre style="margin: 0; color: #E5E7EB; white-space: pre-wrap; word-break: break-word; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">${log.message}</pre>
+          </div>
+        `).join('');
+
+        consoleDockLogEl.scrollTop = consoleDockLogEl.scrollHeight;
+      }
+
+      function startDockResize(event) {
+        event.preventDefault();
+        const startY = event.clientY;
+        const startHeight = consoleDockHeight;
+
+        function onMove(e) {
+          const delta = startY - e.clientY;
+          const minHeight = 120;
+          const maxHeight = Math.min(window.innerHeight * 0.8, 700);
+          consoleDockHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + delta));
+          if (consoleDockEl) {
+            consoleDockEl.style.height = `${consoleDockHeight}px`;
+          }
+        }
+
+        function onUp() {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        }
+
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      }
+
+      function destroyConsoleDock() {
+        if (consoleDockEl) {
+          consoleDockEl.remove();
+          consoleDockEl = null;
+        }
+        consoleDockEnabled = false;
+      }
+
       // WCAG Checker
       function checkWCAG() {
         if (!checkAccessibility) return;
 
         wcagIssues.length = 0;
+        clearAccessibilityHighlights();
 
         // Check for missing alt text
         document.querySelectorAll('img:not([alt])').forEach(img => {
           wcagIssues.push({
             type: 'missing-alt',
             element: img.src ? `<img src="${img.src.substring(0, 50)}...">` : '<img>',
+            elementRef: img,
             message: 'Image missing alt attribute',
             wcagLevel: '1.1.1 Level A'
           });
@@ -1348,6 +1891,7 @@ const defaultBudgets = {
             wcagIssues.push({
               type: 'missing-label',
               element: '<button>',
+              elementRef: button,
               message: 'Button has no accessible text',
               wcagLevel: '4.1.2 Level A'
             });
@@ -1364,6 +1908,7 @@ const defaultBudgets = {
             wcagIssues.push({
               type: 'missing-label',
               element: `<${input.tagName.toLowerCase()} type="${input.type || 'text'}">`,
+              elementRef: input,
               message: 'Form control missing label',
               wcagLevel: '1.3.1 Level A'
             });
@@ -1379,6 +1924,7 @@ const defaultBudgets = {
             wcagIssues.push({
               type: 'missing-heading',
               element: `<${heading.tagName.toLowerCase()}>`,
+              elementRef: heading,
               message: `Heading level skipped (${lastLevel} to ${level})`,
               wcagLevel: '1.3.1 Level A'
             });
@@ -1392,49 +1938,107 @@ const defaultBudgets = {
             wcagIssues.push({
               type: 'missing-label',
               element: `<a href="${link.href.substring(0, 30)}...">`,
+              elementRef: link,
               message: 'Link has no accessible text',
               wcagLevel: '2.4.4 Level A'
             });
           }
         });
 
+        if (highlightEnabled) {
+          wcagIssues.forEach(issue => {
+            if (issue.elementRef instanceof Element) {
+              issue.elementRef.classList.add('wv-a11y-highlight');
+              highlightedNodes.add(issue.elementRef);
+            }
+          });
+        }
+
         updateDebugOverlay();
       }
 
       // Core Web Vitals measurements
       function measureLCP() {
-        try {
-          let lcpTimeout;
-          const observer = new PerformanceObserver((list) => {
-            const entries = list.getEntries();
-            const lastEntry = entries[entries.length - 1];
-            const lcpValue = Math.round(lastEntry.renderTime || lastEntry.loadTime);
+        if (!PerformanceObserver || !PerformanceObserver.supportedEntryTypes || !PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint')) {
+          lcpUnsupported = true;
+          // Fallback: try to use FCP as an approximation if LCP is not exposed
+          const fcpEntry = performance.getEntriesByType('paint').find(e => e.name === 'first-contentful-paint');
+          if (fcpEntry) {
+            vitals.LCP = Math.round(fcpEntry.startTime);
+            lcpUsedFallback = true;
+            recordMetric('LCP', vitals.LCP);
+            updateDebugOverlay();
+          }
+          return;
+        }
 
-            // Only update if we got a valid value
-            if (lcpValue && lcpValue > 0) {
+        try {
+          const updateFromEntries = (entries = []) => {
+            if (!entries.length) return;
+            const lastEntry = entries[entries.length - 1];
+            const lcpValue = Math.round(lastEntry.renderTime || lastEntry.loadTime || lastEntry.startTime || 0);
+            if (lcpValue > 0 && (!vitals.LCP || lcpValue !== vitals.LCP)) {
               vitals.LCP = lcpValue;
               recordMetric('LCP', vitals.LCP);
               updateDebugOverlay();
-
-              if (debug) console.log('[@casoon/astro-webvitals] LCP updated:', vitals.LCP, 'ms');
             }
+          };
+
+          let lcpTimeout;
+          const observer = new PerformanceObserver((list) => {
+            updateFromEntries(list.getEntries());
 
             // Reset timeout on each new LCP
             if (lcpTimeout) clearTimeout(lcpTimeout);
             lcpTimeout = setTimeout(() => {
               // Finalize LCP after 2 seconds of no changes
               observer.disconnect();
-              if (debug) console.log('[@casoon/astro-webvitals] LCP finalized at:', vitals.LCP, 'ms');
             }, 2000);
           });
 
           observer.observe({ type: 'largest-contentful-paint', buffered: true });
 
+          // Populate immediately with buffered entries if present
+          const initialEntries = performance.getEntriesByType('largest-contentful-paint');
+          updateFromEntries(initialEntries);
+
+          // Fallback: attempt one more time shortly after load if still missing
+          if (!vitals.LCP) {
+            const fallback = () => {
+              const entries = performance.getEntriesByType('largest-contentful-paint');
+              updateFromEntries(entries);
+            };
+            window.addEventListener('load', () => setTimeout(fallback, 500));
+            setTimeout(fallback, 2000);
+            setTimeout(fallback, 4000);
+            setTimeout(() => {
+              if (!vitals.LCP) {
+                const fcpEntry = performance.getEntriesByType('paint').find(e => e.name === 'first-contentful-paint');
+                if (fcpEntry) {
+                  vitals.LCP = Math.round(fcpEntry.startTime);
+                  lcpUsedFallback = true;
+                  recordMetric('LCP', vitals.LCP);
+                  updateDebugOverlay();
+                }
+              }
+            }, 6000);
+            setTimeout(() => {
+              if (!vitals.LCP) {
+                const estimate = Math.round(performance.now());
+                if (estimate > 0) {
+                  vitals.LCP = estimate;
+                  lcpEstimated = true;
+                  recordMetric('LCP', vitals.LCP);
+                  updateDebugOverlay();
+                }
+              }
+            }, 8000);
+          }
+
           // Also disconnect on page hide
           document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
               observer.disconnect();
-              if (debug) console.log('[@casoon/astro-webvitals] LCP finalized on page hide:', vitals.LCP, 'ms');
             }
           });
         } catch (e) {
@@ -1454,19 +2058,14 @@ const defaultBudgets = {
               vitals.FID = fidValue;
               recordMetric('FID', vitals.FID);
               updateDebugOverlay();
-              if (debug) console.log('[@casoon/astro-webvitals] FID measured:', vitals.FID, 'ms');
               observer.disconnect();
             }
           });
           observer.observe({ type: 'first-input', buffered: true });
 
-          if (debug) console.log('[@casoon/astro-webvitals] FID observer initialized - waiting for first interaction');
-
           // Simulate a non-intrusive interaction after 3 seconds if no real interaction happened
           setTimeout(() => {
             if (!fidMeasured && !vitals.FID) {
-              if (debug) console.log('[@casoon/astro-webvitals] No user interaction detected, creating hidden element for FID...');
-
               // Create an invisible, non-interactive element just for FID measurement
               const hiddenButton = document.createElement('button');
               hiddenButton.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
@@ -1493,7 +2092,6 @@ const defaultBudgets = {
                   recordMetric('FID', vitals.FID);
                   updateDebugOverlay();
                   observer.disconnect();
-                  if (debug) console.log('[@casoon/astro-webvitals] FID set to 0ms (no interaction delay detected)');
                 }
               }, 100);
             }
@@ -1635,19 +2233,48 @@ const defaultBudgets = {
       function measureINP() {
         try {
           let maxDelay = 0;
+          const interactionDelays = new Map();
+          let inpFallbackTimer;
+
           const observer = new PerformanceObserver((list) => {
             const entries = list.getEntries();
             entries.forEach((entry) => {
-              const delay = entry.processingStart - entry.startTime;
-              if (delay > maxDelay) {
-                maxDelay = delay;
+              const delay = Math.max(
+                entry.duration || 0,
+                entry.processingStart ? entry.processingStart - entry.startTime : 0
+              );
+
+              const id = entry.interactionId || `${entry.name}-${entry.startTime}`;
+              const prev = interactionDelays.get(id) || 0;
+              const best = Math.max(prev, delay);
+              interactionDelays.set(id, best);
+
+              if (best > maxDelay) {
+                maxDelay = best;
                 vitals.INP = Math.round(maxDelay);
                 recordMetric('INP', vitals.INP);
                 updateDebugOverlay();
               }
             });
+            if (inpFallbackTimer) clearTimeout(inpFallbackTimer);
+            inpFallbackTimer = setTimeout(() => {
+              if (!vitals.INP && typeof vitals.FID === 'number') {
+                vitals.INP = vitals.FID;
+                recordMetric('INP', vitals.INP);
+                updateDebugOverlay();
+              }
+            }, 3000);
           });
-          observer.observe({ type: 'event', buffered: true });
+          observer.observe({ type: 'event', buffered: true, durationThreshold: 0 });
+
+          // Last-resort fallback to FID if available after a few seconds
+          setTimeout(() => {
+            if (!vitals.INP && typeof vitals.FID === 'number') {
+              vitals.INP = vitals.FID;
+              recordMetric('INP', vitals.INP);
+              updateDebugOverlay();
+            }
+          }, 8000);
         } catch (e) {
           if (debug) console.warn('[@casoon/astro-webvitals] INP not supported');
         }
@@ -1708,9 +2335,6 @@ const defaultBudgets = {
         });
       }
 
-      // Initialize all measurements
-      if (debug) console.log('[@casoon/astro-webvitals] Initializing Web Vitals monitoring...');
-
       // Navigation timing metrics (available immediately)
       measureDNS();
       measureTCP();
@@ -1732,37 +2356,38 @@ const defaultBudgets = {
       } else {
         window.addEventListener('load', () => {
           measureLOAD();
-          if (debug) console.log('[@casoon/astro-webvitals] Page load complete');
         });
       }
 
       // Check accessibility after DOM is ready
       if (checkAccessibility) {
         if (document.readyState === 'complete') {
-          setTimeout(checkWCAG, 1000);
+          setTimeout(() => preserveContentScroll(checkWCAG), 1000);
         } else {
-          window.addEventListener('load', () => setTimeout(checkWCAG, 1000));
+          window.addEventListener('load', () => setTimeout(() => preserveContentScroll(checkWCAG), 1000));
         }
+      }
+
+       // SEO analysis
+      const runSEO = () => refreshSEO();
+      if (document.readyState === 'complete') {
+        setTimeout(runSEO, 600);
+      } else {
+        window.addEventListener('load', () => setTimeout(runSEO, 600));
       }
 
       // Flush on page unload
       window.addEventListener('beforeunload', flushMetrics);
 
-      if (debug) {
-        console.log('[@casoon/astro-webvitals] Debug mode enabled - metrics will be logged to console');
-        setTimeout(() => {
-          updateDebugOverlay();
-          console.log('[@casoon/astro-webvitals] Current vitals:', vitals);
-        }, 100);
-
-        // Update periodically
-        setInterval(() => {
-          if (checkAccessibility && isExpanded && activeTab === 'accessibility') {
-            checkWCAG();
-          }
-          updateDebugOverlay();
-        }, 5000);
-      }
+      // Periodic refresh without breaking scroll: only update lightweight data
+      setInterval(() => {
+        if (checkAccessibility && isExpanded && activeTab === 'accessibility') {
+          preserveContentScroll(checkWCAG);
+        }
+        if (activeTab === 'seo') {
+          refreshSEO();
+        }
+      }, 5000);
     })();
   </script>
 )}

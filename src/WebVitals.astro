@@ -9,149 +9,151 @@
  */
 
 export interface Props {
-  /**
-   * Enable debug overlay (shows metrics and accessibility issues)
-   * @default false
-   */
-  debug?: boolean;
+	/**
+	 * Enable debug overlay (shows metrics and accessibility issues)
+	 * @default false
+	 */
+	debug?: boolean;
 
-  /**
-   * Dock a resizable console log viewer at the bottom of the page
-   * @default false
-   */
-  consoleDock?: boolean;
+	/**
+	 * Dock a resizable console log viewer at the bottom of the page
+	 * @default false
+	 */
+	consoleDock?: boolean;
 
-  /**
-   * Optional endpoint to send metrics to
-   * Metrics will be sent as POST requests with JSON payload
-   */
-  endpoint?: string;
+	/**
+	 * Optional endpoint to send metrics to
+	 * Metrics will be sent as POST requests with JSON payload
+	 */
+	endpoint?: string;
 
-  /**
-   * Position of debug overlay
-   * @default 'bottom-right'
-   */
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+	/**
+	 * Position of debug overlay
+	 * @default 'bottom-right'
+	 */
+	position?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
 
-  /**
-   * Track metrics even in development mode
-   * @default false
-   */
-  trackInDev?: boolean;
+	/**
+	 * Track metrics even in development mode
+	 * @default false
+	 */
+	trackInDev?: boolean;
 
-  /**
-   * Sampling rate (0-1) - only track percentage of users
-   * @default 1 (100% of users)
-   */
-  sampleRate?: number;
+	/**
+	 * Sampling rate (0-1) - only track percentage of users
+	 * @default 1 (100% of users)
+	 */
+	sampleRate?: number;
 
-  /**
-   * Batch metrics before sending (reduces requests)
-   * @default true
-   */
-  batchReporting?: boolean;
+	/**
+	 * Batch metrics before sending (reduces requests)
+	 * @default true
+	 */
+	batchReporting?: boolean;
 
-  /**
-   * Batch interval in milliseconds
-   * @default 5000 (5 seconds)
-   */
-  batchInterval?: number;
+	/**
+	 * Batch interval in milliseconds
+	 * @default 5000 (5 seconds)
+	 */
+	batchInterval?: number;
 
-  /**
-   * Enable WCAG accessibility checking
-   * @default true when debug is enabled
-   */
-  checkAccessibility?: boolean;
+	/**
+	 * Enable WCAG accessibility checking
+	 * @default true when debug is enabled
+	 */
+	checkAccessibility?: boolean;
 
-  /**
-   * Highlight elements on the page that have WCAG issues
-   * @default false
-   */
-  highlightAccessibility?: boolean;
+	/**
+	 * Highlight elements on the page that have WCAG issues
+	 * @default false
+	 */
+	highlightAccessibility?: boolean;
 
-  /**
-   * Enable extended metrics (Long Tasks, Memory, Network)
-   * @default false
-   */
-  extendedMetrics?: boolean;
+	/**
+	 * Enable extended metrics (Long Tasks, Memory, Network)
+	 * @default false
+	 */
+	extendedMetrics?: boolean;
 
-  /**
-   * Enable smart detection (rage clicks, dead clicks)
-   * @default false
-   */
-  smartDetection?: boolean;
+	/**
+	 * Enable smart detection (rage clicks, dead clicks)
+	 * @default false
+	 */
+	smartDetection?: boolean;
 
-  /**
-   * Performance budget thresholds
-   */
-  performanceBudget?: {
-    LCP?: number;
-    FID?: number;
-    CLS?: number;
-    FCP?: number;
-    TTFB?: number;
-    INP?: number;
-  };
+	/**
+	 * Performance budget thresholds
+	 */
+	performanceBudget?: {
+		LCP?: number;
+		FID?: number;
+		CLS?: number;
+		FCP?: number;
+		TTFB?: number;
+		INP?: number;
+	};
 
-  /**
-   * Custom headers for endpoint requests
-   */
-  headers?: Record<string, string>;
+	/**
+	 * Custom headers for endpoint requests
+	 */
+	headers?: Record<string, string>;
 
-  /**
-   * Session ID for tracking
-   */
-  sessionId?: string;
+	/**
+	 * Session ID for tracking
+	 */
+	sessionId?: string;
 
-  /**
-   * User ID for tracking
-   */
-  userId?: string;
+	/**
+	 * User ID for tracking
+	 */
+	userId?: string;
 }
 
 const {
-  debug = false,
-  consoleDock = false,
-  endpoint,
-  position = 'bottom-right',
-  trackInDev = false,
-  sampleRate = 1,
-  batchReporting = true,
-  batchInterval = 5000,
-  checkAccessibility = debug,
-  highlightAccessibility = false,
-  extendedMetrics = false,
-  smartDetection = false,
-  performanceBudget,
-  headers = {},
-  sessionId,
-  userId
+	debug = false,
+	consoleDock = false,
+	endpoint,
+	position = "bottom-right",
+	trackInDev = false,
+	sampleRate = 1,
+	batchReporting = true,
+	batchInterval = 5000,
+	checkAccessibility = debug,
+	highlightAccessibility = false,
+	extendedMetrics = false,
+	smartDetection = false,
+	performanceBudget,
+	headers = {},
+	sessionId,
+	userId,
 } = Astro.props;
 
 const isDev = import.meta.env.DEV;
-const shouldTrack = (!isDev || trackInDev || debug || consoleDock || highlightAccessibility) && Math.random() < sampleRate;
+const shouldTrack =
+	(!isDev || trackInDev || debug || consoleDock || highlightAccessibility) &&
+	Math.random() < sampleRate;
 
 // Detect if mobile
-const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
 
 // Position styles will be determined dynamically based on viewport
 const desktopPositions = {
-  'top-right': 'top: 16px; right: 16px;',
-  'top-left': 'top: 16px; left: 16px;',
-  'bottom-right': 'bottom: 16px; right: 16px;',
-  'bottom-left': 'bottom: 16px; left: 16px;'
+	"top-right": "top: 16px; right: 16px;",
+	"top-left": "top: 16px; left: 16px;",
+	"bottom-right": "bottom: 16px; right: 16px;",
+	"bottom-left": "bottom: 16px; left: 16px;",
 };
 
-const mobilePosition = 'bottom: 0; left: 0; right: 0;'; // Full width at bottom for mobile
+const mobilePosition = "bottom: 0; left: 0; right: 0;"; // Full width at bottom for mobile
 
 const defaultBudgets = {
-  LCP: 2500,
-  FID: 100,
-  CLS: 0.1,
-  FCP: 1800,
-  TTFB: 800,
-  INP: 200,
-  ...performanceBudget
+	LCP: 2500,
+	FID: 100,
+	CLS: 0.1,
+	FCP: 1800,
+	TTFB: 800,
+	INP: 200,
+	...performanceBudget,
 };
 ---
 
@@ -178,6 +180,27 @@ const defaultBudgets = {
     // @casoon/astro-webvitals - Unified Component
     (function() {
       const vitals = {};
+
+      // Browser/Engine detection
+      const browserInfo = (() => {
+        const ua = navigator.userAgent;
+        const isChromium = !!window.chrome;
+        const isFirefox = ua.includes("Firefox");
+        const isSafari = ua.includes("Safari") && !ua.includes("Chrome");
+        const isEdge = ua.includes("Edg/");
+        let engine = "unknown";
+        if (isChromium || isEdge) engine = "chromium";
+        else if (isFirefox) engine = "gecko";
+        else if (isSafari) engine = "webkit";
+        const supported = {
+          LCP: PerformanceObserver.supportedEntryTypes?.includes("largest-contentful-paint") || false,
+          FID: PerformanceObserver.supportedEntryTypes?.includes("first-input") || false,
+          CLS: PerformanceObserver.supportedEntryTypes?.includes("layout-shift") || false,
+          FCP: PerformanceObserver.supportedEntryTypes?.includes("paint") || false,
+          INP: PerformanceObserver.supportedEntryTypes?.includes("event") || false
+        };
+        return { engine, isChromium, isFirefox, isSafari, supported };
+      })();
       const metricsBuffer = [];
       const wcagIssues = [];
       let debugContainer;
@@ -194,11 +217,82 @@ const defaultBudgets = {
       let consoleDockLogEl;
       const highlightedNodes = new Set();
       let highlightEnabled = !!highlightAccessibility;
-      const lcpHiddenOnStart = document.visibilityState === 'hidden';
-      let lcpUnsupported = false;
-      let lcpUsedFallback = false;
-      let lcpEstimated = false;
       let seoInfo = null;
+
+      // LCP status flags for UI display
+      let lcpUnsupported = false;
+
+      // ============================================================
+      // Web Vitals Helper Functions
+      // ============================================================
+
+      // Get activation start time for prerendered pages
+      function getActivationStart() {
+        const navEntry = performance.getEntriesByType('navigation')[0];
+        return (navEntry && navEntry.activationStart) || 0;
+      }
+
+      // Visibility tracking - important for accurate metrics
+      const visibilityWatcher = (() => {
+        let firstHiddenTime = document.visibilityState === 'hidden' ? 0 : Infinity;
+
+        const onVisibilityChange = (event) => {
+          if (document.visibilityState === 'hidden' && firstHiddenTime === Infinity) {
+            firstHiddenTime = event.type === 'visibilitychange' ? event.timeStamp : 0;
+          }
+        };
+
+        document.addEventListener('visibilitychange', onVisibilityChange, true);
+        // Handle page being hidden on unload
+        document.addEventListener('prerenderingchange', onVisibilityChange, true);
+
+        return {
+          get firstHiddenTime() { return firstHiddenTime; }
+        };
+      })();
+
+      // BFCache (Back-Forward Cache) restoration handler
+      const onBFCacheRestore = (callback) => {
+        window.addEventListener('pageshow', (event) => {
+          if (event.persisted) {
+            callback(event);
+          }
+        }, true);
+      };
+
+      // Run callback once
+      const runOnce = (callback) => {
+        let called = false;
+        return (...args) => {
+          if (!called) {
+            called = true;
+            callback(...args);
+          }
+        };
+      };
+
+      // Schedule during idle or when hidden
+      const whenIdleOrHidden = (callback) => {
+        const onHidden = () => {
+          if (document.visibilityState === 'hidden') {
+            callback();
+            document.removeEventListener('visibilitychange', onHidden, true);
+          }
+        };
+
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => callback(), { timeout: 500 });
+        } else {
+          setTimeout(callback, 100);
+        }
+
+        document.addEventListener('visibilitychange', onHidden, true);
+      };
+
+      // Double requestAnimationFrame for accurate timing after BFCache restore
+      const doubleRAF = (callback) => {
+        requestAnimationFrame(() => requestAnimationFrame(callback));
+      };
 
       // Track which accessibility issues are expanded
       let expandedIssues = new Set();
@@ -351,7 +445,13 @@ const defaultBudgets = {
         const scoreEmoji = score >= 80 ? '✅' : score >= 60 ? '⚠️' : '❌';
 
         // Mobile-specific styles
-        const currentPositionStyle = isMobile ? mobilePosition : desktopPositions[position];
+        // Adjust position when console dock is open
+        let adjustedPosition = desktopPositions[position];
+        if (consoleDockEnabled && (position === "bottom-right" || position === "bottom-left")) {
+          const bottomOffset = consoleDockHeight + 20;
+          adjustedPosition = position === "bottom-right" ? "bottom: " + bottomOffset + "px; right: 16px;" : "bottom: " + bottomOffset + "px; left: 16px;";
+        }
+        const currentPositionStyle = isMobile ? mobilePosition : adjustedPosition;
         const containerStyles = isMobile ? `
           position: fixed;
           ${mobilePosition}
@@ -372,7 +472,7 @@ const defaultBudgets = {
           overflow: hidden;
         ` : `
           position: fixed;
-          ${desktopPositions[position]}
+          ${adjustedPosition}
           background: rgba(17, 24, 39, 0.95);
           color: white;
           border-radius: 12px;
@@ -712,10 +812,33 @@ const defaultBudgets = {
             <div style="margin-left: 16px;">
               <div style="font-size: 12px; color: #9CA3AF; margin-bottom: 4px;">Performance Score</div>
               <div style="font-size: 11px; color: #6B7280;">${measuredCount}/6 metrics measured</div>
-              ${measuredCount < 6 ? '<div style="font-size: 10px; color: #60A5FA; margin-top: 4px;">Interact with the page for more metrics</div>' : ''}
+              <div style="font-size: 10px; color: #6B7280; margin-top: 2px;">${browserInfo.engine.charAt(0).toUpperCase() + browserInfo.engine.slice(1)} engine</div>
+              ${measuredCount < 6 ? `<button onclick="window.triggerWebVitalsInteraction()" style="margin-top: 6px; padding: 4px 10px; background: #3B82F6; color: white; border: none; border-radius: 4px; font-size: 10px; cursor: pointer;">Trigger FID/INP</button>` : ''}
             </div>
           </div>
         `;
+
+        // Browser compatibility warning
+        const unsupportedMetrics = Object.entries(browserInfo.supported).filter(([k, v]) => !v).map(([k]) => k);
+        if (unsupportedMetrics.length > 0) {
+          html += `
+            <div style="
+              margin-bottom: 12px;
+              padding: 10px 12px;
+              background: rgba(251, 191, 36, 0.08);
+              border: 1px solid rgba(251, 191, 36, 0.2);
+              border-radius: 10px;
+              color: #E5E7EB;
+              font-size: 11px;
+            ">
+              <div style="font-weight: 600; color: #FBBF24; margin-bottom: 6px;">Browser Limitation (${browserInfo.engine})</div>
+              <div style="color: #9CA3AF; line-height: 1.5;">
+                Not supported: ${unsupportedMetrics.join(", ")}<br>
+                Use Chrome, Edge or Brave for full metrics.
+              </div>
+            </div>
+          `;
+        }
 
         if (!hasLCP) {
           html += `
@@ -730,12 +853,10 @@ const defaultBudgets = {
             ">
               <div style="font-weight: 600; color: #93C5FD; margin-bottom: 6px;">LCP not observed yet</div>
               <div style="color: #9CA3AF; line-height: 1.5;">
-                ${lcpUnsupported ? '• Browser does not expose LCP entries (unsupported)<br>' : ''}
-                ${lcpHiddenOnStart ? '• Page started hidden; reload with the tab visible<br>' : ''}
+                ${lcpUnsupported ? '• Browser does not support LCP measurement<br>' : ''}
+                • LCP is measured on first user interaction or page hide<br>
                 • Ensure a visible hero (image or large heading) is on the page<br>
-                • Use same-origin hero assets or send <code style="color:#E5E7EB;">Timing-Allow-Origin</code> for images<br>
-                • Avoid file:// loads; test over http/https
-                ${lcpEstimated ? '<br>• Using estimated value until a real LCP is seen' : ''}
+                • Use same-origin assets or set <code style="color:#E5E7EB;">Timing-Allow-Origin</code> header
               </div>
             </div>
           `;
@@ -902,13 +1023,6 @@ const defaultBudgets = {
         const formatted = key === 'CLS' ? value.toFixed(3) : `${value}ms`;
         const rating = getMetricRating(key, value);
         const exceededBudget = budget && value > budget;
-        const lcpTag = key === 'LCP'
-          ? lcpUsedFallback
-            ? '<span style="color: #F59E0B; font-size: 9px; margin-left: 4px;">(FCP fallback)</span>'
-            : lcpEstimated
-              ? '<span style="color: #F59E0B; font-size: 9px; margin-left: 4px;">(estimated)</span>'
-              : ''
-          : '';
 
         return `
           <div style="
@@ -924,7 +1038,6 @@ const defaultBudgets = {
                   <span>${rating.status}</span>
                   <span style="font-weight: 600; color: #E5E7EB;">${key}</span>
                   ${exceededBudget ? '<span style="color: #EF4444; font-size: 9px; margin-left: 4px;">over budget</span>' : ''}
-                  ${lcpTag}
                 </div>
                 <div style="font-size: 9px; color: #6B7280; margin-top: 2px;">${metricInfo.hint}</div>
               </div>
@@ -1493,7 +1606,7 @@ const defaultBudgets = {
             ">
               <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.03em;">Quick Actions</div>
               <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                <button onclick="window.toggleConsoleDock()" style="
+                <button onclick="event.stopPropagation(); window.toggleConsoleDock()" style="
                   background: ${consoleDockEnabled ? '#10B981' : '#4B5563'};
                   border: none;
                   color: white;
@@ -1641,6 +1754,18 @@ const defaultBudgets = {
         updateDebugOverlay();
       };
 
+
+      window.triggerWebVitalsInteraction = function() {
+        // Trigger a real click event to measure FID/INP
+        const btn = document.createElement("button");
+        btn.style.cssText = "position:fixed;top:-100px;left:-100px;opacity:0;pointer-events:none;";
+        document.body.appendChild(btn);
+        btn.click();
+        setTimeout(() => btn.remove(), 100);
+        // Update overlay after metrics are collected
+        setTimeout(() => updateDebugOverlay(), 200);
+      };
+
       window.setWebVitalsTab = function(tab) {
         activeTab = tab;
         updateDebugOverlay();
@@ -1651,6 +1776,26 @@ const defaultBudgets = {
         updateDebugOverlay();
         if (consoleDockEnabled) updateConsoleDock();
       };
+
+      window.copyConsoleLine = function(index) {
+        const log = consoleErrors[index];
+        if (log) {
+          const text = "[" + log.type.toUpperCase() + "] " + new Date(log.timestamp).toLocaleTimeString() + " - " + log.message;
+          navigator.clipboard.writeText(text).then(() => {
+            console.log("Copied to clipboard");
+          });
+        }
+      };
+
+      window.copyAllConsoleLogs = function() {
+        const text = consoleErrors.map(log => 
+          "[" + log.type.toUpperCase() + "] " + new Date(log.timestamp).toLocaleTimeString() + " - " + log.message
+        ).join("\n");
+        navigator.clipboard.writeText(text).then(() => {
+          console.log("All logs copied to clipboard");
+        });
+      };
+
 
       window.toggleAccessibilityIssue = function(type) {
         if (expandedIssues.has(type)) {
@@ -1701,11 +1846,14 @@ const defaultBudgets = {
 
       // Console dock controls
       window.toggleConsoleDock = function(force) {
+        console.log("[WV] toggleConsoleDock called, current:", consoleDockEnabled, "force:", force);
         const shouldEnable = typeof force === 'boolean' ? force : !consoleDockEnabled;
         if (shouldEnable) {
           createConsoleDock();
+          updateDebugOverlay();
         } else {
           destroyConsoleDock();
+          updateDebugOverlay();
         }
       };
 
@@ -1773,7 +1921,19 @@ const defaultBudgets = {
               "
             >Clear</button>
             <button
-              onclick="window.toggleConsoleDock(false)"
+              onclick="window.copyAllConsoleLogs()"
+              style="
+                background: #1F2937;
+                border: 1px solid #374151;
+                color: #E5E7EB;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                cursor: pointer;
+              "
+            >Copy All</button>
+            <button
+              onclick="event.stopPropagation(); window.toggleConsoleDock(false)"
               style="
                 background: #111827;
                 border: 1px solid #374151;
@@ -1816,7 +1976,7 @@ const defaultBudgets = {
         const counter = consoleDockEl.querySelector('span[style*="Logs"]');
         if (counter) counter.innerHTML = `${consoleErrors.length} Logs`;
 
-        consoleDockLogEl.innerHTML = consoleErrors.slice(-150).map(log => `
+        consoleDockLogEl.innerHTML = consoleErrors.slice(-150).map((log, index) => `
           <div style="
             margin-bottom: 6px;
             padding: 8px;
@@ -1827,6 +1987,7 @@ const defaultBudgets = {
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 10px; color: #9CA3AF;">
               <span style="color: ${typeColors[log.type] || '#9CA3AF'};">${(log.type || 'log').toUpperCase()}</span>
               <span>${new Date(log.timestamp).toLocaleTimeString()}</span>
+              <button onclick="window.copyConsoleLine(${index})" style="background: transparent; border: 1px solid #4B5563; color: #9CA3AF; padding: 2px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;" title="Copy this line">Copy</button>
             </div>
             <pre style="margin: 0; color: #E5E7EB; white-space: pre-wrap; word-break: break-word; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">${log.message}</pre>
           </div>
@@ -1957,163 +2118,165 @@ const defaultBudgets = {
         updateDebugOverlay();
       }
 
-      // Core Web Vitals measurements
+      // ============================================================
+      // Core Web Vitals Measurements
+      // ============================================================
+
+      // LCP - Largest Contentful Paint
+      // Loading performance: time until largest visible element renders
       function measureLCP() {
-        if (!PerformanceObserver || !PerformanceObserver.supportedEntryTypes || !PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint')) {
+        if (!PerformanceObserver || !PerformanceObserver.supportedEntryTypes?.includes('largest-contentful-paint')) {
           lcpUnsupported = true;
-          // Fallback: try to use FCP as an approximation if LCP is not exposed
-          const fcpEntry = performance.getEntriesByType('paint').find(e => e.name === 'first-contentful-paint');
-          if (fcpEntry) {
-            vitals.LCP = Math.round(fcpEntry.startTime);
-            lcpUsedFallback = true;
-            recordMetric('LCP', vitals.LCP);
-            updateDebugOverlay();
-          }
           return;
         }
 
         try {
-          const updateFromEntries = (entries = []) => {
-            if (!entries.length) return;
-            const lastEntry = entries[entries.length - 1];
-            const lcpValue = Math.round(lastEntry.renderTime || lastEntry.loadTime || lastEntry.startTime || 0);
-            if (lcpValue > 0 && (!vitals.LCP || lcpValue !== vitals.LCP)) {
-              vitals.LCP = lcpValue;
+          let lcpValue = 0;
+          let lcpEntries = [];
+          let observer;
+
+          const reportLCP = () => {
+            if (lcpValue > 0) {
+              vitals.LCP = lcpValue; console.log("[WV] LCP:", vitals.LCP);
               recordMetric('LCP', vitals.LCP);
               updateDebugOverlay();
             }
           };
 
-          let lcpTimeout;
-          const observer = new PerformanceObserver((list) => {
-            updateFromEntries(list.getEntries());
+          const handleEntries = (entries) => {
+            for (const entry of entries) {
+              // Only report if the page wasn't hidden before this LCP
+              if (entry.startTime < visibilityWatcher.firstHiddenTime) {
+                // Subtract activationStart for prerendered pages
+                const value = Math.max(entry.startTime - getActivationStart(), 0);
+                if (value > 0) {
+                  lcpValue = Math.round(value);
+                  lcpEntries.push(entry);
+                  // Live update in debug overlay (final report happens in stopListening)
+                  vitals.LCP = lcpValue; console.log("[WV] LCP:", vitals.LCP);
+                  updateDebugOverlay();
+                }
+              }
+            }
+          };
 
-            // Reset timeout on each new LCP
-            if (lcpTimeout) clearTimeout(lcpTimeout);
-            lcpTimeout = setTimeout(() => {
-              // Finalize LCP after 2 seconds of no changes
-              observer.disconnect();
-            }, 2000);
+          // Stop observing on user interaction (LCP stops after first input)
+          const stopListening = runOnce(() => {
+            whenIdleOrHidden(() => {
+              if (observer) {
+                handleEntries(observer.takeRecords());
+                observer.disconnect();
+              }
+              reportLCP();
+            });
+          });
+
+          // Stop on keydown, click (pointerdown), or visibility change
+          ['keydown', 'click'].forEach(type => {
+            addEventListener(type, () => stopListening(), { capture: true, once: true });
+          });
+
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+              stopListening();
+            }
+          }, { capture: true });
+
+          observer = new PerformanceObserver((list) => {
+            handleEntries(list.getEntries());
           });
 
           observer.observe({ type: 'largest-contentful-paint', buffered: true });
 
-          // Populate immediately with buffered entries if present
-          const initialEntries = performance.getEntriesByType('largest-contentful-paint');
-          updateFromEntries(initialEntries);
-
-          // Fallback: attempt one more time shortly after load if still missing
-          if (!vitals.LCP) {
-            const fallback = () => {
-              const entries = performance.getEntriesByType('largest-contentful-paint');
-              updateFromEntries(entries);
-            };
-            window.addEventListener('load', () => setTimeout(fallback, 500));
-            setTimeout(fallback, 2000);
-            setTimeout(fallback, 4000);
-            setTimeout(() => {
-              if (!vitals.LCP) {
-                const fcpEntry = performance.getEntriesByType('paint').find(e => e.name === 'first-contentful-paint');
-                if (fcpEntry) {
-                  vitals.LCP = Math.round(fcpEntry.startTime);
-                  lcpUsedFallback = true;
-                  recordMetric('LCP', vitals.LCP);
-                  updateDebugOverlay();
-                }
-              }
-            }, 6000);
-            setTimeout(() => {
-              if (!vitals.LCP) {
-                const estimate = Math.round(performance.now());
-                if (estimate > 0) {
-                  vitals.LCP = estimate;
-                  lcpEstimated = true;
-                  recordMetric('LCP', vitals.LCP);
-                  updateDebugOverlay();
-                }
-              }
-            }, 8000);
-          }
-
-          // Also disconnect on page hide
-          document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-              observer.disconnect();
-            }
+          // Handle BFCache restoration
+          onBFCacheRestore((event) => {
+            lcpValue = 0;
+            lcpEntries = [];
+            doubleRAF(() => {
+              lcpValue = Math.round(performance.now() - event.timeStamp);
+              reportLCP();
+            });
           });
+
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] LCP not supported:', e);
+          if (debug) console.warn('[@casoon/astro-webvitals] LCP error:', e);
         }
       }
 
-      function measureFID() {
+      // FID - First Input Delay
+      // Input responsiveness: delay between first interaction and browser response
+      // Deprecated in favor of INP, but still tracked for compatibility
+      function measureFID() { console.log("[WV] measureFID called");
         try {
-          let fidMeasured = false;
+          let observer;
 
-          const observer = new PerformanceObserver((list) => {
-            const firstEntry = list.getEntries()[0];
-            if (firstEntry && !fidMeasured) {
-              fidMeasured = true;
-              const fidValue = Math.round(firstEntry.processingStart - firstEntry.startTime);
-              vitals.FID = fidValue;
-              recordMetric('FID', vitals.FID);
-              updateDebugOverlay();
-              observer.disconnect();
+          const handleEntries = (entries) => {
+            const firstEntry = entries[0];
+            if (firstEntry) {
+              // Only report if the page wasn't hidden before this input
+              if (firstEntry.startTime < visibilityWatcher.firstHiddenTime) {
+                console.log("[WV] FID entry received:", firstEntry); const fidValue = Math.round(firstEntry.processingStart - firstEntry.startTime);
+                vitals.FID = fidValue;
+                recordMetric('FID', vitals.FID);
+                updateDebugOverlay();
+              }
+              if (observer) observer.disconnect();
             }
+          };
+
+          observer = new PerformanceObserver((list) => {
+            handleEntries(list.getEntries());
           });
-          observer.observe({ type: 'first-input', buffered: true });
 
-          // Simulate a non-intrusive interaction after 3 seconds if no real interaction happened
-          setTimeout(() => {
-            if (!fidMeasured && !vitals.FID) {
-              // Create an invisible, non-interactive element just for FID measurement
-              const hiddenButton = document.createElement('button');
-              hiddenButton.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
-              hiddenButton.setAttribute('aria-hidden', 'true');
-              hiddenButton.setAttribute('tabindex', '-1');
-              document.body.appendChild(hiddenButton);
+          console.log("[WV] FID observer registered, supported types:", PerformanceObserver.supportedEntryTypes); observer.observe({ type: 'first-input', buffered: true });
 
-              // Dispatch a synthetic event on this hidden element (won't interfere with user interactions)
-              const simulatedClick = new PointerEvent('pointerdown', {
-                bubbles: true,
-                cancelable: false, // Don't allow cancellation to avoid side effects
-                view: window
-              });
+          // Handle BFCache - reset FID on restore
+          onBFCacheRestore(() => {
+            delete vitals.FID;
+            observer = new PerformanceObserver((list) => {
+              handleEntries(list.getEntries());
+            });
+            console.log("[WV] FID observer registered, supported types:", PerformanceObserver.supportedEntryTypes); observer.observe({ type: 'first-input', buffered: true });
+          });
 
-              hiddenButton.dispatchEvent(simulatedClick);
-
-              // Clean up and check
-              setTimeout(() => {
-                document.body.removeChild(hiddenButton);
-
-                if (!fidMeasured && !vitals.FID) {
-                  // If still no FID, set a minimal value (0ms = instant response)
-                  vitals.FID = 0;
-                  recordMetric('FID', vitals.FID);
-                  updateDebugOverlay();
-                  observer.disconnect();
-                }
-              }, 100);
-            }
-          }, 3000);
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] FID not supported:', e);
+          console.error('[WV] FID error:', e);
         }
       }
 
+      // CLS - Cumulative Layout Shift
+      // Visual stability: measures unexpected layout movements
+      // Uses session windows (max 5s, 1s gap)
       function measureCLS() {
         try {
           let clsValue = 0;
           let sessionValue = 0;
           let sessionEntries = [];
+          let observer;
 
-          const observer = new PerformanceObserver((list) => {
-            for (const entry of list.getEntries()) {
+          const MAX_SESSION_DURATION = 5000; // 5 second max session window
+          const SESSION_GAP = 1000; // 1 second gap resets session
+
+          const reportCLS = () => {
+            console.log("[WV] CLS:", Math.round(clsValue * 1000) / 1000); vitals.CLS = Math.round(clsValue * 1000) / 1000;
+            recordMetric('CLS', vitals.CLS);
+            updateDebugOverlay();
+          };
+
+          const handleEntries = (entries) => {
+            for (const entry of entries) {
+              // Only count shifts without recent user input
               if (!entry.hadRecentInput) {
-                const firstSessionEntry = sessionEntries[0];
-                const lastSessionEntry = sessionEntries[sessionEntries.length - 1];
+                const firstEntry = sessionEntries[0];
+                const lastEntry = sessionEntries[sessionEntries.length - 1];
 
-                if (sessionValue && entry.startTime - lastSessionEntry.startTime > 1000) {
+                // Start new session if:
+                // 1. Gap > 1 second since last entry, OR
+                // 2. Session duration > 5 seconds
+                if (sessionValue > 0 && (
+                  entry.startTime - lastEntry.startTime > SESSION_GAP ||
+                  entry.startTime - firstEntry.startTime > MAX_SESSION_DURATION
+                )) {
                   sessionValue = 0;
                   sessionEntries = [];
                 }
@@ -2123,58 +2286,223 @@ const defaultBudgets = {
 
                 if (sessionValue > clsValue) {
                   clsValue = sessionValue;
-                  vitals.CLS = Math.round(clsValue * 1000) / 1000;
-                  recordMetric('CLS', vitals.CLS);
-                  updateDebugOverlay();
+                  reportCLS();
                 }
               }
             }
+          };
+
+          observer = new PerformanceObserver((list) => {
+            handleEntries(list.getEntries());
           });
+
           observer.observe({ type: 'layout-shift', buffered: true });
 
+          // Initialize CLS to 0 immediately (no shifts = good)
+          vitals.CLS = 0;
+          updateDebugOverlay();
+
+          // Report final CLS on page hide
           document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') {
-              observer.disconnect();
+              handleEntries(observer.takeRecords());
+              reportCLS();
             }
+          }, { capture: true });
+
+          // Handle BFCache - reset CLS on restore
+          onBFCacheRestore(() => {
+            clsValue = 0;
+            sessionValue = 0;
+            sessionEntries = [];
+            reportCLS();
           });
+
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] CLS not supported');
+          if (debug) console.warn('[@casoon/astro-webvitals] CLS not supported:', e);
         }
       }
 
+      // FCP - First Contentful Paint
+      // Initial render: time until first content appears
       function measureFCP() {
         try {
-          const observer = new PerformanceObserver((list) => {
-            const entries = list.getEntries();
-            const fcpEntry = entries.find(entry => entry.name === 'first-contentful-paint');
+          let observer;
+
+          const reportFCP = (value) => {
+            vitals.FCP = value; console.log("[WV] FCP:", vitals.FCP);
+            recordMetric('FCP', vitals.FCP);
+            updateDebugOverlay();
+          };
+
+          const handleEntries = (entries) => {
+            const fcpEntry = entries.find(e => e.name === 'first-contentful-paint');
             if (fcpEntry) {
-              vitals.FCP = Math.round(fcpEntry.startTime);
-              recordMetric('FCP', vitals.FCP);
-              updateDebugOverlay();
-              observer.disconnect();
+              // Only report if the page wasn't hidden before FCP
+              if (fcpEntry.startTime < visibilityWatcher.firstHiddenTime) {
+                // Subtract activationStart for prerendered pages
+                const value = Math.max(fcpEntry.startTime - getActivationStart(), 0);
+                reportFCP(Math.round(value));
+              }
+              if (observer) observer.disconnect();
             }
+          };
+
+          observer = new PerformanceObserver((list) => {
+            handleEntries(list.getEntries());
           });
+
           observer.observe({ type: 'paint', buffered: true });
+
+          // Handle BFCache restoration
+          onBFCacheRestore((event) => {
+            delete vitals.FCP;
+            doubleRAF(() => {
+              reportFCP(Math.round(performance.now() - event.timeStamp));
+            });
+          });
+
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] FCP not supported');
+          if (debug) console.warn('[@casoon/astro-webvitals] FCP not supported:', e);
         }
       }
 
+      // TTFB - Time to First Byte
+      // Server response: time until first byte received
       function measureTTFB() {
         try {
-          const navigationEntry = performance.getEntriesByType('navigation')[0];
-          if (navigationEntry) {
-            // Correct TTFB calculation: from fetch start to response start
-            vitals.TTFB = Math.round(navigationEntry.responseStart - navigationEntry.fetchStart);
-            recordMetric('TTFB', vitals.TTFB);
-            updateDebugOverlay();
-          }
+          const reportTTFB = () => {
+            const navEntry = performance.getEntriesByType('navigation')[0];
+            if (navEntry) {
+              // Subtract activationStart for prerendered pages
+              const value = Math.max(navEntry.responseStart - getActivationStart(), 0);
+              vitals.TTFB = Math.round(value); console.log("[WV] TTFB:", vitals.TTFB);
+              recordMetric('TTFB', vitals.TTFB);
+              updateDebugOverlay();
+            }
+          };
+
+          // Wait until loadEventEnd is available for complete navigation data
+          const whenReady = (callback) => {
+            if (document.readyState === 'complete') {
+              // Use setTimeout to ensure loadEventEnd is populated
+              setTimeout(callback, 0);
+            } else {
+              addEventListener('load', () => setTimeout(callback, 0), { once: true });
+            }
+          };
+
+          whenReady(reportTTFB);
+
+          // Handle BFCache restoration
+          onBFCacheRestore((event) => {
+            delete vitals.TTFB;
+            doubleRAF(() => {
+              vitals.TTFB = Math.round(performance.now() - event.timeStamp);
+              recordMetric('TTFB', vitals.TTFB);
+              updateDebugOverlay();
+            });
+          });
+
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] TTFB not supported');
+          if (debug) console.warn('[@casoon/astro-webvitals] TTFB not supported:', e);
         }
       }
 
-      // New metric: DNS Resolution Time
+      // INP - Interaction to Next Paint
+      // Responsiveness: 98th percentile of all interaction delays
+      function measureINP() {
+        try {
+          // Store interaction durations for 98th percentile calculation
+          const interactionMap = new Map(); // interactionId -> max duration
+          let observer;
+
+          // Calculate 98th percentile from interaction durations
+          const getP98 = () => {
+            const durations = Array.from(interactionMap.values()).sort((a, b) => b - a);
+            if (durations.length === 0) return 0;
+
+            // 98th percentile: we want the value that 98% of values are <= to
+            // For small samples, use the highest value
+            // Formula: index = ceil(N * 0.98) - 1, but for small N use max
+            const len = durations.length;
+            if (len <= 10) {
+              // For <= 10 interactions, use the worst one
+              return durations[0];
+            } else if (len <= 50) {
+              // For 11-50, use 2nd worst
+              return durations[Math.min(1, len - 1)];
+            } else {
+              // For > 50, calculate proper 98th percentile
+              const index = Math.max(0, Math.ceil(len * 0.02) - 1);
+              return durations[index];
+            }
+          };
+
+          const reportINP = () => {
+            const p98 = getP98();
+            if (p98 > 0) {
+              vitals.INP = Math.round(p98);
+              recordMetric('INP', vitals.INP);
+              updateDebugOverlay();
+            }
+          };
+
+          const handleEntries = (entries) => {
+            // Process entries in idle time to avoid affecting INP itself
+            whenIdleOrHidden(() => {
+              for (const entry of entries) {
+                // Only process entries with valid interactionId
+                if (entry.interactionId) {
+                  const existingDuration = interactionMap.get(entry.interactionId) || 0;
+                  // Use duration (includes processing + presentation delay)
+                  if (entry.duration > existingDuration) {
+                    interactionMap.set(entry.interactionId, entry.duration);
+                  }
+                }
+              }
+              reportINP();
+            });
+          };
+
+          observer = new PerformanceObserver((list) => {
+            handleEntries(list.getEntries());
+          });
+
+          // durationThreshold: 40ms filters out very fast interactions
+          // This is the minimum event duration (2.5+ frames at 60Hz)
+          observer.observe({ type: 'event', buffered: true, durationThreshold: 40 });
+
+          // Also observe first-input for fallback
+          try {
+            console.log("[WV] FID observer registered, supported types:", PerformanceObserver.supportedEntryTypes); observer.observe({ type: 'first-input', buffered: true });
+          } catch (e) {
+            // first-input might not be supported with event observer
+          }
+
+          // Report on visibility change
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+              handleEntries(observer.takeRecords());
+              reportINP();
+            }
+          }, { capture: true });
+
+          // Handle BFCache - reset INP on restore
+          onBFCacheRestore(() => {
+            interactionMap.clear();
+            delete vitals.INP;
+          });
+
+        } catch (e) {
+          if (debug) console.warn('[@casoon/astro-webvitals] INP not supported:', e);
+        }
+      }
+
+      // ============================================================
+      // Additional Navigation Timing Metrics
+      // ============================================================
+
       function measureDNS() {
         try {
           const navEntry = performance.getEntriesByType('navigation')[0];
@@ -2184,11 +2512,10 @@ const defaultBudgets = {
             updateDebugOverlay();
           }
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] DNS not available');
+          if (debug) console.warn('[@casoon/astro-webvitals] DNS not available:', e);
         }
       }
 
-      // New metric: TCP Connection Time
       function measureTCP() {
         try {
           const navEntry = performance.getEntriesByType('navigation')[0];
@@ -2198,11 +2525,10 @@ const defaultBudgets = {
             updateDebugOverlay();
           }
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] TCP not available');
+          if (debug) console.warn('[@casoon/astro-webvitals] TCP not available:', e);
         }
       }
 
-      // New metric: DOM Processing Time
       function measureDOM() {
         try {
           const navEntry = performance.getEntriesByType('navigation')[0];
@@ -2212,71 +2538,20 @@ const defaultBudgets = {
             updateDebugOverlay();
           }
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] DOM not available');
+          if (debug) console.warn('[@casoon/astro-webvitals] DOM not available:', e);
         }
       }
 
-      // New metric: Page Load Complete Time
       function measureLOAD() {
         try {
           const navEntry = performance.getEntriesByType('navigation')[0];
           if (navEntry && navEntry.loadEventEnd > 0) {
-            vitals.LOAD = Math.round(navEntry.loadEventEnd - navEntry.navigationStart);
+            vitals.LOAD = Math.round(navEntry.loadEventEnd - navEntry.startTime);
             recordMetric('LOAD', vitals.LOAD);
             updateDebugOverlay();
           }
         } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] LOAD not available');
-        }
-      }
-
-      function measureINP() {
-        try {
-          let maxDelay = 0;
-          const interactionDelays = new Map();
-          let inpFallbackTimer;
-
-          const observer = new PerformanceObserver((list) => {
-            const entries = list.getEntries();
-            entries.forEach((entry) => {
-              const delay = Math.max(
-                entry.duration || 0,
-                entry.processingStart ? entry.processingStart - entry.startTime : 0
-              );
-
-              const id = entry.interactionId || `${entry.name}-${entry.startTime}`;
-              const prev = interactionDelays.get(id) || 0;
-              const best = Math.max(prev, delay);
-              interactionDelays.set(id, best);
-
-              if (best > maxDelay) {
-                maxDelay = best;
-                vitals.INP = Math.round(maxDelay);
-                recordMetric('INP', vitals.INP);
-                updateDebugOverlay();
-              }
-            });
-            if (inpFallbackTimer) clearTimeout(inpFallbackTimer);
-            inpFallbackTimer = setTimeout(() => {
-              if (!vitals.INP && typeof vitals.FID === 'number') {
-                vitals.INP = vitals.FID;
-                recordMetric('INP', vitals.INP);
-                updateDebugOverlay();
-              }
-            }, 3000);
-          });
-          observer.observe({ type: 'event', buffered: true, durationThreshold: 0 });
-
-          // Last-resort fallback to FID if available after a few seconds
-          setTimeout(() => {
-            if (!vitals.INP && typeof vitals.FID === 'number') {
-              vitals.INP = vitals.FID;
-              recordMetric('INP', vitals.INP);
-              updateDebugOverlay();
-            }
-          }, 8000);
-        } catch (e) {
-          if (debug) console.warn('[@casoon/astro-webvitals] INP not supported');
+          if (debug) console.warn('[@casoon/astro-webvitals] LOAD not available:', e);
         }
       }
 
@@ -2338,15 +2613,15 @@ const defaultBudgets = {
       // Navigation timing metrics (available immediately)
       measureDNS();
       measureTCP();
-      measureTTFB();
+      console.log("[WV] Starting measurements..."); measureTTFB();
       measureDOM();
 
       // Paint metrics
-      measureFCP();
-      measureLCP();
+      console.log("[WV] Before measureFCP"); measureFCP(); console.log("[WV] After measureFCP");
+      console.log("[WV] Before measureLCP"); measureLCP(); console.log("[WV] After measureLCP");
 
       // Interaction metrics
-      measureFID();
+      console.log("[WV] Before measureFID"); measureFID(); console.log("[WV] After measureFID");
       measureINP();
       measureCLS();
 

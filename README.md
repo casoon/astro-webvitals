@@ -1,6 +1,6 @@
 # @casoon/astro-webvitals
 
-[![npm version](https://badge.fury.io/js/@casoon%2Fastro-webvitals.svg)](https://www.npmjs.com/package/@casoon/astro-webvitals)
+[![npm version](https://img.shields.io/npm/v/@casoon/astro-webvitals.svg)](https://www.npmjs.com/package/@casoon/astro-webvitals)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive Web Vitals & SEO monitoring component for Astro with debug overlay and analytics support.
@@ -254,9 +254,24 @@ const isDev = import.meta.env.DEV;
 
 Uses the [Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance) supported in all modern browsers:
 
-- Chrome/Edge 60+
-- Firefox 60+
-- Safari 14+
+- Chrome/Edge 77+ (full support)
+- Firefox 89+ (full support)
+- Safari 14+ (limited support)
+
+### Safari Limitations
+
+Safari (WebKit) does not support all Web Vitals metrics. The following metrics are **not available** in Safari:
+
+| Metric | Safari Support |
+|--------|----------------|
+| **LCP** | ❌ Not supported |
+| **FID** | ❌ Not supported |
+| **INP** | ❌ Not supported |
+| **CLS** | ✅ Supported |
+| **FCP** | ✅ Supported |
+| **TTFB** | ✅ Supported |
+
+The debug overlay automatically detects browser limitations and displays a warning when metrics are unavailable. For complete Web Vitals measurement, use a Chromium-based browser (Chrome, Edge, Brave, Arc).
 
 ## Development
 

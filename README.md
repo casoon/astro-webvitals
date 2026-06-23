@@ -5,7 +5,7 @@
 
 A comprehensive Web Vitals & SEO monitoring component for Astro with debug overlay and analytics support.
 
-> This component was extracted from the [astro-v5-template](https://github.com/casoon/astro-v5-template) to be available as a standalone package.
+> This component was extracted from the [astro-v5-template](https://github.com/casoon/astro-v5-template) to be available as a standalone package. Supports Astro v4–v7.
 
 ## Features
 
@@ -174,10 +174,15 @@ The component will send POST requests with this payload:
 
 ```typescript
 {
-  name: string;        // Metric name (LCP, FID, etc.)
-  value: number;       // Metric value
+  metrics: Array<{
+    name: string;      // Metric name (LCP, FID, CLS, etc.)
+    value: number;     // Metric value
+    timestamp: number; // Unix timestamp
+  }>;
+  sessionId: string;   // Auto-generated or custom session ID
+  userId?: string;     // Optional user ID
+  timestamp: number;   // Batch send time (Unix)
   url: string;         // Page URL
-  timestamp: number;   // Unix timestamp
   userAgent: string;   // Browser user agent
 }
 ```

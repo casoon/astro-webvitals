@@ -173,7 +173,7 @@ const defaultBudgets = {
     smartDetection,
     performanceBudget: defaultBudgets,
     headers,
-    sessionId: sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    sessionId: sessionId || `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     userId,
     sampleRate
   }}>
@@ -1846,7 +1846,6 @@ const defaultBudgets = {
 
       // Console dock controls
       window.toggleConsoleDock = function(force) {
-        console.log("[WV] toggleConsoleDock called, current:", consoleDockEnabled, "force:", force);
         const shouldEnable = typeof force === 'boolean' ? force : !consoleDockEnabled;
         if (shouldEnable) {
           createConsoleDock();
@@ -1889,7 +1888,7 @@ const defaultBudgets = {
           background: linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         `;
-        resizeHandle.title = 'Ziehen um die Höhe anzupassen';
+        resizeHandle.title = 'Drag to resize';
         resizeHandle.addEventListener('pointerdown', startDockResize);
 
         const header = document.createElement('div');
@@ -2137,7 +2136,7 @@ const defaultBudgets = {
 
           const reportLCP = () => {
             if (lcpValue > 0) {
-              vitals.LCP = lcpValue; console.log("[WV] LCP:", vitals.LCP);
+              vitals.LCP = lcpValue;
               recordMetric('LCP', vitals.LCP);
               updateDebugOverlay();
             }
@@ -2153,7 +2152,7 @@ const defaultBudgets = {
                   lcpValue = Math.round(value);
                   lcpEntries.push(entry);
                   // Live update in debug overlay (final report happens in stopListening)
-                  vitals.LCP = lcpValue; console.log("[WV] LCP:", vitals.LCP);
+                  vitals.LCP = lcpValue;
                   updateDebugOverlay();
                 }
               }
@@ -2206,7 +2205,7 @@ const defaultBudgets = {
       // FID - First Input Delay
       // Input responsiveness: delay between first interaction and browser response
       // Deprecated in favor of INP, but still tracked for compatibility
-      function measureFID() { console.log("[WV] measureFID called");
+      function measureFID() {
         try {
           let observer;
 
@@ -2215,7 +2214,7 @@ const defaultBudgets = {
             if (firstEntry) {
               // Only report if the page wasn't hidden before this input
               if (firstEntry.startTime < visibilityWatcher.firstHiddenTime) {
-                console.log("[WV] FID entry received:", firstEntry); const fidValue = Math.round(firstEntry.processingStart - firstEntry.startTime);
+                const fidValue = Math.round(firstEntry.processingStart - firstEntry.startTime);
                 vitals.FID = fidValue;
                 recordMetric('FID', vitals.FID);
                 updateDebugOverlay();
@@ -2228,7 +2227,7 @@ const defaultBudgets = {
             handleEntries(list.getEntries());
           });
 
-          console.log("[WV] FID observer registered, supported types:", PerformanceObserver.supportedEntryTypes); observer.observe({ type: 'first-input', buffered: true });
+          observer.observe({ type: 'first-input', buffered: true });
 
           // Handle BFCache - reset FID on restore
           onBFCacheRestore(() => {
@@ -2236,7 +2235,7 @@ const defaultBudgets = {
             observer = new PerformanceObserver((list) => {
               handleEntries(list.getEntries());
             });
-            console.log("[WV] FID observer registered, supported types:", PerformanceObserver.supportedEntryTypes); observer.observe({ type: 'first-input', buffered: true });
+            observer.observe({ type: 'first-input', buffered: true });
           });
 
         } catch (e) {
@@ -2258,7 +2257,7 @@ const defaultBudgets = {
           const SESSION_GAP = 1000; // 1 second gap resets session
 
           const reportCLS = () => {
-            console.log("[WV] CLS:", Math.round(clsValue * 1000) / 1000); vitals.CLS = Math.round(clsValue * 1000) / 1000;
+            vitals.CLS = Math.round(clsValue * 1000) / 1000;
             recordMetric('CLS', vitals.CLS);
             updateDebugOverlay();
           };
@@ -2330,7 +2329,7 @@ const defaultBudgets = {
           let observer;
 
           const reportFCP = (value) => {
-            vitals.FCP = value; console.log("[WV] FCP:", vitals.FCP);
+            vitals.FCP = value;
             recordMetric('FCP', vitals.FCP);
             updateDebugOverlay();
           };
@@ -2376,7 +2375,7 @@ const defaultBudgets = {
             if (navEntry) {
               // Subtract activationStart for prerendered pages
               const value = Math.max(navEntry.responseStart - getActivationStart(), 0);
-              vitals.TTFB = Math.round(value); console.log("[WV] TTFB:", vitals.TTFB);
+              vitals.TTFB = Math.round(value);
               recordMetric('TTFB', vitals.TTFB);
               updateDebugOverlay();
             }
@@ -2475,7 +2474,7 @@ const defaultBudgets = {
 
           // Also observe first-input for fallback
           try {
-            console.log("[WV] FID observer registered, supported types:", PerformanceObserver.supportedEntryTypes); observer.observe({ type: 'first-input', buffered: true });
+            observer.observe({ type: 'first-input', buffered: true });
           } catch (e) {
             // first-input might not be supported with event observer
           }
@@ -2613,15 +2612,15 @@ const defaultBudgets = {
       // Navigation timing metrics (available immediately)
       measureDNS();
       measureTCP();
-      console.log("[WV] Starting measurements..."); measureTTFB();
+      measureTTFB();
       measureDOM();
 
       // Paint metrics
-      console.log("[WV] Before measureFCP"); measureFCP(); console.log("[WV] After measureFCP");
-      console.log("[WV] Before measureLCP"); measureLCP(); console.log("[WV] After measureLCP");
+      measureFCP();
+      measureLCP();
 
       // Interaction metrics
-      console.log("[WV] Before measureFID"); measureFID(); console.log("[WV] After measureFID");
+      measureFID();
       measureINP();
       measureCLS();
 

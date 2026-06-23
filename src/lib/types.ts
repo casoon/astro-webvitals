@@ -2,12 +2,8 @@
  * Web Vitals Types
  */
 
-// Extend PerformanceEventTiming with interactionId (not yet in all TS libs)
+// Extend PerformanceNavigationTiming with activationStart (not yet in all TS libs)
 declare global {
-	interface PerformanceEventTiming {
-		interactionId?: number;
-	}
-
 	interface PerformanceNavigationTiming {
 		activationStart?: number;
 	}

@@ -19,8 +19,7 @@ export function measureLCP(
 	debug: boolean = false,
 ): void {
 	if (
-		!PerformanceObserver ||
-		!PerformanceObserver.supportedEntryTypes?.includes(
+		!PerformanceObserver?.supportedEntryTypes?.includes(
 			"largest-contentful-paint",
 		)
 	) {

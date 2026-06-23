@@ -82,8 +82,6 @@ export interface WebVitalsProps {
 	batchReporting?: boolean;
 	/** Interval for batch reporting (ms) */
 	batchInterval?: number;
-	/** Maximum batch size before forcing send */
-	maxBatchSize?: number;
 	/** Enable WCAG accessibility checking */
 	checkAccessibility?: boolean;
 	/** Highlight elements that fail WCAG checks */
@@ -94,8 +92,6 @@ export interface WebVitalsProps {
 	smartDetection?: boolean;
 	/** Performance budget thresholds */
 	performanceBudget?: PerformanceBudget;
-	/** Callback when budget is exceeded */
-	onBudgetExceeded?: (metric: string, value: number, budget: number) => void;
 	/** Custom headers for endpoint requests */
 	headers?: Record<string, string>;
 	/** Session ID for tracking */

@@ -77,11 +77,9 @@ Follow these guidelines:
 # Type checking
 pnpm run type-check
 
-# Format code
-pnpm run format
-
-# Lint (when configured)
-pnpm run lint
+# Lint, format and test
+pnpm run check
+pnpm test
 ```
 
 ### 4. Manual Testing
@@ -134,12 +132,12 @@ Then create a Pull Request on GitHub with:
 ```
 astro-webvitals/
 ├── src/
-│   ├── WebVitals.astro          # Basic component
-│   ├── WebVitalsEnhanced.astro  # Enhanced component
+│   ├── WebVitals.astro          # Astro component
+│   ├── client/                  # Browser measurement, reporting and debug modules
 │   └── index.ts                 # TypeScript exports
 ├── docs/                        # Documentation
 ├── examples/                    # Example implementations
-├── tests/                       # Test files
+├── tests/                       # Vitest unit tests
 └── package.json
 ```
 

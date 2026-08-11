@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-08-11
+
+### Added
+- Optional Web Vitals attribution (`attribution`) with compact diagnostic context.
+- Optional `LongTask` reporting, browser metric events (`webvitals:metric`), configurable `maxBatchSize`, and experimental browser soft-navigation reporting.
+- Explicit `consent` and `respectDnt` collection gates.
+- Opt-in retry queue for failed `fetch` reports, bounded to 50 entries in `localStorage`.
+
+### Changed
+- Replaced outdated examples and feature claims with documentation matching the package API.
+- Added reporting unit tests for IDs, deltas, transport selection, and retry persistence.
+
+## [0.4.2] - 2026-08-11
+
+### Changed
+- Replaced custom vital calculations with Google's `web-vitals` package for LCP, CLS, INP, FCP, and TTFB.
+- Reporting now includes stable metric IDs, deltas, ratings, and navigation types.
+- Metrics flush on `visibilitychange`/`pagehide` and use `sendBeacon` where possible.
+- Loaded overlay, console, SEO, and accessibility code only when those features are enabled.
+
+### Fixed
+- Prevented duplicate initialization when the component is rendered more than once.
+- Removed the misleading programmatic FID/INP trigger and legacy FID collection.
+- Escaped SEO and overlay data before rendering it into the debug UI.
+
 ## [0.4.1] - 2026-08-11
 
 ### Fixed

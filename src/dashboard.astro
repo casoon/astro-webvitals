@@ -9,40 +9,123 @@ const title = "Web Vitals dashboard";
     <meta name="viewport" content="width=device-width" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{title}</title>
-    <style>
-      :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
-      body { margin: 0; background: Canvas; color: CanvasText; }
-      main { max-width: 72rem; margin: 0 auto; padding: 2rem; }
-      header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-      button { border: 1px solid color-mix(in srgb, CanvasText 25%, transparent); border-radius: .4rem; padding: .5rem .75rem; background: transparent; color: inherit; cursor: pointer; }
-      .intro { color: color-mix(in srgb, CanvasText 70%, transparent); }
-      .empty { padding: 2rem; border: 1px dashed color-mix(in srgb, CanvasText 30%, transparent); border-radius: .5rem; }
-      .route { margin-top: 1.5rem; border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); border-radius: .5rem; overflow: hidden; }
-      h2 { margin: 0; padding: .8rem 1rem; font-size: 1rem; overflow-wrap: anywhere; background: color-mix(in srgb, CanvasText 6%, transparent); }
-      table { width: 100%; border-collapse: collapse; text-align: left; }
-      th, td { padding: .7rem 1rem; border-top: 1px solid color-mix(in srgb, CanvasText 12%, transparent); }
-      .good { color: #14804a; } .needs-improvement { color: #a86000; } .poor { color: #bd2020; }
+    <style is:global>
+      :root {
+        color-scheme: light dark;
+        font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, "Noto Sans", Ubuntu, Cantarell, Arial, sans-serif;
+        --canvas: #f4f7fb;
+        --surface: #ffffff;
+        --surface-raised: #f9fbff;
+        --ink: #172033;
+        --muted: #62708a;
+        --line: #dbe2ee;
+        --accent: #2854d8;
+        --accent-soft: #e8eeff;
+        --good: #18794e;
+        --good-soft: #e5f5ec;
+        --needs-improvement: #a86200;
+        --needs-improvement-soft: #fff1dc;
+        --poor: #bd3030;
+        --poor-soft: #fde8e8;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --canvas: #111827;
+          --surface: #182235;
+          --surface-raised: #1e2a40;
+          --ink: #edf2ff;
+          --muted: #aab6ca;
+          --line: #31405c;
+          --accent: #9bb3ff;
+          --accent-soft: #22366f;
+          --good: #72d2a0;
+          --good-soft: #183d30;
+          --needs-improvement: #ffc067;
+          --needs-improvement-soft: #4c3516;
+          --poor: #ff9a9a;
+          --poor-soft: #542a31;
+        }
+      }
+
+      * { box-sizing: border-box; }
+      body { min-width: 20rem; margin: 0; background: var(--canvas); color: var(--ink); }
+      button { font: inherit; }
+      .shell { max-width: 76rem; margin: 0 auto; padding: clamp(1.25rem, 4vw, 3.5rem); }
+      .masthead { display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--line); }
+      .kicker { display: flex; align-items: center; gap: .5rem; margin: 0 0 .55rem; color: var(--accent); font-size: .72rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+      .signal { width: .55rem; height: .55rem; border-radius: 999px; background: currentColor; box-shadow: 0 0 0 .25rem var(--accent-soft); }
+      h1 { max-width: 12ch; margin: 0; font-size: clamp(2.25rem, 6vw, 4.5rem); font-weight: 780; letter-spacing: -.045em; line-height: .98; }
+      .intro { max-width: 50rem; margin: .9rem 0 0; color: var(--muted); font-size: 1rem; line-height: 1.55; }
+      .actions { display: grid; justify-items: end; gap: .75rem; min-width: max-content; }
+      .summary { margin: 0; color: var(--muted); font-size: .84rem; font-variant-numeric: tabular-nums; }
+      .clear { border: 1px solid var(--line); border-radius: .55rem; padding: .65rem .8rem; background: var(--surface); color: var(--ink); cursor: pointer; font-size: .84rem; font-weight: 650; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+      .clear:hover { border-color: var(--accent); background: var(--accent-soft); }
+      .clear:active { transform: translateY(1px); }
+      .clear:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+      main { padding-top: 2rem; }
+      .empty { max-width: 42rem; margin: 3.5rem auto; padding: 2rem; border: 1px dashed var(--line); border-radius: .85rem; background: var(--surface-raised); color: var(--muted); line-height: 1.55; text-align: center; }
+      .route-list { display: grid; gap: 1rem; }
+      .route { border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); overflow: hidden; }
+      .route-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; border-bottom: 1px solid var(--line); background: var(--surface-raised); }
+      h2 { max-width: 100%; margin: 0; overflow-wrap: anywhere; font-size: .92rem; font-weight: 700; letter-spacing: -.01em; }
+      .route-count { flex: 0 0 auto; color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+      .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px; margin: 0; padding: 0; list-style: none; background: var(--line); }
+      .metric { display: grid; gap: .35rem; min-height: 8.2rem; padding: 1rem 1.15rem; background: var(--surface); }
+      .metric-name { color: var(--muted); font-size: .73rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+      .metric-value { font-size: clamp(1.45rem, 2.5vw, 2rem); font-weight: 760; font-variant-numeric: tabular-nums; letter-spacing: -.04em; line-height: 1; }
+      .metric-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: auto; }
+      .rating { display: inline-flex; align-items: center; min-height: 1.35rem; border-radius: 999px; padding: .15rem .45rem; background: var(--surface-raised); color: var(--muted); font-size: .7rem; font-weight: 700; text-transform: capitalize; }
+      .rating.good { background: var(--good-soft); color: var(--good); }
+      .rating.needs-improvement { background: var(--needs-improvement-soft); color: var(--needs-improvement); }
+      .rating.poor { background: var(--poor-soft); color: var(--poor); }
+      time { color: var(--muted); font-size: .7rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+      @media (max-width: 42rem) {
+        .masthead { flex-direction: column; gap: 1.25rem; }
+        .actions { justify-items: start; }
+        .route-header { align-items: flex-start; flex-direction: column; gap: .25rem; }
+        .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .metric { min-height: 7.4rem; padding: .9rem; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .clear { transition: none; }
+      }
     </style>
   </head>
   <body>
-    <main>
-      <header>
+    <div class="shell">
+      <header class="masthead">
         <div>
+          <p class="kicker"><span class="signal" aria-hidden="true"></span> Browser-local field data</p>
           <h1>{title}</h1>
-          <p class="intro">Local measurements from this browser only. No data is sent or stored by this page.</p>
+          <p class="intro">The latest measurements from this browser, grouped by page. This view never sends data anywhere.</p>
         </div>
-        <button id="clear" type="button">Clear local data</button>
+        <div class="actions">
+          <p class="summary" id="summary" aria-live="polite"></p>
+          <button class="clear" id="clear" type="button">Clear local data</button>
+        </div>
       </header>
-      <div id="content" aria-live="polite"></div>
-    </main>
+      <main>
+        <div id="content" aria-live="polite"></div>
+      </main>
+    </div>
 
     <script>
       import { clearDashboardMetrics, readDashboardMetrics } from "./client/dashboard-storage";
 
       const content = document.querySelector<HTMLDivElement>("#content")!;
       const clear = document.querySelector<HTMLButtonElement>("#clear")!;
+      const summary = document.querySelector<HTMLParagraphElement>("#summary")!;
 
       type Metric = ReturnType<typeof readDashboardMetrics>[number];
+
+      function formatMetric(metric: Metric): string {
+        return metric.name === "CLS"
+          ? metric.value.toFixed(3)
+          : `${Math.round(metric.value)} ms`;
+      }
 
       function render() {
         const latest = new Map<string, Metric>();
@@ -57,38 +140,65 @@ const title = "Web Vitals dashboard";
           byUrl.set(metric.url, [...(byUrl.get(metric.url) ?? []), metric]);
         }
 
+        const allMetrics = [...latest.values()];
+        const newest = allMetrics.reduce<Metric | undefined>(
+          (current, metric) => (!current || metric.timestamp > current.timestamp ? metric : current),
+          undefined,
+        );
+        summary.textContent = allMetrics.length
+          ? `${byUrl.size} page${byUrl.size === 1 ? "" : "s"} · ${allMetrics.length} latest metrics · updated ${new Date(newest!.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+          : "No local data yet";
+
         content.replaceChildren();
         if (byUrl.size === 0) {
           const empty = document.createElement("p");
           empty.className = "empty";
-          empty.textContent = "No local RUM measurements yet. Visit a page that enables WebVitals with dashboard={true}.";
+          empty.textContent = "No local RUM measurements yet. Visit a page that enables WebVitals with dashboard={true}, then return here.";
           content.append(empty);
           return;
         }
 
-        for (const [url, metrics] of byUrl) {
+        const routes = document.createElement("div");
+        routes.className = "route-list";
+        for (const [url, metrics] of [...byUrl].sort(([, a], [, b]) => b[0].timestamp - a[0].timestamp)) {
           const section = document.createElement("section");
           section.className = "route";
+          const header = document.createElement("div");
+          header.className = "route-header";
           const heading = document.createElement("h2");
           heading.textContent = url;
-          const table = document.createElement("table");
-          table.innerHTML = "<thead><tr><th>Metric</th><th>Value</th><th>Rating</th><th>Captured</th></tr></thead>";
-          const body = document.createElement("tbody");
+          const count = document.createElement("span");
+          count.className = "route-count";
+          count.textContent = `${metrics.length} metric${metrics.length === 1 ? "" : "s"}`;
+          header.append(heading, count);
+
+          const list = document.createElement("ul");
+          list.className = "metrics";
           for (const metric of metrics.sort((a, b) => a.name.localeCompare(b.name))) {
-            const row = document.createElement("tr");
-            const cells = [metric.name, String(metric.value), metric.rating ?? "—", new Date(metric.timestamp).toLocaleString()];
-            for (const value of cells) {
-              const cell = document.createElement("td");
-              cell.textContent = value;
-              row.append(cell);
-            }
-            if (metric.rating) row.children[2].className = metric.rating;
-            body.append(row);
+            const item = document.createElement("li");
+            item.className = "metric";
+            const name = document.createElement("span");
+            name.className = "metric-name";
+            name.textContent = metric.name;
+            const value = document.createElement("strong");
+            value.className = "metric-value";
+            value.textContent = formatMetric(metric);
+            const footer = document.createElement("div");
+            footer.className = "metric-footer";
+            const rating = document.createElement("span");
+            rating.className = `rating${metric.rating ? ` ${metric.rating}` : ""}`;
+            rating.textContent = metric.rating ?? "observed";
+            const captured = document.createElement("time");
+            captured.dateTime = new Date(metric.timestamp).toISOString();
+            captured.textContent = new Date(metric.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            footer.append(rating, captured);
+            item.append(name, value, footer);
+            list.append(item);
           }
-          table.append(body);
-          section.append(heading, table);
-          content.append(section);
+          section.append(header, list);
+          routes.append(section);
         }
+        content.append(routes);
       }
 
       clear.addEventListener("click", () => {

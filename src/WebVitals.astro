@@ -70,7 +70,7 @@ export interface Props {
 	highlightAccessibility?: boolean;
 
 	/**
-	 * Enable extended metrics (Long Tasks, Memory, Network)
+	 * Enable extended debug details (Memory, Network)
 	 * @default false
 	 */
 	extendedMetrics?: boolean;
@@ -86,7 +86,6 @@ export interface Props {
 	 */
 	performanceBudget?: {
 		LCP?: number;
-		FID?: number;
 		CLS?: number;
 		FCP?: number;
 		TTFB?: number;
@@ -107,6 +106,30 @@ export interface Props {
 	 * User ID for tracking
 	 */
 	userId?: string;
+
+	/**
+	 * Include experimental soft navigations reported by the browser
+	 * @default false
+	 */
+	trackSoftNavigations?: boolean;
+
+	/** Include privacy-safe Web Vitals diagnostic data in metric payloads */
+	attribution?: boolean;
+
+	/** Report main-thread tasks that block for at least 50ms */
+	trackLongTasks?: boolean;
+
+	/** Maximum number of metrics in one reporting request */
+	maxBatchSize?: number;
+
+	/** Persist failed reports in localStorage and retry on a later visit */
+	retryFailedMetrics?: boolean;
+
+	/** Do not initialize when the browser has enabled Do Not Track */
+	respectDnt?: boolean;
+
+	/** Explicit consent gate for all collection and reporting */
+	consent?: boolean;
 }
 
 const {
@@ -126,6 +149,13 @@ const {
 	headers = {},
 	sessionId,
 	userId,
+	trackSoftNavigations = false,
+	attribution = false,
+	trackLongTasks = false,
+	maxBatchSize = 10,
+	retryFailedMetrics = false,
+	respectDnt = false,
+	consent = true,
 } = Astro.props;
 
 const isDev = import.meta.env.DEV;
@@ -146,7 +176,6 @@ const mobilePosition = "bottom: 0; left: 0; right: 0;"; // Full width at bottom 
 
 const defaultBudgets = {
 	LCP: 2500,
-	FID: 100,
 	CLS: 0.1,
 	FCP: 1800,
 	TTFB: 800,
@@ -173,8 +202,15 @@ const defaultBudgets = {
       performanceBudget: defaultBudgets,
       headers,
       sessionId,
-      userId,
-      sampleRate
+		userId,
+	      sampleRate: Math.min(1, Math.max(0, Number.isFinite(sampleRate) ? sampleRate : 1)),
+	      trackSoftNavigations,
+	      attribution,
+	      trackLongTasks,
+	      maxBatchSize: Math.max(1, Math.floor(Number.isFinite(maxBatchSize) ? maxBatchSize : 10)),
+	      retryFailedMetrics,
+	      respectDnt,
+	      consent
     }
   }}>
     window.__WEBVITALS_CONFIG__ = config;

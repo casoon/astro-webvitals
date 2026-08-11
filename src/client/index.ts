@@ -6,55 +6,45 @@
  * metrics reporting, in the same order the original inline IIFE did.
  */
 
-import { checkWCAG } from "./accessibility";
 import { type BridgedConfig, config, initConfig } from "./config";
-import { initConsoleCapture } from "./console-capture";
-import { measureCLS } from "./metrics/cls";
-import { measureFCP } from "./metrics/fcp";
-import { measureFID } from "./metrics/fid";
-import { measureINP } from "./metrics/inp";
-import { measureLCP } from "./metrics/lcp";
 import {
 	measureDNS,
 	measureDOM,
 	measureLOAD,
 	measureTCP,
 } from "./metrics/navigation";
-import { measureTTFB } from "./metrics/ttfb";
-import { flushMetrics } from "./reporting";
-import { refreshSEO } from "./seo";
-import { state } from "./state";
-import { initConsoleDock } from "./ui/console-dock";
-import { initDebugOverlay, preserveContentScroll } from "./ui/debug-overlay";
-import { initResponsive } from "./ui/responsive";
+import { measureWebVitals } from "./metrics/vitals";
+import { flushMetrics, retryFailedMetrics } from "./reporting";
+
+declare global {
+	interface Window {
+		__CASOON_WEBVITALS_INITIALIZED__?: boolean;
+	}
+}
 
 export function initWebVitals(bridgedConfig: BridgedConfig): void {
+	if (!bridgedConfig.consent) return;
+	if (bridgedConfig.respectDnt && navigator.doNotTrack === "1") return;
 	// Sampling is decided per page load (client-side) so static builds don't
 	// bake a single build-time coin flip into every visitor's HTML.
 	if (Math.random() >= bridgedConfig.sampleRate) return;
+	if (window.__CASOON_WEBVITALS_INITIALIZED__) return;
+	window.__CASOON_WEBVITALS_INITIALIZED__ = true;
 
 	initConfig(bridgedConfig);
-	state.highlightEnabled = !!config.highlightAccessibility;
-
-	initResponsive();
-	initConsoleCapture();
-	initDebugOverlay();
-	initConsoleDock();
+	retryFailedMetrics();
 
 	// Navigation timing metrics (available immediately)
 	measureDNS();
 	measureTCP();
-	measureTTFB();
 	measureDOM();
 
-	// Paint metrics
-	measureFCP();
-	measureLCP();
-
-	// Interaction metrics
-	measureFID();
-	measureINP();
-	measureCLS();
+	void measureWebVitals();
+	if (config.trackLongTasks) {
+		void import("./metrics/long-tasks").then(({ measureLongTasks }) =>
+			measureLongTasks(),
+		);
+	}
 
 	// Load complete (might take a while)
 	if (document.readyState === "complete") {
@@ -65,39 +55,66 @@ export function initWebVitals(bridgedConfig: BridgedConfig): void {
 		});
 	}
 
-	// Check accessibility after DOM is ready
+	const flushOnHidden = () => {
+		if (document.visibilityState === "hidden") flushMetrics();
+	};
+	document.addEventListener("visibilitychange", flushOnHidden, {
+		capture: true,
+	});
+	window.addEventListener("pagehide", flushMetrics, { capture: true });
+
+	if (config.debug || config.consoleDock || config.checkAccessibility) {
+		void initDebugFeatures();
+	}
+}
+
+async function initDebugFeatures(): Promise<void> {
+	const [
+		{ checkWCAG },
+		{ initConsoleCapture },
+		{ refreshSEO },
+		{ state },
+		{ initConsoleDock },
+		{ initDebugOverlay, preserveContentScroll, updateDebugOverlay },
+		{ initResponsive },
+	] = await Promise.all([
+		import("./accessibility"),
+		import("./console-capture"),
+		import("./seo"),
+		import("./state"),
+		import("./ui/console-dock"),
+		import("./ui/debug-overlay"),
+		import("./ui/responsive"),
+	]);
+
+	state.highlightEnabled = !!config.highlightAccessibility;
+	initResponsive();
+	initConsoleCapture();
+	initDebugOverlay();
+	initConsoleDock();
+	window.addEventListener("webvitals:metric", updateDebugOverlay);
+
 	if (config.checkAccessibility) {
-		if (document.readyState === "complete") {
-			setTimeout(() => preserveContentScroll(checkWCAG), 1000);
-		} else {
-			window.addEventListener("load", () =>
-				setTimeout(() => preserveContentScroll(checkWCAG), 1000),
-			);
-		}
+		const runAccessibility = () => preserveContentScroll(checkWCAG);
+		if (document.readyState === "complete") setTimeout(runAccessibility, 1000);
+		else
+			window.addEventListener("load", () => setTimeout(runAccessibility, 1000));
 	}
 
-	// SEO analysis
-	const runSEO = () => refreshSEO();
-	if (document.readyState === "complete") {
-		setTimeout(runSEO, 600);
-	} else {
-		window.addEventListener("load", () => setTimeout(runSEO, 600));
+	if (config.debug) {
+		const runSEO = () => refreshSEO();
+		if (document.readyState === "complete") setTimeout(runSEO, 600);
+		else window.addEventListener("load", () => setTimeout(runSEO, 600));
+
+		setInterval(() => {
+			if (
+				config.checkAccessibility &&
+				state.isExpanded &&
+				state.activeTab === "accessibility"
+			) {
+				preserveContentScroll(checkWCAG);
+			}
+			if (state.activeTab === "seo") refreshSEO();
+		}, 5000);
 	}
-
-	// Flush on page unload
-	window.addEventListener("beforeunload", flushMetrics);
-
-	// Periodic refresh without breaking scroll: only update lightweight data
-	setInterval(() => {
-		if (
-			config.checkAccessibility &&
-			state.isExpanded &&
-			state.activeTab === "accessibility"
-		) {
-			preserveContentScroll(checkWCAG);
-		}
-		if (state.activeTab === "seo") {
-			refreshSEO();
-		}
-	}, 5000);
 }

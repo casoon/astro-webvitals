@@ -258,7 +258,7 @@ export function getSEOContent(): string {
     border-radius: 999px;
     font-size: 10px;
     border: 1px solid rgba(255,255,255,0.08);
-  ">${ok ? "✅" : "⚠️"} ${text}</span>`;
+  ">${ok ? "✅" : "⚠️"} ${escapeHTML(text)}</span>`;
 
 	const listItem = (
 		label: string,
@@ -266,8 +266,8 @@ export function getSEOContent(): string {
 		ok = true,
 	) => `
     <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px;">
-      <span style="color: #9CA3AF;">${label}</span>
-      <span style="color: ${ok ? "#E5E7EB" : "#F59E0B"};">${value || "—"}</span>
+      <span style="color: #9CA3AF;">${escapeHTML(label)}</span>
+      <span style="color: ${ok ? "#E5E7EB" : "#F59E0B"};">${escapeHTML(String(value || "—"))}</span>
     </div>
   `;
 

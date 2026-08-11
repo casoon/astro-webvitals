@@ -31,7 +31,6 @@ export function escapeHTML(str: unknown): string {
 export function getMetricRating(key: string, value: number) {
 	const thresholds: Record<string, { good: number; poor: number }> = {
 		LCP: { good: 2500, poor: 4000 },
-		FID: { good: 100, poor: 300 },
 		CLS: { good: 0.1, poor: 0.25 },
 		FCP: { good: 1800, poor: 3000 },
 		TTFB: { good: 800, poor: 1800 },
@@ -113,7 +112,6 @@ export function renderMetricRow(key: string): string {
 	// Metric descriptions for better UX
 	const metricDescriptions: Record<string, { name: string; hint: string }> = {
 		LCP: { name: "Largest Contentful Paint", hint: "Loading performance" },
-		FID: { name: "First Input Delay", hint: "Input responsiveness" },
 		CLS: { name: "Cumulative Layout Shift", hint: "Visual stability" },
 		FCP: { name: "First Contentful Paint", hint: "Initial render" },
 		TTFB: { name: "Time to First Byte", hint: "Server response" },
@@ -134,7 +132,6 @@ export function renderMetricRow(key: string): string {
 				loading?: boolean;
 			}
 		> = {
-			FID: { icon: "👆", text: "Click or tap to measure", action: true },
 			INP: { icon: "👆", text: "Interact to measure", action: true },
 			CLS: { icon: "📐", text: "0.000", isGood: true },
 			LCP: { icon: "⏳", text: "Measuring...", loading: true },
@@ -174,7 +171,7 @@ export function renderMetricRow(key: string): string {
       `;
 		}
 
-		// For interaction-based metrics (FID, INP), show call-to-action
+		// For interaction-based metrics, show a call-to-action.
 		if (info.action) {
 			return `
         <div style="
@@ -269,7 +266,7 @@ export function renderMetricRow(key: string): string {
 
 export function getVitalsContent(): string {
 	// Core Web Vitals (the 3 main ones)
-	const coreMetrics = ["LCP", "FID", "CLS"];
+	const coreMetrics = ["LCP", "CLS", "INP"];
 	// Additional metrics
 	const additionalMetrics = ["FCP", "TTFB", "INP"];
 	// Navigation timing metrics
@@ -280,7 +277,7 @@ export function getVitalsContent(): string {
 	let measuredCount = 0;
 	const hasLCP = typeof state.vitals.LCP === "number";
 
-	["LCP", "FID", "CLS", "FCP", "TTFB", "INP"].forEach((key) => {
+	["LCP", "CLS", "INP", "FCP", "TTFB"].forEach((key) => {
 		if (typeof state.vitals[key] === "number") {
 			measuredCount++;
 			const rating = getMetricRating(key, state.vitals[key]);
@@ -308,9 +305,8 @@ export function getVitalsContent(): string {
       </div>
       <div style="margin-left: 16px;">
         <div style="font-size: 12px; color: #9CA3AF; margin-bottom: 4px;">Performance Score</div>
-        <div style="font-size: 11px; color: #6B7280;">${measuredCount}/6 metrics measured</div>
+	        <div style="font-size: 11px; color: #6B7280;">${measuredCount}/5 metrics measured</div>
         <div style="font-size: 10px; color: #6B7280; margin-top: 2px;">${browserInfo.engine.charAt(0).toUpperCase() + browserInfo.engine.slice(1)} engine</div>
-        ${measuredCount < 6 ? `<button onclick="window.triggerWebVitalsInteraction()" style="margin-top: 6px; padding: 4px 10px; background: #3B82F6; color: white; border: none; border-radius: 4px; font-size: 10px; cursor: pointer;">Trigger FID/INP</button>` : ""}
       </div>
     </div>
   `;
@@ -414,7 +410,7 @@ export function getAccessibilityContent(): string {
       <div style="text-align: center; padding: 20px;">
         <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
         <div style="color: #10B981; font-weight: 500;">No accessibility issues detected</div>
-        <div style="color: #6B7280; font-size: 11px; margin-top: 4px;">WCAG 2.1 Level AA compliant</div>
+		<div style="color: #6B7280; font-size: 11px; margin-top: 4px;">No heuristic issues found</div>
       </div>
     `;
 	}
@@ -592,7 +588,7 @@ export function getAccessibilityContent(): string {
                 ">
                   <span style="color: #6B7280;">${i + 1}.</span>
                   <span style="color: #F59E0B;">${escapeHTML(issue.element || "Element")}</span>
-                  ${issue.message ? `<div style="color: #9CA3AF; margin-top: 2px; font-size: 9px;">${issue.message}</div>` : ""}
+									${issue.message ? `<div style="color: #9CA3AF; margin-top: 2px; font-size: 9px;">${escapeHTML(issue.message)}</div>` : ""}
                 </div>
               `,
 								)
@@ -695,7 +691,7 @@ export function getDetailsContent(): string {
       <div style="padding: 8px; background: rgba(31, 41, 55, 0.5); border-radius: 6px; font-size: 10px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
           <span style="color: #9CA3AF;">URL</span>
-          <span style="color: #E5E7EB; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${window.location.pathname}</span>
+		  <span style="color: #E5E7EB; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(window.location.pathname)}</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
           <span style="color: #9CA3AF;">Viewport</span>
@@ -900,7 +896,6 @@ export function updateDebugOverlay(): void {
 	// Calculate overall score
 	let score = 100;
 	if (state.vitals.LCP > performanceBudget.LCP) score -= 20;
-	if (state.vitals.FID > performanceBudget.FID) score -= 20;
 	if (state.vitals.CLS > performanceBudget.CLS) score -= 20;
 	if (state.vitals.FCP > performanceBudget.FCP) score -= 10;
 	if (state.vitals.TTFB > performanceBudget.TTFB) score -= 10;
@@ -1195,18 +1190,6 @@ export function initDebugOverlay(): void {
 	(window as any).toggleWebVitalsDebug = () => {
 		state.isExpanded = !state.isExpanded;
 		updateDebugOverlay();
-	};
-
-	(window as any).triggerWebVitalsInteraction = () => {
-		// Trigger a real click event to measure FID/INP
-		const btn = document.createElement("button");
-		btn.style.cssText =
-			"position:fixed;top:-100px;left:-100px;opacity:0;pointer-events:none;";
-		document.body.appendChild(btn);
-		btn.click();
-		setTimeout(() => btn.remove(), 100);
-		// Update overlay after metrics are collected
-		setTimeout(() => updateDebugOverlay(), 200);
 	};
 
 	(window as any).setWebVitalsTab = (tab: string) => {

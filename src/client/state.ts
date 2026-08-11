@@ -23,7 +23,20 @@ export interface WcagIssue {
 export interface MetricEntry {
 	name: string;
 	value: number;
+	delta: number;
+	id: string;
+	rating?: "good" | "needs-improvement" | "poor";
+	navigationType?: string;
+	attribution?: MetricAttribution;
 	timestamp: number;
+}
+
+export interface MetricAttribution {
+	target?: string;
+	url?: string;
+	largestShiftTime?: number;
+	largestShiftValue?: number;
+	interactionType?: string;
 }
 
 export interface SeoImage {

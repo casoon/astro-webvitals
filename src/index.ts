@@ -13,10 +13,26 @@ export { default as WebVitals } from "./WebVitals.astro";
  * Web Vitals metric interface
  */
 export interface WebVitalsMetric {
-	/** Metric name (LCP, FID, CLS, etc.) */
+	/** Metric name (LCP, CLS, INP, FCP, TTFB, or an enabled extra metric) */
 	name: string;
-	/** Metric value (milliseconds for timing metrics, unitless for CLS) */
+	/** Latest metric value (milliseconds for timing metrics, unitless for CLS) */
 	value: number;
+	/** Change since the previous report for this metric instance */
+	delta: number;
+	/** Stable identifier for aggregating a metric instance */
+	id: string;
+	/** Rating calculated using the official Web Vitals thresholds */
+	rating?: "good" | "needs-improvement" | "poor";
+	/** Browser navigation that produced the metric */
+	navigationType?: string;
+	/** Optional, privacy-safe attribution for diagnosing poor field metrics */
+	attribution?: {
+		target?: string;
+		url?: string;
+		largestShiftTime?: number;
+		largestShiftValue?: number;
+		interactionType?: string;
+	};
 	/** Page URL where metric was measured */
 	url: string;
 	/** Timestamp when metric was captured */
@@ -50,8 +66,6 @@ export interface ExtendedMetrics {
 export interface PerformanceBudget {
 	/** Largest Contentful Paint threshold (ms) */
 	LCP?: number;
-	/** First Input Delay threshold (ms) */
-	FID?: number;
 	/** Cumulative Layout Shift threshold */
 	CLS?: number;
 	/** First Contentful Paint threshold (ms) */
@@ -98,4 +112,18 @@ export interface WebVitalsProps {
 	sessionId?: string;
 	/** User ID for tracking */
 	userId?: string;
+	/** Include experimental browser-detected soft navigations */
+	trackSoftNavigations?: boolean;
+	/** Include privacy-safe diagnostic context for Web Vitals */
+	attribution?: boolean;
+	/** Report browser long tasks above 50ms */
+	trackLongTasks?: boolean;
+	/** Maximum metric entries per reporting request */
+	maxBatchSize?: number;
+	/** Retry failed metrics from localStorage on a later visit */
+	retryFailedMetrics?: boolean;
+	/** Respect the browser's Do Not Track preference */
+	respectDnt?: boolean;
+	/** Explicit consent gate for initializing collection */
+	consent?: boolean;
 }

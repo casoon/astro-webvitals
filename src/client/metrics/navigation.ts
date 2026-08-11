@@ -13,6 +13,16 @@ function getNavEntry(): PerformanceNavigationTiming | undefined {
 		| undefined;
 }
 
+function recordNavigationMetric(name: string, value: number): void {
+	recordMetric({
+		name,
+		value,
+		delta: value,
+		id: `${config.finalSessionId}-${name}`,
+		navigationType: "navigate",
+	});
+}
+
 export function measureDNS(): void {
 	try {
 		const navEntry = getNavEntry();
@@ -20,7 +30,7 @@ export function measureDNS(): void {
 			state.vitals.DNS = Math.round(
 				navEntry.domainLookupEnd - navEntry.domainLookupStart,
 			);
-			recordMetric("DNS", state.vitals.DNS);
+			recordNavigationMetric("DNS", state.vitals.DNS);
 			updateDebugOverlay();
 		}
 	} catch (e) {
@@ -36,7 +46,7 @@ export function measureTCP(): void {
 			state.vitals.TCP = Math.round(
 				navEntry.connectEnd - navEntry.connectStart,
 			);
-			recordMetric("TCP", state.vitals.TCP);
+			recordNavigationMetric("TCP", state.vitals.TCP);
 			updateDebugOverlay();
 		}
 	} catch (e) {
@@ -52,7 +62,7 @@ export function measureDOM(): void {
 			state.vitals.DOM = Math.round(
 				navEntry.domInteractive - navEntry.responseEnd,
 			);
-			recordMetric("DOM", state.vitals.DOM);
+			recordNavigationMetric("DOM", state.vitals.DOM);
 			updateDebugOverlay();
 		}
 	} catch (e) {
@@ -68,7 +78,7 @@ export function measureLOAD(): void {
 			state.vitals.LOAD = Math.round(
 				navEntry.loadEventEnd - navEntry.startTime,
 			);
-			recordMetric("LOAD", state.vitals.LOAD);
+			recordNavigationMetric("LOAD", state.vitals.LOAD);
 			updateDebugOverlay();
 		}
 	} catch (e) {

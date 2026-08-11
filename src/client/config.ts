@@ -7,7 +7,6 @@
 
 export interface PerformanceBudget {
 	LCP?: number;
-	FID?: number;
 	CLS?: number;
 	FCP?: number;
 	TTFB?: number;
@@ -32,6 +31,13 @@ export interface BridgedConfig {
 	sessionId?: string;
 	userId?: string;
 	sampleRate: number;
+	trackSoftNavigations: boolean;
+	attribution: boolean;
+	trackLongTasks: boolean;
+	maxBatchSize: number;
+	retryFailedMetrics: boolean;
+	respectDnt: boolean;
+	consent: boolean;
 }
 
 export interface WebVitalsConfig extends BridgedConfig {

@@ -9,7 +9,6 @@ export interface BrowserInfo {
 	isSafari: boolean;
 	supported: {
 		LCP: boolean;
-		FID: boolean;
 		CLS: boolean;
 		FCP: boolean;
 		INP: boolean;
@@ -31,8 +30,6 @@ function computeBrowserInfo(): BrowserInfo {
 			PerformanceObserver.supportedEntryTypes?.includes(
 				"largest-contentful-paint",
 			) || false,
-		FID:
-			PerformanceObserver.supportedEntryTypes?.includes("first-input") || false,
 		CLS:
 			PerformanceObserver.supportedEntryTypes?.includes("layout-shift") ||
 			false,

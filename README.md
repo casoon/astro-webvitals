@@ -50,7 +50,7 @@ export default defineConfig({
 <WebVitals endpoint="/api/analytics/vitals" dashboard />
 ```
 
-Open `/__web-vitals`. It shows the latest metric per route from this browser and can clear that local history. Use `webVitalsDashboard({ route: '/internal/web-vitals', enabled: process.env.NODE_ENV !== 'production' })` to change or disable the injected route.
+Open `/__web-vitals`. It shows the latest metric per route from this browser and can clear that local history. **Run sitemap pass** opens every page listed in `/sitemap.xml` in the current tab, waits briefly for each page to settle, and returns to the dashboard with local QA measurements. It deliberately bypasses normal sampling for that explicitly started pass, while consent and Do Not Track still apply. This is not representative field data. Use `webVitalsDashboard({ route: '/internal/web-vitals', enabled: process.env.NODE_ENV !== 'production' })` to change or disable the injected route.
 
 For local diagnosis:
 

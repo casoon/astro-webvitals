@@ -59,10 +59,14 @@ const title = "Web Vitals dashboard";
       .intro { max-width: 50rem; margin: .9rem 0 0; color: var(--muted); font-size: 1rem; line-height: 1.55; }
       .actions { display: grid; justify-items: end; gap: .75rem; min-width: max-content; }
       .summary { margin: 0; color: var(--muted); font-size: .84rem; font-variant-numeric: tabular-nums; }
-      .clear { border: 1px solid var(--line); border-radius: .55rem; padding: .65rem .8rem; background: var(--surface); color: var(--ink); cursor: pointer; font-size: .84rem; font-weight: 650; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
-      .clear:hover { border-color: var(--accent); background: var(--accent-soft); }
-      .clear:active { transform: translateY(1px); }
-      .clear:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+      .action-buttons { display: flex; flex-wrap: wrap; justify-content: end; gap: .5rem; }
+      .button { border: 1px solid var(--line); border-radius: .55rem; padding: .65rem .8rem; background: var(--surface); color: var(--ink); cursor: pointer; font-size: .84rem; font-weight: 650; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+      .button:hover { border-color: var(--accent); background: var(--accent-soft); }
+      .button:active { transform: translateY(1px); }
+      .button:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+      .button.primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+      .button.primary:hover { filter: brightness(1.08); }
+      .pass-note { max-width: 19rem; margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.35; text-align: right; }
       main { padding-top: 2rem; }
       .empty { max-width: 42rem; margin: 3.5rem auto; padding: 2rem; border: 1px dashed var(--line); border-radius: .85rem; background: var(--surface-raised); color: var(--muted); line-height: 1.55; text-align: center; }
       .route-list { display: grid; gap: 1rem; }
@@ -84,6 +88,8 @@ const title = "Web Vitals dashboard";
       @media (max-width: 42rem) {
         .masthead { flex-direction: column; gap: 1.25rem; }
         .actions { justify-items: start; }
+        .action-buttons { justify-content: start; }
+        .pass-note { text-align: left; }
         .route-header { align-items: flex-start; flex-direction: column; gap: .25rem; }
         .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .metric { min-height: 7.4rem; padding: .9rem; }
@@ -104,7 +110,11 @@ const title = "Web Vitals dashboard";
         </div>
         <div class="actions">
           <p class="summary" id="summary" aria-live="polite"></p>
-          <button class="clear" id="clear" type="button">Clear local data</button>
+          <div class="action-buttons">
+            <button class="button primary" id="sitemap-pass" type="button">Run sitemap pass</button>
+            <button class="button" id="clear" type="button">Clear local data</button>
+          </div>
+          <p class="pass-note" id="pass-note">Loads every sitemap page in this tab and returns here. This is local QA data, not representative user data.</p>
         </div>
       </header>
       <main>
@@ -114,9 +124,12 @@ const title = "Web Vitals dashboard";
 
     <script>
       import { clearDashboardMetrics, readDashboardMetrics } from "./client/dashboard-storage";
+      import { startSitemapPass } from "./client/sitemap-pass";
 
       const content = document.querySelector<HTMLDivElement>("#content")!;
       const clear = document.querySelector<HTMLButtonElement>("#clear")!;
+      const sitemapPass = document.querySelector<HTMLButtonElement>("#sitemap-pass")!;
+      const passNote = document.querySelector<HTMLParagraphElement>("#pass-note")!;
       const summary = document.querySelector<HTMLParagraphElement>("#summary")!;
 
       type Metric = ReturnType<typeof readDashboardMetrics>[number];
@@ -204,6 +217,29 @@ const title = "Web Vitals dashboard";
       clear.addEventListener("click", () => {
         clearDashboardMetrics();
         render();
+      });
+
+      sitemapPass.addEventListener("click", async () => {
+        sitemapPass.disabled = true;
+        passNote.textContent = "Reading sitemap…";
+        try {
+          const response = await fetch("/sitemap.xml", { cache: "no-store" });
+          if (!response.ok) throw new Error(`Sitemap returned ${response.status}`);
+          const xml = await response.text();
+          const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
+            .map((match) => new URL(match[1].trim()))
+            .map((url) =>
+              new URL(`${url.pathname}${url.search}`, window.location.origin).href,
+            )
+            .filter((url) => url !== window.location.href);
+          if (!startSitemapPass(urls, window.location.href)) {
+            throw new Error("The sitemap contains no pages to measure");
+          }
+          window.location.assign(urls[0]);
+        } catch (error) {
+          passNote.textContent = error instanceof Error ? error.message : "Could not start the sitemap pass";
+          sitemapPass.disabled = false;
+        }
       });
       render();
     </script>

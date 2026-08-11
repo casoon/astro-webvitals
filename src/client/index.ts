@@ -15,6 +15,7 @@ import {
 } from "./metrics/navigation";
 import { measureWebVitals } from "./metrics/vitals";
 import { flushMetrics, retryFailedMetrics } from "./reporting";
+import { continueSitemapPass, isSitemapPassActive } from "./sitemap-pass";
 
 declare global {
 	interface Window {
@@ -27,7 +28,10 @@ export function initWebVitals(bridgedConfig: BridgedConfig): void {
 	if (bridgedConfig.respectDnt && navigator.doNotTrack === "1") return;
 	// Sampling is decided per page load (client-side) so static builds don't
 	// bake a single build-time coin flip into every visitor's HTML.
-	if (Math.random() >= bridgedConfig.sampleRate) return;
+	// An explicit, browser-local sitemap pass must not be lost to normal
+	// production sampling. Consent and DNT gates above still always apply.
+	if (!isSitemapPassActive() && Math.random() >= bridgedConfig.sampleRate)
+		return;
 	if (window.__CASOON_WEBVITALS_INITIALIZED__) return;
 	window.__CASOON_WEBVITALS_INITIALIZED__ = true;
 
@@ -62,6 +66,8 @@ export function initWebVitals(bridgedConfig: BridgedConfig): void {
 		capture: true,
 	});
 	window.addEventListener("pagehide", flushMetrics, { capture: true });
+
+	continueSitemapPass();
 
 	if (config.debug || config.consoleDock || config.checkAccessibility) {
 		void initDebugFeatures();

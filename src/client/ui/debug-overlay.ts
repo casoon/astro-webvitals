@@ -7,6 +7,7 @@
 import { checkWCAG, clearAccessibilityHighlights } from "../accessibility";
 import { browserInfo } from "../browser-info";
 import { config } from "../config";
+import { formatMetricValue } from "../metric-format";
 import { formatSEOReport, getSEOContent } from "../seo";
 import { state } from "../state";
 
@@ -226,7 +227,7 @@ export function renderMetricRow(key: string): string {
 	}
 
 	// Metric has a value - render with rating
-	const formatted = key === "CLS" ? value.toFixed(3) : `${value}ms`;
+	const formatted = formatMetricValue(key, value);
 	const rating = getMetricRating(key, value);
 	const exceededBudget = budget && value > budget;
 

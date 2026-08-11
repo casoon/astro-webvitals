@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-11
+
+### Fixed
+- The bundled client script's import path was `../client/index` instead of `./client/index`, pointing outside `src/` — broke the module import introduced in 0.4.0.
+
 ## [0.4.0] - 2026-08-11
 
 ### Changed

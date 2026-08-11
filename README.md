@@ -39,7 +39,7 @@ The optional dashboard is a static Astro route backed only by this browser's `lo
 ```ts
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import { webVitalsDashboard } from '@casoon/astro-webvitals';
+import { webVitalsDashboard } from '@casoon/astro-webvitals/integration';
 
 export default defineConfig({
   integrations: [webVitalsDashboard()],

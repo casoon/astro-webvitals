@@ -27,7 +27,7 @@ The optional dashboard stores up to 200 metrics in this browser's `localStorage`
 ```ts
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import { webVitalsDashboard } from '@casoon/astro-webvitals';
+import { webVitalsDashboard } from '@casoon/astro-webvitals/integration';
 
 export default defineConfig({
   integrations: [webVitalsDashboard({ enabled: process.env.NODE_ENV !== 'production' })],

@@ -1,12 +1,13 @@
 {
   "name": "@casoon/astro-webvitals",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "A lightweight Web Vitals monitoring component for Astro with debug overlay and analytics support",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./WebVitals.astro": "./src/WebVitals.astro"
+    "./WebVitals.astro": "./src/WebVitals.astro",
+    "./integration": "./src/integration.ts"
   },
   "files": [
     "src",

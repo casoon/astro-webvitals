@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-08-11
+
+### Fixed
+- Exposed the dashboard integration as `@casoon/astro-webvitals/integration`, so Astro can load it from `astro.config` without importing the `.astro` component.
+
 ## [0.4.4] - 2026-08-11
 
 ### Added

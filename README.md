@@ -32,6 +32,26 @@ import { WebVitals } from '@casoon/astro-webvitals';
 <WebVitals endpoint="/api/analytics/vitals" sampleRate={0.1} />
 ```
 
+## Local dashboard
+
+The optional dashboard is a static Astro route backed only by this browser's `localStorage`; it needs neither Cloudflare nor a database. It is useful for development and QA, not for team-wide production analytics.
+
+```ts
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import { webVitalsDashboard } from '@casoon/astro-webvitals';
+
+export default defineConfig({
+  integrations: [webVitalsDashboard()],
+});
+```
+
+```astro
+<WebVitals endpoint="/api/analytics/vitals" dashboard />
+```
+
+Open `/__web-vitals`. It shows the latest metric per route from this browser and can clear that local history. Use `webVitalsDashboard({ route: '/internal/web-vitals', enabled: process.env.NODE_ENV !== 'production' })` to change or disable the injected route.
+
 For local diagnosis:
 
 ```astro
@@ -78,6 +98,7 @@ The client flushes when a page becomes hidden and uses `sendBeacon` when possibl
 | `trackSoftNavigations` | `false` | Include experimental browser-detected soft navigations. |
 | `retryFailedMetrics` | `false` | Store up to 50 failed entries in `localStorage` for a later retry. |
 | `consent` | `true` | Explicit collection gate. `false` prevents initialization. |
+| `dashboard` | `false` | Store the last 200 metrics in browser-local storage for the optional dashboard. |
 | `respectDnt` | `false` | Prevent initialization when `navigator.doNotTrack === '1'`. |
 | `checkAccessibility` | `debug` | Run the small, development-only accessibility heuristic. |
 | `highlightAccessibility` | `false` | Highlight heuristic findings. |

@@ -1,0 +1,101 @@
+---
+const title = "Web Vitals dashboard";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title}</title>
+    <style>
+      :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+      body { margin: 0; background: Canvas; color: CanvasText; }
+      main { max-width: 72rem; margin: 0 auto; padding: 2rem; }
+      header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+      button { border: 1px solid color-mix(in srgb, CanvasText 25%, transparent); border-radius: .4rem; padding: .5rem .75rem; background: transparent; color: inherit; cursor: pointer; }
+      .intro { color: color-mix(in srgb, CanvasText 70%, transparent); }
+      .empty { padding: 2rem; border: 1px dashed color-mix(in srgb, CanvasText 30%, transparent); border-radius: .5rem; }
+      .route { margin-top: 1.5rem; border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); border-radius: .5rem; overflow: hidden; }
+      h2 { margin: 0; padding: .8rem 1rem; font-size: 1rem; overflow-wrap: anywhere; background: color-mix(in srgb, CanvasText 6%, transparent); }
+      table { width: 100%; border-collapse: collapse; text-align: left; }
+      th, td { padding: .7rem 1rem; border-top: 1px solid color-mix(in srgb, CanvasText 12%, transparent); }
+      .good { color: #14804a; } .needs-improvement { color: #a86000; } .poor { color: #bd2020; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>{title}</h1>
+          <p class="intro">Local measurements from this browser only. No data is sent or stored by this page.</p>
+        </div>
+        <button id="clear" type="button">Clear local data</button>
+      </header>
+      <div id="content" aria-live="polite"></div>
+    </main>
+
+    <script>
+      import { clearDashboardMetrics, readDashboardMetrics } from "./client/dashboard-storage";
+
+      const content = document.querySelector<HTMLDivElement>("#content")!;
+      const clear = document.querySelector<HTMLButtonElement>("#clear")!;
+
+      type Metric = ReturnType<typeof readDashboardMetrics>[number];
+
+      function render() {
+        const latest = new Map<string, Metric>();
+        for (const metric of readDashboardMetrics()) {
+          const key = `${metric.url}:${metric.name}`;
+          const previous = latest.get(key);
+          if (!previous || metric.timestamp > previous.timestamp) latest.set(key, metric);
+        }
+
+        const byUrl = new Map<string, Metric[]>();
+        for (const metric of latest.values()) {
+          byUrl.set(metric.url, [...(byUrl.get(metric.url) ?? []), metric]);
+        }
+
+        content.replaceChildren();
+        if (byUrl.size === 0) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = "No local RUM measurements yet. Visit a page that enables WebVitals with dashboard={true}.";
+          content.append(empty);
+          return;
+        }
+
+        for (const [url, metrics] of byUrl) {
+          const section = document.createElement("section");
+          section.className = "route";
+          const heading = document.createElement("h2");
+          heading.textContent = url;
+          const table = document.createElement("table");
+          table.innerHTML = "<thead><tr><th>Metric</th><th>Value</th><th>Rating</th><th>Captured</th></tr></thead>";
+          const body = document.createElement("tbody");
+          for (const metric of metrics.sort((a, b) => a.name.localeCompare(b.name))) {
+            const row = document.createElement("tr");
+            const cells = [metric.name, String(metric.value), metric.rating ?? "—", new Date(metric.timestamp).toLocaleString()];
+            for (const value of cells) {
+              const cell = document.createElement("td");
+              cell.textContent = value;
+              row.append(cell);
+            }
+            if (metric.rating) row.children[2].className = metric.rating;
+            body.append(row);
+          }
+          table.append(body);
+          section.append(heading, table);
+          content.append(section);
+        }
+      }
+
+      clear.addEventListener("click", () => {
+        clearDashboardMetrics();
+        render();
+      });
+      render();
+    </script>
+  </body>
+</html>

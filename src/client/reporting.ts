@@ -3,6 +3,7 @@
  */
 
 import { config } from "./config";
+import { persistDashboardMetric } from "./dashboard-storage";
 import { type MetricEntry, state } from "./state";
 
 export type ReportableMetric = Omit<MetricEntry, "timestamp">;
@@ -11,8 +12,9 @@ const FAILED_METRICS_KEY = "casoon-webvitals-failed-metrics";
 const MAX_STORED_METRICS = 50;
 
 export function recordMetric(metric: ReportableMetric): void {
-	if (!config.endpoint) return;
 	const entry: MetricEntry = { ...metric, timestamp: Date.now() };
+	if (config.dashboard) persistDashboardMetric(entry);
+	if (!config.endpoint) return;
 
 	if (config.batchReporting) {
 		state.metricsBuffer.push(entry);

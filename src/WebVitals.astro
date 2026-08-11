@@ -130,6 +130,9 @@ export interface Props {
 
 	/** Explicit consent gate for all collection and reporting */
 	consent?: boolean;
+
+	/** Store a bounded history for the local Web Vitals dashboard */
+	dashboard?: boolean;
 }
 
 const {
@@ -156,13 +159,15 @@ const {
 	retryFailedMetrics = false,
 	respectDnt = false,
 	consent = true,
+	dashboard = false,
 } = Astro.props;
 
 const isDev = import.meta.env.DEV;
 // Note: sampling (sampleRate) is applied client-side inside the script below,
 // not here — this file's frontmatter runs once at build time for static output,
 // so a build-time coin flip would bake the same decision into every visitor's page.
-const shouldTrack = !isDev || trackInDev || debug || consoleDock || highlightAccessibility;
+const shouldTrack =
+	!isDev || trackInDev || debug || consoleDock || highlightAccessibility || dashboard;
 
 // Position styles will be determined dynamically based on viewport
 const desktopPositions = {
@@ -210,7 +215,8 @@ const defaultBudgets = {
 	      maxBatchSize: Math.max(1, Math.floor(Number.isFinite(maxBatchSize) ? maxBatchSize : 10)),
 	      retryFailedMetrics,
 	      respectDnt,
-	      consent
+	      consent,
+	      dashboard
     }
   }}>
     window.__WEBVITALS_CONFIG__ = config;

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-08-11
+
+### Added
+- Optional browser-local dashboard storage (`dashboard`) with a bounded history of 200 metrics.
+- `webVitalsDashboard()` Astro integration, which injects a static, noindex dashboard route at `/__web-vitals` by default.
+
 ## [0.4.3] - 2026-08-11
 
 ### Added

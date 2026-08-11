@@ -7,6 +7,8 @@
  * @packageDocumentation
  */
 
+export type { WebVitalsDashboardOptions } from "./integration";
+export { webVitalsDashboard } from "./integration";
 export { default as WebVitals } from "./WebVitals.astro";
 
 /**
@@ -126,4 +128,6 @@ export interface WebVitalsProps {
 	respectDnt?: boolean;
 	/** Explicit consent gate for initializing collection */
 	consent?: boolean;
+	/** Store a bounded history for the local Web Vitals dashboard */
+	dashboard?: boolean;
 }

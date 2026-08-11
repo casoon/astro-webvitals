@@ -38,6 +38,7 @@ export interface BridgedConfig {
 	retryFailedMetrics: boolean;
 	respectDnt: boolean;
 	consent: boolean;
+	dashboard: boolean;
 }
 
 export interface WebVitalsConfig extends BridgedConfig {

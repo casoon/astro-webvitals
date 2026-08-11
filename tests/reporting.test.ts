@@ -2,6 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { config } from "../src/client/config";
 import {
+	DASHBOARD_STORAGE_KEY,
+	readDashboardMetrics,
+} from "../src/client/dashboard-storage";
+import {
 	flushMetrics,
 	recordMetric,
 	retryFailedMetrics,
@@ -24,6 +28,7 @@ describe("metric reporting", () => {
 			finalSessionId: "session-test",
 			debug: false,
 			retryFailedMetrics: false,
+			dashboard: false,
 		});
 		Object.defineProperty(navigator, "sendBeacon", {
 			configurable: true,
@@ -90,5 +95,17 @@ describe("metric reporting", () => {
 
 		retryFailedMetrics();
 		expect(window.localStorage.getItem(failedMetricsKey)).toBeNull();
+	});
+
+	it("stores dashboard metrics locally without requiring an endpoint", () => {
+		config.endpoint = undefined;
+		config.dashboard = true;
+
+		recordMetric({ name: "LCP", value: 1300, delta: 1300, id: "v4-local" });
+
+		expect(readDashboardMetrics()).toEqual([
+			expect.objectContaining({ name: "LCP", id: "v4-local", url: window.location.href }),
+		]);
+		expect(window.localStorage.getItem(DASHBOARD_STORAGE_KEY)).toContain("v4-local");
 	});
 });

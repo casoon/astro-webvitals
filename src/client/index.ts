@@ -14,6 +14,7 @@ import {
 	measureTCP,
 } from "./metrics/navigation";
 import { measureWebVitals } from "./metrics/vitals";
+import { capturePageAudit } from "./page-audit";
 import { flushMetrics, retryFailedMetrics } from "./reporting";
 import { continueSitemapPass, isSitemapPassActive } from "./sitemap-pass";
 
@@ -37,6 +38,10 @@ export function initWebVitals(bridgedConfig: BridgedConfig): void {
 
 	initConfig(bridgedConfig);
 	retryFailedMetrics();
+	if (config.dashboard) {
+		if (document.readyState === "complete") capturePageAudit();
+		else window.addEventListener("load", capturePageAudit, { once: true });
+	}
 
 	// Navigation timing metrics (available immediately)
 	measureDNS();

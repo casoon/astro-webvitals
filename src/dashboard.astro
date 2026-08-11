@@ -84,6 +84,19 @@ const title = "Web Vitals dashboard";
       .rating.needs-improvement { background: var(--needs-improvement-soft); color: var(--needs-improvement); }
       .rating.poor { background: var(--poor-soft); color: var(--poor); }
       time { color: var(--muted); font-size: .7rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .page-audit { padding: 1rem 1.15rem 1.15rem; border-top: 1px solid var(--line); background: var(--surface-raised); }
+      .audit-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+      h3 { margin: 0; font-size: .78rem; font-weight: 780; letter-spacing: .07em; text-transform: uppercase; }
+      .audit-summary { margin: 0; color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; }
+      .audit-checks { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0 0; padding: 0; list-style: none; }
+      .audit-check { max-width: 100%; border-radius: 999px; padding: .22rem .5rem; background: var(--surface); color: var(--muted); font-size: .7rem; line-height: 1.3; }
+      .audit-check.pass { background: var(--good-soft); color: var(--good); }
+      .audit-check.issue { background: var(--poor-soft); color: var(--poor); }
+      .audit-metadata { margin-top: .85rem; color: var(--muted); font-size: .75rem; }
+      .audit-metadata summary { width: fit-content; cursor: pointer; color: var(--ink); font-weight: 700; }
+      .metadata-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .35rem .75rem; margin: .6rem 0 0; }
+      .metadata-list dt { color: var(--muted); font-weight: 650; }
+      .metadata-list dd { min-width: 0; margin: 0; overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; }
 
       @media (max-width: 42rem) {
         .masthead { flex-direction: column; gap: 1.25rem; }
@@ -93,10 +106,12 @@ const title = "Web Vitals dashboard";
         .route-header { align-items: flex-start; flex-direction: column; gap: .25rem; }
         .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .metric { min-height: 7.4rem; padding: .9rem; }
+        .page-audit { padding: .9rem; }
+        .audit-heading { align-items: flex-start; flex-direction: column; gap: .25rem; }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .clear { transition: none; }
+        .button { transition: none; }
       }
     </style>
   </head>
@@ -123,7 +138,11 @@ const title = "Web Vitals dashboard";
     </div>
 
     <script>
-      import { clearDashboardMetrics, readDashboardMetrics } from "./client/dashboard-storage";
+      import {
+        clearDashboardMetrics,
+        readDashboardMetrics,
+        readDashboardPageAudits,
+      } from "./client/dashboard-storage";
       import { startSitemapPass } from "./client/sitemap-pass";
 
       const content = document.querySelector<HTMLDivElement>("#content")!;
@@ -133,11 +152,62 @@ const title = "Web Vitals dashboard";
       const summary = document.querySelector<HTMLParagraphElement>("#summary")!;
 
       type Metric = ReturnType<typeof readDashboardMetrics>[number];
+      type PageAudit = ReturnType<typeof readDashboardPageAudits>[number];
 
       function formatMetric(metric: Metric): string {
         return metric.name === "CLS"
           ? metric.value.toFixed(3)
           : `${Math.round(metric.value)} ms`;
+      }
+
+      function renderPageAudit(audit: PageAudit): HTMLElement {
+        const auditSection = document.createElement("section");
+        auditSection.className = "page-audit";
+        const heading = document.createElement("div");
+        heading.className = "audit-heading";
+        const title = document.createElement("h3");
+        title.textContent = "Page checks";
+        const issueCount = audit.checks.filter((check) => check.state === "issue").length;
+        const passCount = audit.checks.filter((check) => check.state === "pass").length;
+        const summary = document.createElement("p");
+        summary.className = "audit-summary";
+        summary.textContent = issueCount
+          ? `${issueCount} issue${issueCount === 1 ? "" : "s"} · ${passCount} passed`
+          : `${passCount} checks passed`;
+        heading.append(title, summary);
+
+        const checks = document.createElement("ul");
+        checks.className = "audit-checks";
+        for (const check of audit.checks) {
+          const item = document.createElement("li");
+          item.className = `audit-check ${check.state}`;
+          item.textContent = `${check.name}: ${check.detail}`;
+          checks.append(item);
+        }
+
+        const metadata = document.createElement("details");
+        metadata.className = "audit-metadata";
+        const metadataSummary = document.createElement("summary");
+        metadataSummary.textContent = "Metadata";
+        const metadataList = document.createElement("dl");
+        metadataList.className = "metadata-list";
+        for (const [label, value] of [
+          ["Title", audit.metadata.title],
+          ["Description", audit.metadata.description],
+          ["Canonical", audit.metadata.canonical],
+          ["Language", audit.metadata.lang],
+          ["Robots", audit.metadata.robots || "Not set"],
+        ]) {
+          const term = document.createElement("dt");
+          term.textContent = label;
+          const definition = document.createElement("dd");
+          definition.textContent = value || "Missing";
+          definition.title = value || "Missing";
+          metadataList.append(term, definition);
+        }
+        metadata.append(metadataSummary, metadataList);
+        auditSection.append(heading, checks, metadata);
+        return auditSection;
       }
 
       function render() {
@@ -153,13 +223,23 @@ const title = "Web Vitals dashboard";
           byUrl.set(metric.url, [...(byUrl.get(metric.url) ?? []), metric]);
         }
 
+        const latestAudits = new Map<string, PageAudit>();
+        for (const audit of readDashboardPageAudits()) {
+          const previous = latestAudits.get(audit.url);
+          if (!previous || audit.timestamp > previous.timestamp) latestAudits.set(audit.url, audit);
+        }
+
         const allMetrics = [...latest.values()];
         const newest = allMetrics.reduce<Metric | undefined>(
           (current, metric) => (!current || metric.timestamp > current.timestamp ? metric : current),
           undefined,
         );
+        const auditIssues = [...latestAudits.values()].reduce(
+          (total, audit) => total + audit.checks.filter((check) => check.state === "issue").length,
+          0,
+        );
         summary.textContent = allMetrics.length
-          ? `${byUrl.size} page${byUrl.size === 1 ? "" : "s"} · ${allMetrics.length} latest metrics · updated ${new Date(newest!.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+          ? `${byUrl.size} page${byUrl.size === 1 ? "" : "s"} · ${allMetrics.length} latest metrics · ${auditIssues} page issue${auditIssues === 1 ? "" : "s"} · updated ${new Date(newest!.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
           : "No local data yet";
 
         content.replaceChildren();
@@ -208,7 +288,9 @@ const title = "Web Vitals dashboard";
             item.append(name, value, footer);
             list.append(item);
           }
+          const audit = latestAudits.get(url);
           section.append(header, list);
+          if (audit) section.append(renderPageAudit(audit));
           routes.append(section);
         }
         content.append(routes);

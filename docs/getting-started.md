@@ -38,7 +38,7 @@ export default defineConfig({
 <WebVitals dashboard />
 ```
 
-Open `/__web-vitals` to inspect or clear the local history. **Run sitemap pass** opens each `/sitemap.xml` page sequentially in the current tab, then returns with locally captured measurements. The explicitly started pass bypasses normal sampling, but never the consent or Do Not Track gates. This is a developer/QA tool, not shared or representative analytics.
+Open `/__web-vitals` to inspect or clear the local history. **Run sitemap pass** opens each `/sitemap.xml` page sequentially in the current tab, then returns with local measurements and browser-visible page checks (metadata, H1, Open Graph and basic accessibility signals). The explicitly started pass bypasses normal sampling, but never the consent or Do Not Track gates. This complements, rather than replaces, the build-time audit. It is a developer/QA tool, not shared or representative analytics.
 
 Production collection is consent-aware when configured:
 

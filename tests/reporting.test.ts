@@ -68,6 +68,15 @@ describe("metric reporting", () => {
 		);
 	});
 
+	it("flushes immediately when the configured batch size is reached", () => {
+		config.maxBatchSize = 1;
+
+		recordMetric({ name: "TTFB", value: 200, delta: 200, id: "v4-000" });
+
+		expect(navigator.sendBeacon).toHaveBeenCalledTimes(1);
+		expect(state.metricsBuffer).toEqual([]);
+	});
+
 	it("persists failed fetch reports only when retry is enabled", async () => {
 		vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("offline"))));
 		config.headers = { "X-Request-Source": "test" };

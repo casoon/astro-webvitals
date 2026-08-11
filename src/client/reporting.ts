@@ -17,11 +17,11 @@ export function recordMetric(metric: ReportableMetric): void {
 	if (config.batchReporting) {
 		state.metricsBuffer.push(entry);
 
-		if (
-			state.metricsBuffer.length >= config.maxBatchSize ||
-			!state.batchTimer
-		) {
-			if (state.batchTimer) clearTimeout(state.batchTimer);
+		if (state.metricsBuffer.length >= config.maxBatchSize) {
+			flushMetrics();
+			return;
+		}
+		if (!state.batchTimer) {
 			state.batchTimer = setTimeout(flushMetrics, config.batchInterval);
 		}
 	} else {

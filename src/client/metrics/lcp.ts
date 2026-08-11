@@ -1,60 +1,60 @@
-/**
- * LCP - Largest Contentful Paint
- * Loading performance: time until largest visible element renders
- */
+// LCP - Largest Contentful Paint
+// Loading performance: time until largest visible element renders
 
-import type { MetricCallbacks, WebVitalsMetrics } from "../types";
-import { onBFCacheRestore } from "../utils/bfcache";
+import { config } from "../config";
+import { recordMetric } from "../reporting";
+import { state } from "../state";
+import { updateDebugOverlay } from "../ui/debug-overlay";
 import {
 	doubleRAF,
 	getActivationStart,
+	onBFCacheRestore,
 	runOnce,
+	visibilityWatcher,
 	whenIdleOrHidden,
-} from "../utils/helpers";
-import { visibilityWatcher } from "../utils/visibility";
+} from "../visibility";
 
-export function measureLCP(
-	vitals: WebVitalsMetrics,
-	callbacks: MetricCallbacks,
-	debug: boolean = false,
-): void {
+export function measureLCP(): void {
 	if (
 		!PerformanceObserver?.supportedEntryTypes?.includes(
 			"largest-contentful-paint",
 		)
 	) {
-		if (debug) console.warn("[@casoon/astro-webvitals] LCP not supported");
+		state.lcpUnsupported = true;
 		return;
 	}
 
 	try {
 		let lcpValue = 0;
 		let lcpEntries: PerformanceEntry[] = [];
-		let observer: PerformanceObserver;
+		let observer: PerformanceObserver | undefined;
 
 		const reportLCP = () => {
 			if (lcpValue > 0) {
-				vitals.LCP = lcpValue;
-				callbacks.onMetric("LCP", vitals.LCP);
-				callbacks.onUpdate();
+				state.vitals.LCP = lcpValue;
+				recordMetric("LCP", state.vitals.LCP);
+				updateDebugOverlay();
 			}
 		};
 
-		const handleEntries = (entries: PerformanceEntryList) => {
+		const handleEntries = (entries: PerformanceEntry[]) => {
 			for (const entry of entries) {
+				// Only report if the page wasn't hidden before this LCP
 				if (entry.startTime < visibilityWatcher.firstHiddenTime) {
+					// Subtract activationStart for prerendered pages
 					const value = Math.max(entry.startTime - getActivationStart(), 0);
 					if (value > 0) {
 						lcpValue = Math.round(value);
 						lcpEntries.push(entry);
-						// Live update
-						vitals.LCP = lcpValue;
-						callbacks.onUpdate();
+						// Live update in debug overlay (final report happens in stopListening)
+						state.vitals.LCP = lcpValue;
+						updateDebugOverlay();
 					}
 				}
 			}
 		};
 
+		// Stop observing on user interaction (LCP stops after first input)
 		const stopListening = runOnce(() => {
 			whenIdleOrHidden(() => {
 				if (observer) {
@@ -65,7 +65,8 @@ export function measureLCP(
 			});
 		});
 
-		["keydown", "click"].forEach((type) => {
+		// Stop on keydown, click (pointerdown), or visibility change
+		(["keydown", "click"] as const).forEach((type) => {
 			addEventListener(type, () => stopListening(), {
 				capture: true,
 				once: true,
@@ -88,6 +89,7 @@ export function measureLCP(
 
 		observer.observe({ type: "largest-contentful-paint", buffered: true });
 
+		// Handle BFCache restoration
 		onBFCacheRestore((event) => {
 			lcpValue = 0;
 			lcpEntries = [];
@@ -97,6 +99,6 @@ export function measureLCP(
 			});
 		});
 	} catch (e) {
-		if (debug) console.warn("[@casoon/astro-webvitals] LCP error:", e);
+		if (config.debug) console.warn("[@casoon/astro-webvitals] LCP error:", e);
 	}
 }

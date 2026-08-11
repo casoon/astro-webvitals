@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-11
+
+### Changed
+- **Client architecture** - The ~2500-line inline client script is now split into TypeScript modules under `src/client/` (metrics, UI, accessibility, SEO, reporting) and loaded as a bundled module script instead of a raw inline script. This makes the client logic covered by type-checking and linting for the first time, and lets browsers cache the script across page loads instead of re-downloading it inline on every page.
+- Upgraded `typescript` to `^7.0.2` (from `^6.0.3`), `astro` to `^7.2.0`, `@biomejs/biome` to `^2.5.8`.
+- Removed `src/lib/` - an unused, unreferenced set of metric/util modules that weren't exported or imported anywhere.
+
+### Fixed
+- `sampleRate` and the auto-generated `sessionId` were evaluated once at build time in the Astro frontmatter, so every visitor of a statically generated page shared the same sampling decision and session ID. Both are now evaluated client-side, per page load.
+- Captured console messages were inserted into the console dock without escaping, allowing HTML/script injection via `console.log`/`console.error` calls that include untrusted content.
+- A WCAG label lookup could throw on element `id`s containing CSS-selector-breaking characters, aborting the rest of the accessibility check.
+- The FID measurement could register a duplicate `PerformanceObserver` on BFCache restore without disconnecting the previous one.
+- `console.log/info/warn/error` were monkey-patched on every tracked page load regardless of whether `debug` or `consoleDock` was enabled; now only patched when needed.
+
 ## [0.1.6] - 2024-12-17
 
 ### Changed

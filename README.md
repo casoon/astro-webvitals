@@ -260,23 +260,23 @@ const isDev = import.meta.env.DEV;
 Uses the [Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance) supported in all modern browsers:
 
 - Chrome/Edge 77+ (full support)
-- Firefox 89+ (full support)
-- Safari 14+ (limited support)
+- Firefox 89+ (full support, INP since Firefox 114)
+- Safari 26.2+ (partial support, see below)
 
 ### Safari Limitations
 
-Safari (WebKit) does not support all Web Vitals metrics. The following metrics are **not available** in Safari:
+Safari (WebKit) does not support all Web Vitals metrics. As of Safari 26.2 (December 2025), LCP and INP are supported; CLS remains unimplemented (proposed for Interop 2026, not yet shipped):
 
 | Metric | Safari Support |
 |--------|----------------|
-| **LCP** | ❌ Not supported |
-| **FID** | ❌ Not supported |
-| **INP** | ❌ Not supported |
-| **CLS** | ✅ Supported |
+| **LCP** | ✅ Supported (Safari 26.2+) |
+| **FID** | ❌ Not supported (deprecated in favor of INP) |
+| **INP** | ✅ Supported (Safari 26.2+, some inflated values reported) |
+| **CLS** | ❌ Not supported |
 | **FCP** | ✅ Supported |
 | **TTFB** | ✅ Supported |
 
-The debug overlay automatically detects browser limitations and displays a warning when metrics are unavailable. For complete Web Vitals measurement, use a Chromium-based browser (Chrome, Edge, Brave, Arc).
+The debug overlay uses live feature detection (`PerformanceObserver.supportedEntryTypes`), so it always reflects the browser's actual support rather than this table. For complete Web Vitals measurement, use a Chromium-based browser (Chrome, Edge, Brave, Arc).
 
 ## Development
 

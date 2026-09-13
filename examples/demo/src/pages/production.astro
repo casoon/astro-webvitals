@@ -1,0 +1,22 @@
+---
+import { WebVitals } from "@casoon/astro-webvitals";
+
+// Your consent state, e.g. from a consent manager.
+const hasAnalyticsConsent = true;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Production</title>
+	</head>
+	<body>
+		<h1>Production</h1>
+		<WebVitals
+			endpoint="/api/analytics/vitals"
+			sampleRate={0.1}
+			consent={hasAnalyticsConsent}
+			respectDnt={true}
+		/>
+	</body>
+</html>

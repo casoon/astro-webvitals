@@ -1,0 +1,45 @@
+{
+  "name": "@casoon/pages-theme",
+  "version": "0.1.2",
+  "private": true,
+  "description": "Shared Astro theme for the GitHub Pages sites of CASOON open-source projects",
+  "type": "module",
+  "license": "MIT",
+  "author": "Jörn Seidel <joern.seidel@casoon.de> (https://www.casoon.de)",
+  "exports": {
+    ".": "./index.ts",
+    "./content": "./content.ts",
+    "./components": "./components/index.ts",
+    "./components/*": "./components/*",
+    "./ansi": "./lib/ansi.ts",
+    "./showcase": "./lib/showcase.ts",
+    "./layouts/*": "./layouts/*",
+    "./lib/*": "./lib/*",
+    "./routes/*": "./routes/*",
+    "./styles/*": "./styles/*"
+  },
+  "files": [
+    "index.ts",
+    "content.ts",
+    "virtual.d.ts",
+    "assets",
+    "components",
+    "fonts",
+    "layouts",
+    "lib",
+    "routes",
+    "styles"
+  ],
+  "keywords": [
+    "astro-integration",
+    "astro-theme",
+    "withastro",
+    "casoon"
+  ],
+  "peerDependencies": {
+    "astro": "^7.3.2"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^8.0.1"
+  }
+}

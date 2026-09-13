@@ -1,0 +1,63 @@
+---
+interface Props {
+  type?: 'note' | 'tip' | 'caution' | 'deprecated';
+  title?: string;
+}
+
+const TITLES = { note: 'Note', tip: 'Tip', caution: 'Caution', deprecated: 'Deprecated' };
+const { type = 'note', title = TITLES[type] } = Astro.props;
+---
+
+<div class:list={['callout', type]} role="note">
+  <p class="title">{title}</p>
+  <div class="body"><slot /></div>
+</div>
+
+<style>
+  .callout {
+    margin: 32px 0;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    border-radius: 4px 12px 12px 4px;
+    font-size: 14.5px;
+  }
+  .note {
+    border-left-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .tip {
+    border-left-color: var(--accent);
+  }
+  .caution {
+    border-left-color: var(--brand);
+    background: var(--brand-soft);
+  }
+  .deprecated {
+    border-left-color: var(--border-strong);
+    background: var(--bg-deep);
+  }
+  .title {
+    margin: 0 0 3px;
+    color: var(--heading);
+    font-weight: 600;
+  }
+  /* The tinted backgrounds lower the contrast of the accent colour below 4.5:1, for any
+     project accent. Links use the heading colour and keep the accent as underline. */
+  .body :global(a),
+  .body :global(a:hover) {
+    color: var(--heading);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 2px;
+  }
+  .body :global(a:hover) {
+    text-decoration-thickness: 2px;
+  }
+  .body :global(> :last-child) {
+    margin-bottom: 0;
+  }
+  .body :global(p) {
+    margin: 0 0 8px;
+  }
+</style>

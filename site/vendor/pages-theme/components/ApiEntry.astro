@@ -1,0 +1,134 @@
+---
+/** Overview entry for a public type or function. Item-level docs stay on docs.rs / TypeDoc. */
+import { Code } from 'astro:components';
+
+interface Props {
+  kind: string;
+  name: string;
+  signature: string;
+  lang?: string;
+  since?: string;
+  params?: { name: string; type: string; desc: string }[];
+}
+
+const { kind, name, signature, lang = 'rust', since, params = [] } = Astro.props;
+---
+
+<section class="api">
+  <header>
+    <span class="kind">{kind}</span>
+    <code class="name">{name}</code>
+    {since && <span class="since">{since}</span>}
+  </header>
+  <div class="body">
+    <div class="sig"><Code code={signature} lang={lang as never} theme="css-variables" /></div>
+    <slot />
+    {
+      params.length > 0 && (
+        <>
+          <p class="label">Parameters</p>
+          <dl>
+            {params.map((p) => (
+              <div>
+                <dt>
+                  <code>{p.name}</code>
+                </dt>
+                <dd class="type">
+                  <code>{p.type}</code>
+                </dd>
+                <dd>{p.desc}</dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .api {
+    margin-bottom: 26px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-deep);
+  }
+  .kind {
+    padding: 2px 7px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .name {
+    color: var(--heading);
+    font-size: 14.5px;
+    font-weight: 500;
+  }
+  .since {
+    margin-left: auto;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .body {
+    padding: 20px;
+    font-size: 14.5px;
+  }
+  .sig {
+    margin-bottom: 18px;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  .sig :global(pre.astro-code) {
+    padding: 14px 16px;
+    line-height: 1.7;
+  }
+  .body :global(p) {
+    margin: 0 0 18px;
+  }
+  .label {
+    margin-bottom: 8px !important;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  dl {
+    margin: 0;
+  }
+  dl div {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 4px 16px;
+    align-items: baseline;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+  }
+  dd {
+    margin: 0;
+  }
+  dt code {
+    color: var(--heading);
+    font-size: 13px;
+  }
+  .type code {
+    color: var(--accent);
+    font-size: 12.5px;
+  }
+</style>

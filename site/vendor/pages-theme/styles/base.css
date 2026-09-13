@@ -1,0 +1,271 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+}
+
+main {
+  flex: 1;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--brand);
+}
+
+button {
+  font: inherit;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -100px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--heading);
+  color: var(--bg);
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Highlighted code (Shiki) */
+pre.astro-code {
+  margin: 0;
+  padding: 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  overflow: auto;
+}
+
+/* ANSI output (lib/ansi.ts) */
+.ansi-bold {
+  font-weight: 500;
+  color: var(--ansi-15);
+}
+.ansi-dim {
+  color: var(--term-dim);
+}
+.ansi-italic {
+  font-style: italic;
+}
+.ansi-underline {
+  text-decoration: underline;
+}
+.ansi-fg-0 {
+  color: var(--ansi-0);
+}
+.ansi-fg-1 {
+  color: var(--ansi-1);
+}
+.ansi-fg-2 {
+  color: var(--ansi-2);
+}
+.ansi-fg-3 {
+  color: var(--ansi-3);
+}
+.ansi-fg-4 {
+  color: var(--ansi-4);
+}
+.ansi-fg-5 {
+  color: var(--ansi-5);
+}
+.ansi-fg-6 {
+  color: var(--ansi-6);
+}
+.ansi-fg-7 {
+  color: var(--ansi-7);
+}
+.ansi-fg-8 {
+  color: var(--ansi-8);
+}
+.ansi-fg-9 {
+  color: var(--ansi-9);
+}
+.ansi-fg-10 {
+  color: var(--ansi-10);
+}
+.ansi-fg-11 {
+  color: var(--ansi-11);
+}
+.ansi-fg-12 {
+  color: var(--ansi-12);
+}
+.ansi-fg-13 {
+  color: var(--ansi-13);
+}
+.ansi-fg-14 {
+  color: var(--ansi-14);
+}
+.ansi-fg-15 {
+  color: var(--ansi-15);
+}
+
+/* Section label used above home sections and in the docs kit */
+.cp-label {
+  margin: 0 0 28px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Rendered Markdown / MDX */
+.cp-prose > :first-child {
+  margin-top: 0;
+}
+.cp-prose h2 {
+  margin: 44px 0 14px;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--heading);
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.cp-prose h3 {
+  margin: 32px 0 10px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--heading);
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.cp-prose p,
+.cp-prose ul,
+.cp-prose ol {
+  margin: 0 0 18px;
+}
+.cp-prose li + li {
+  margin-top: 6px;
+}
+.cp-prose a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.cp-prose :not(pre) > code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--code-bg);
+  color: var(--heading);
+  font-size: 0.86em;
+}
+.cp-prose > figure,
+.cp-prose > .tabs {
+  margin-bottom: 22px;
+}
+.cp-prose > pre,
+.cp-prose > .astro-code {
+  margin: 0 0 22px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.cp-prose table {
+  width: 100%;
+  margin: 0 0 22px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font-size: 14.5px;
+}
+.cp-prose th {
+  padding: 11px 16px;
+  background: var(--bg-deep);
+  color: var(--heading);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+.cp-prose td {
+  padding: 11px 16px;
+  border-top: 1px solid var(--border);
+}
+.cp-prose blockquote {
+  margin: 0 0 18px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border-strong);
+  color: var(--muted);
+}
+.cp-prose hr {
+  margin: 40px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}

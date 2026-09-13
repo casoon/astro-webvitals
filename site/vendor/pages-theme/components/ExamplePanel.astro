@@ -1,0 +1,130 @@
+---
+/** One showcase example: input next to the output the package produced at build time. */
+import { Code } from 'astro:components';
+import type { ShowcaseExample } from '../lib/showcase';
+import { url } from '../lib/url';
+
+interface Props {
+  example: ShowcaseExample;
+  /** Heading level of the title; the detail page uses its own h1. */
+  headingLevel?: 2 | 3;
+  detailLink?: boolean;
+}
+
+const { example, headingLevel = 2, detailLink = true } = Astro.props;
+const Heading = `h${headingLevel}` as 'h2' | 'h3';
+const outputKind = example.output.kind ?? 'terminal';
+---
+
+<section class="example">
+  <header>
+    <Heading>{example.title}</Heading>
+    <span class="file">{example.file}</span>
+    {
+      detailLink && (
+        <a href={url(`showcase/${example.slug}/`)}>
+          Detail<span class="visually-hidden">: {example.title}</span> →
+        </a>
+      )
+    }
+  </header>
+  <div class="grid">
+    <div class="input" aria-label="Input">
+      <Code code={example.input.code} lang={(example.input.lang ?? 'text') as never} theme="css-variables" />
+    </div>
+    <div class:list={['output', outputKind]} aria-label="Output">
+      {outputKind === 'terminal' ? <pre tabindex="0" set:html={example.output.html} /> : <Fragment set:html={example.output.html} />}
+    </div>
+  </div>
+  {
+    example.tags && example.tags.length > 0 && (
+      <ul class="tags">
+        {example.tags.map((tag) => (
+          <li>{tag}</li>
+        ))}
+      </ul>
+    )
+  }
+</section>
+
+<style>
+  .example {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2,
+  h3 {
+    margin: 0;
+    color: var(--heading);
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .file {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  header a {
+    margin-left: auto;
+    font-size: 13.5px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  }
+  .input {
+    min-width: 0;
+    border-right: 1px solid var(--border);
+    background: var(--code-bg);
+  }
+  .input :global(pre.astro-code) {
+    height: 100%;
+    font-size: 12.5px;
+  }
+  .output {
+    min-width: 0;
+    overflow: auto;
+  }
+  .output.terminal {
+    background: var(--term-bg);
+    color: var(--term-text);
+  }
+  .output.panel {
+    padding: 18px;
+  }
+  .output pre {
+    margin: 0;
+    padding: 18px;
+    overflow: auto;
+    font-size: 12.5px;
+    line-height: 1.8;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    list-style: none;
+  }
+  .tags li {
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+</style>

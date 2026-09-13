@@ -1,0 +1,79 @@
+---
+/**
+ * Terminal window. Pass raw ANSI via `ansi` (converted at build time), or
+ * pre-rendered HTML from the project's own renderer as slot content.
+ */
+import { ansiToHtml } from '../lib/ansi';
+
+interface Props {
+  ansi?: string;
+  /** Command or shell name shown in the title bar. */
+  title?: string;
+  /** Window dots in the title bar. */
+  dots?: boolean;
+}
+
+const { ansi, title, dots = false } = Astro.props;
+const html = ansi !== undefined ? ansiToHtml(ansi) : await Astro.slots.render('default');
+---
+
+<figure class="terminal">
+  {
+    title && (
+      <figcaption>
+        {dots && (
+          <span class="dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        )}
+        {title}
+      </figcaption>
+    )
+  }
+  <pre tabindex="0" set:html={html} />
+</figure>
+
+<style>
+  .terminal {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--term-bg);
+    color: var(--term-text);
+  }
+  figcaption {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--term-border);
+    color: var(--term-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .dots {
+    display: flex;
+    gap: 7px;
+  }
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+  .dots i:nth-child(2) {
+    background: #febc2e;
+  }
+  .dots i:nth-child(3) {
+    background: #28c840;
+  }
+  pre {
+    margin: 0;
+    padding: 18px;
+    overflow: auto;
+    font-size: 12.5px;
+    line-height: 1.85;
+  }
+</style>

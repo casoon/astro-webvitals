@@ -1,0 +1,156 @@
+---
+import config from 'virtual:casoon-pages/config';
+import logo from '../assets/casoon-logo.svg';
+import logoDark from '../assets/casoon-logo-dark.svg';
+import { url } from '../lib/url';
+
+const IMPRESSUM = 'https://www.casoon.de/impressum/';
+const DATENSCHUTZ = 'https://www.casoon.de/datenschutz/';
+const MORE_PROJECTS = 'https://www.casoon.dev';
+
+const columns = [
+  {
+    title: 'Project',
+    links: [
+      { label: 'Documentation', href: url('docs/') },
+      ...(config.hasShowcase ? [{ label: 'Showcase', href: url('showcase/') }] : []),
+      ...(config.changelog ? [{ label: 'Changelog', href: url('changelog/') }] : []),
+    ],
+  },
+  {
+    title: 'Packages',
+    links: [{ label: 'GitHub', href: `https://github.com/${config.repo}` }, ...config.packages],
+  },
+  {
+    title: 'CASOON',
+    links: [
+      { label: 'casoon.de', href: 'https://www.casoon.de' },
+      { label: 'Weitere Projekte', href: MORE_PROJECTS },
+    ],
+  },
+];
+---
+
+<footer class="footer">
+  <div class="cols">
+    <div>
+      <a class="logo" href="https://www.casoon.de">
+        <img class="logo-light" src={logo.src} width="150" height="41" alt="CASOON" />
+        <img class="logo-dark" src={logoDark.src} width="150" height="41" alt="CASOON" />
+      </a>
+      <p>Ein Projekt von CASOON · Jörn Seidel</p>
+    </div>
+    {
+      columns.map((col) => (
+        <nav aria-label={col.title}>
+          <p class="title">{col.title}</p>
+          <ul>
+            {col.links.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))
+    }
+  </div>
+  <div class="bottom">
+    <span>{config.license} License · © {new Date().getFullYear()} Jörn Seidel</span>
+    <span class="legal">
+      <a href={IMPRESSUM}>Impressum</a>
+      <a href={DATENSCHUTZ}>Datenschutz</a>
+      <a href={MORE_PROJECTS}>Weitere Projekte</a>
+    </span>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 14px;
+  }
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 40px;
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 48px 24px 32px;
+  }
+  .logo {
+    display: inline-block;
+    margin-bottom: 14px;
+  }
+  .logo img {
+    display: block;
+    width: 120px;
+    height: auto;
+  }
+  .logo-dark {
+    display: none !important;
+  }
+  :global([data-theme='dark']) .logo-light {
+    display: none !important;
+  }
+  :global([data-theme='dark']) .logo-dark {
+    display: block !important;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .logo-light {
+      display: none !important;
+    }
+    :global(:root:not([data-theme='light'])) .logo-dark {
+      display: block !important;
+    }
+  }
+  p {
+    margin: 0 0 6px;
+  }
+  .title {
+    margin-bottom: 12px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  ul a {
+    color: var(--text);
+  }
+  ul a:hover {
+    color: var(--brand);
+  }
+  .bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px;
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 16px 24px 40px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+  .legal a {
+    color: var(--muted);
+  }
+  .legal a:hover {
+    color: var(--brand);
+  }
+</style>

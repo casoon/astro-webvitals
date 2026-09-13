@@ -1,0 +1,121 @@
+---
+import { readFile } from 'node:fs/promises';
+import config from 'virtual:casoon-pages/config';
+import Base from '../layouts/Base.astro';
+import { formatDate, parseChangelog } from '../lib/changelog';
+
+const releases = parseChangelog(await readFile(config.changelog as string, 'utf8'));
+const tone = (kind: string) =>
+  ['breaking', 'removed', 'security'].includes(kind)
+    ? 'brand'
+    : kind === 'fixed'
+      ? 'accent'
+      : 'plain';
+---
+
+<Base title="Changelog" description={`Release history of ${config.name}.`}>
+  <div class="page">
+    <h1>Changelog</h1>
+    <p class="lead">
+      Generated from <code>CHANGELOG.md</code> in the project repository. Never maintained twice.
+    </p>
+    {
+      releases.map((release) => (
+        <section>
+          <div>
+            <h2>{release.version}</h2>
+            {release.date && <p class="date">{formatDate(release.date)}</p>}
+          </div>
+          <ul>
+            {release.changes.map((change) => (
+              <li>
+                <span class:list={['kind', tone(change.kind)]}>{change.kind}</span>
+                <span set:html={change.html} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .page {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+  h1 {
+    margin: 0 0 12px;
+    color: var(--heading);
+    font-size: 38px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  .lead {
+    margin: 0 0 44px;
+    font-size: 17.5px;
+  }
+  .lead code,
+  li :global(code) {
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--code-bg);
+    font-size: 0.86em;
+  }
+  section {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 24px;
+    padding: 26px 0;
+    border-top: 1px solid var(--border);
+  }
+  h2 {
+    margin: 0;
+    color: var(--heading);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .date {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 14.5px;
+  }
+  .kind {
+    flex-shrink: 0;
+    min-width: 76px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .plain {
+    color: var(--heading);
+  }
+  .accent {
+    color: var(--accent);
+  }
+  .brand {
+    color: var(--brand);
+  }
+  @media (max-width: 560px) {
+    section {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+  }
+</style>

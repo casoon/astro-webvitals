@@ -1,0 +1,105 @@
+---
+import '../styles/fonts.css';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import config from 'virtual:casoon-pages/config';
+import favicon from '../assets/favicon.svg';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+  /** Page title; the project name is appended. Omit on the home page. */
+  title?: string;
+  description?: string;
+}
+
+const { title, description = config.description } = Astro.props;
+const fullTitle = title ? `${title} · ${config.name}` : `${config.name}: ${config.description}`;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+
+const accentCss = config.accent
+  ? `:root{--accent:${config.accent.light}}` +
+    `:root[data-theme="dark"]{--accent:${config.accent.dark}}` +
+    `@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--accent:${config.accent.dark}}}`
+  : '';
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: config.name,
+  description: config.description,
+  codeRepository: `https://github.com/${config.repo}`,
+  license: `https://spdx.org/licenses/${config.license}.html`,
+  ...(config.version && { version: config.version }),
+  author: { '@type': 'Person', name: 'Jörn Seidel', url: 'https://www.casoon.de' },
+  publisher: { '@type': 'Organization', name: 'CASOON', url: 'https://www.casoon.de' },
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <link rel="icon" href={favicon.src} type="image/svg+xml" />
+    {accentCss && <style is:inline set:html={accentCss} />}
+    <script is:inline>
+      // Theme before first paint: stored choice, else system preference.
+      (() => {
+        let theme = null;
+        try {
+          theme = localStorage.getItem('casoon-pages-theme');
+        } catch {}
+        if (theme !== 'dark' && theme !== 'light') {
+          theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        for (const button of document.querySelectorAll('[data-theme-toggle]')) {
+          button.hidden = false;
+          button.setAttribute('aria-pressed', String(root.dataset.theme === 'dark'));
+          button.addEventListener('click', () => {
+            const theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+            root.dataset.theme = theme;
+            button.setAttribute('aria-pressed', String(theme === 'dark'));
+            try {
+              localStorage.setItem('casoon-pages-theme', theme);
+            } catch {}
+          });
+        }
+        if (!navigator.clipboard) return;
+        for (const button of document.querySelectorAll('[data-copy]')) {
+          button.hidden = false;
+          button.addEventListener('click', async () => {
+            const source = document.getElementById(button.dataset.copy);
+            await navigator.clipboard.writeText(source.textContent.trim());
+            button.textContent = 'Copied';
+            setTimeout(() => {
+              button.textContent = 'Copy';
+            }, 1600);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

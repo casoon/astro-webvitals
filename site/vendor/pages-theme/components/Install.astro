@@ -1,0 +1,126 @@
+---
+/** Install commands per ecosystem: CSS-only tabs, copy button when JS is available. */
+interface Props {
+  commands: { label: string; command: string }[];
+  label?: string;
+}
+
+const { commands, label = 'Package manager' } = Astro.props;
+const uid = `install-${commands.map((c) => c.label.replace(/\W/g, '')).join('-')}`;
+---
+
+<div class="install">
+  <div class="list" role="radiogroup" aria-label={label}>
+    {
+      commands.map((c, i) => (
+        <>
+          <input
+            class="visually-hidden"
+            type="radio"
+            name={uid}
+            id={`${uid}-${i}`}
+            value={i}
+            checked={i === 0}
+          />
+          <label for={`${uid}-${i}`}>{c.label}</label>
+        </>
+      ))
+    }
+  </div>
+  {
+    commands.map((c, i) => (
+      <div class="panel" data-i={i}>
+        <span class="prompt" aria-hidden="true">
+          $
+        </span>
+        {/* Long commands scroll horizontally; tabindex keeps the region keyboard-reachable. */}
+        <code id={`${uid}-cmd-${i}`} tabindex="0">{c.command}</code>
+        <button class="copy" type="button" data-copy={`${uid}-cmd-${i}`} hidden>
+          Copy
+        </button>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .install {
+    max-width: 470px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .list {
+    display: flex;
+    gap: 2px;
+    padding: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  label {
+    flex: 1;
+    padding: 7px 10px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    text-align: center;
+    cursor: pointer;
+  }
+  input:checked + label {
+    background: var(--bg-deep);
+    color: var(--heading);
+  }
+  input:focus-visible + label {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .panel {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  /* First panel is the no-:has() fallback. */
+  .panel[data-i='0'],
+  .install:has(input[value='1']:checked) .panel[data-i='1'],
+  .install:has(input[value='2']:checked) .panel[data-i='2'],
+  .install:has(input[value='3']:checked) .panel[data-i='3'],
+  .install:has(input[value='4']:checked) .panel[data-i='4'],
+  .install:has(input[value='5']:checked) .panel[data-i='5'] {
+    display: flex;
+  }
+  .install:has(input:not([value='0']):checked) .panel[data-i='0'] {
+    display: none;
+  }
+  .prompt {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  code {
+    flex: 1;
+    overflow: auto;
+    color: var(--heading);
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  .copy {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .copy:hover {
+    border-color: var(--border-strong);
+    color: var(--heading);
+  }
+  .copy[hidden] {
+    display: none;
+  }
+</style>

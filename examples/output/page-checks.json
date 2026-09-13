@@ -1,0 +1,68 @@
+{
+  "source": "examples/pages/sample.html",
+  "url": "https://example.com/sale/",
+  "metadata": {
+    "title": "Spring sale – Example shop",
+    "description": "",
+    "canonical": "https://example.com/sale/",
+    "lang": "en",
+    "robots": ""
+  },
+  "checks": [
+    {
+      "name": "Title",
+      "state": "pass",
+      "detail": "26 characters"
+    },
+    {
+      "name": "Description",
+      "state": "issue",
+      "detail": "Missing"
+    },
+    {
+      "name": "Canonical",
+      "state": "pass",
+      "detail": "Present"
+    },
+    {
+      "name": "Language",
+      "state": "pass",
+      "detail": "en"
+    },
+    {
+      "name": "H1",
+      "state": "pass",
+      "detail": "One heading"
+    },
+    {
+      "name": "Open Graph",
+      "state": "issue",
+      "detail": "Title, description or image missing"
+    },
+    {
+      "name": "Skip link",
+      "state": "pass",
+      "detail": "Present"
+    },
+    {
+      "name": "Image alt",
+      "state": "issue",
+      "detail": "1 image without alt"
+    },
+    {
+      "name": "Link text",
+      "state": "issue",
+      "detail": "1 empty link"
+    },
+    {
+      "name": "Form labels",
+      "state": "issue",
+      "detail": "1 unlabelled control"
+    },
+    {
+      "name": "Structured data",
+      "state": "info",
+      "detail": "No invalid JSON-LD found"
+    }
+  ]
+}

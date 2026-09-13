@@ -1,0 +1,121 @@
+---
+import {
+  Badge,
+  Badges,
+  BuildOutput,
+  Callout,
+  CodeBlock,
+  Facts,
+  Features,
+  Hero,
+  Install,
+  Quickstart,
+  Terminal,
+} from '@casoon/pages-theme/components';
+import Base from '@casoon/pages-theme/layouts/Base.astro';
+import { checksAnsi, defaultOutput, entryGzip, kB } from '../showcase';
+
+const layout = `---
+import { WebVitals } from '@casoon/astro-webvitals';
+---
+
+<html lang="en">
+  <body>
+    <slot />
+    <WebVitals endpoint="/api/analytics/vitals" sampleRate={0.1} />
+  </body>
+</html>`;
+
+// Runs on request (needs an adapter). The prerender export is left out of this snippet on
+// purpose: Astro would detect it in this page's frontmatter and treat the page as on-demand.
+const endpoint = `import type { APIRoute } from 'astro';
+
+export const POST: APIRoute = async ({ request }) => {
+  const { metrics } = await request.json();
+  for (const metric of metrics) {
+    // Validate, rate-limit and store; sum deltas per metric.id.
+  }
+  return new Response(null, { status: 204 });
+};`;
+---
+
+<Base>
+  <Hero
+    title="Web Vitals from real visits, for Astro."
+    lead="astro-webvitals measures LCP, CLS, INP, FCP and TTFB with Google’s web-vitals library and sends them in batches to an endpoint you own. Collection can be gated on consent, Do Not Track and a sample rate; a local dashboard and a development overlay help while you build."
+  >
+    <Install
+      commands={[
+        { label: 'pnpm', command: 'pnpm add @casoon/astro-webvitals' },
+        { label: 'npm', command: 'npm install @casoon/astro-webvitals' },
+      ]}
+    />
+    <Badges>
+      <Badge>MIT</Badge>
+      <Badge>npm 0.4.8</Badge>
+      <Badge>Astro 4–7</Badge>
+      <Badge>Node 18.17+</Badge>
+    </Badges>
+    <Terminal slot="output" title="dashboard page checks · sample.html" dots ansi={checksAnsi} />
+  </Hero>
+
+  <Facts
+    items={[
+      { value: '5', label: 'Web Vitals from Google’s web-vitals' },
+      { value: '1', label: 'runtime dependency' },
+      { value: '4–7', label: 'supported Astro major versions' },
+      { value: kB(entryGzip), label: 'gzip entry script in the demo build' },
+    ]}
+  />
+
+  <Features
+    items={[
+      {
+        title: 'Official metric definitions',
+        body: 'LCP, CLS, INP, FCP and TTFB come from the web-vitals package, with its ratings, stable metric IDs and deltas, so repeated CLS and INP reports aggregate correctly.',
+      },
+      {
+        title: 'Reports go to your endpoint',
+        body: 'Metrics are batched, flushed when the page is hidden and sent with sendBeacon where possible. Without an endpoint nothing is sent; every metric is also dispatched as a webvitals:metric event.',
+      },
+      {
+        title: 'Collection gates',
+        body: 'consent={false} and respectDnt stop the client before any observer is registered. sampleRate is decided per page load in the browser, not baked into a static build.',
+      },
+      {
+        title: 'Local dashboard',
+        body: 'webVitalsDashboard() adds a static, noindex route that reads this browser’s localStorage, runs a sitemap pass and shows page checks – for development and QA, not field analytics.',
+      },
+      {
+        title: 'Development overlay',
+        body: 'debug shows live metrics, an SEO inspection and a small accessibility heuristic. It is a development aid, not a WCAG audit.',
+      },
+    ]}
+  />
+
+  <BuildOutput
+    caption="What <WebVitals /> adds to a statically built page, captured from the demo build by examples/capture.mjs and formatted for reading."
+    file="examples/output/default.html"
+  >
+    <Terminal><Fragment set:html={defaultOutput} /></Terminal>
+  </BuildOutput>
+
+  <Callout title="Why this site does not measure itself">
+    This site ships no JavaScript beyond the theme’s two inline scripts. The component would add
+    its own configuration and module script, so the examples here are captured build output of
+    the package instead of live measurements. No metric values are shown: Web Vitals depend on
+    each visitor’s device and connection.
+  </Callout>
+
+  <Quickstart
+    lead="Three steps from install to your first reports. The full walkthrough lives in the documentation."
+    steps={[
+      'Install <code>@casoon/astro-webvitals</code>.',
+      'Add <code>&lt;WebVitals /&gt;</code> once to your shared layout, right before <code>&lt;/body&gt;</code>.',
+      'Store the batches in a same-origin route, or listen for the <code>webvitals:metric</code> event.',
+    ]}
+  >
+    <CodeBlock code={layout} lang="astro" title="src/layouts/Layout.astro" label="Layout" />
+    <CodeBlock code={endpoint} lang="ts" title="src/pages/api/analytics/vitals.ts" label="Endpoint" />
+  </Quickstart>
+</Base>

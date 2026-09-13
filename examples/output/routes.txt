@@ -1,0 +1,11 @@
+$ astro build   # examples/demo
+
+Pages in dist/:
+  __web-vitals/index.html   <- injected by webVitalsDashboard()
+  index.html
+  local/index.html
+  production/index.html
+
+__web-vitals/index.html:
+  <meta name="robots" content="noindex, nofollow">
+  <script type="module" src="/_astro/dashboard.astro_astro_type_script_index_0_lang.YQl8rvJm.js">

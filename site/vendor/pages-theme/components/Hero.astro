@@ -1,0 +1,68 @@
+---
+interface Props {
+  title: string;
+  lead: string;
+  eyebrow?: string;
+}
+
+const { title, lead, eyebrow = 'CASOON Open Source' } = Astro.props;
+---
+
+<section class="hero">
+  <div>
+    <p class="eyebrow">{eyebrow}</p>
+    <h1>{title}</h1>
+    <p class="lead">{lead}</p>
+    <slot />
+  </div>
+  <div class="output">
+    <slot name="output" />
+  </div>
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+    gap: 56px;
+    align-items: center;
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 72px 24px 56px;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 20px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brand);
+  }
+  h1 {
+    margin: 0 0 18px;
+    color: var(--heading);
+    font-size: clamp(34px, 4.2vw, 52px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+  }
+  .lead {
+    max-width: 44ch;
+    margin: 0 0 30px;
+    font-size: 18.5px;
+    line-height: 1.6;
+  }
+  .output {
+    min-width: 0;
+  }
+</style>

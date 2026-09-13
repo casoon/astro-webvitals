@@ -1,0 +1,35 @@
+{
+  "source": "examples/pages/sample.html",
+  "issues": [
+    {
+      "type": "missing-alt",
+      "element": "<img src=\"https://example.com/shoes.jpg...\">",
+      "message": "Image missing alt attribute",
+      "wcagLevel": "1.1.1 Level A"
+    },
+    {
+      "type": "missing-label",
+      "element": "<button>",
+      "message": "Button has no accessible text",
+      "wcagLevel": "4.1.2 Level A"
+    },
+    {
+      "type": "missing-label",
+      "element": "<input type=\"search\">",
+      "message": "Form control missing label",
+      "wcagLevel": "1.3.1 Level A"
+    },
+    {
+      "type": "missing-heading",
+      "element": "<h3>",
+      "message": "Heading level skipped (1 to 3)",
+      "wcagLevel": "1.3.1 Level A"
+    },
+    {
+      "type": "missing-label",
+      "element": "<a href=\"https://example.com/cart...\">",
+      "message": "Link has no accessible text",
+      "wcagLevel": "2.4.4 Level A"
+    }
+  ]
+}

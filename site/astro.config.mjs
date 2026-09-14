@@ -12,7 +12,7 @@ export default defineConfig({
       description:
         'Web Vitals monitoring for Astro: official metrics, consent-gated reporting to your own endpoint, a local dashboard and a development overlay.',
       repo: 'casoon/astro-webvitals',
-      version: '0.4.8',
+      version: '0.4.9',
       license: 'MIT',
       packages: [{ label: 'npm', href: 'https://www.npmjs.com/package/@casoon/astro-webvitals' }],
       docsGroups: {

@@ -1,0 +1,96 @@
+---
+import { url } from '../lib/url';
+import Button from './Button.astro';
+
+interface Props {
+  /** Steps; inline HTML allowed (e.g. <code>). */
+  steps: string[];
+  lead?: string;
+  title?: string;
+}
+
+const {
+  steps,
+  lead = 'From install to a first result. The full walkthrough lives in the documentation.',
+  title = 'Quickstart',
+} = Astro.props;
+---
+
+<section class="quickstart">
+  <div>
+    <h2>{title}</h2>
+    <p class="lead">{lead}</p>
+    <ol>
+      {
+        steps.map((step, i) => (
+          <li>
+            <span class="n" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span set:html={step} />
+          </li>
+        ))
+      }
+    </ol>
+    <div class="cta"><Button href={url('docs/')}>Read the documentation</Button></div>
+  </div>
+  <div class="code"><slot /></div>
+</section>
+
+<style>
+  .quickstart {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    gap: 48px;
+    align-items: start;
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+  h2 {
+    margin: 0 0 14px;
+    color: var(--heading);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .lead {
+    margin: 0 0 24px;
+    font-size: 15.5px;
+  }
+  ol {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    gap: 12px;
+    font-size: 14.5px;
+  }
+  .n {
+    padding-top: 2px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+  li :global(code) {
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: var(--code-bg);
+    font-size: 13px;
+  }
+  .cta {
+    margin-top: 28px;
+  }
+  /* Projects often show several code blocks here (e.g. Rust and Node). */
+  .code {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+</style>

@@ -1,0 +1,81 @@
+---
+/** Highlighted at build time (Shiki, theme-aware via CSS variables). */
+import { Code } from 'astro:components';
+
+interface Props {
+  code: string;
+  lang?: string;
+  /** File name shown left in the bar. */
+  title?: string;
+  /** Language label shown right in the bar. */
+  label?: string;
+  copy?: boolean;
+}
+
+const { code, lang = 'text', title, label, copy = true } = Astro.props;
+
+let hash = 5381;
+for (const ch of code) hash = ((hash * 33) ^ ch.charCodeAt(0)) >>> 0;
+const id = `code-${hash.toString(36)}`;
+---
+
+<figure class="codeblock">
+  {
+    (title || label || copy) && (
+      <figcaption>
+        <span>{title}</span>
+        <span class="right">
+          {label}
+          {copy && (
+            <button class="copy" type="button" data-copy={id} hidden>
+              Copy
+            </button>
+          )}
+        </span>
+      </figcaption>
+    )
+  }
+  <div id={id}><Code code={code} lang={lang as never} theme="css-variables" /></div>
+</figure>
+
+<style>
+  .codeblock {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--code-bg);
+  }
+  figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 42px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .copy {
+    padding: 2px 9px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .copy:hover {
+    border-color: var(--border-strong);
+    color: var(--heading);
+  }
+  .copy[hidden] {
+    display: none;
+  }
+</style>

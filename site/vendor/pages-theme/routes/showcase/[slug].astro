@@ -1,0 +1,105 @@
+---
+import { examples } from 'virtual:casoon-pages/showcase';
+import ExamplePanel from '../../components/ExamplePanel.astro';
+import Base from '../../layouts/Base.astro';
+import type { ShowcaseExample } from '../../lib/showcase';
+import { url } from '../../lib/url';
+
+export function getStaticPaths() {
+  return examples.map((example, i) => ({
+    params: { slug: example.slug },
+    props: { example, prev: examples[i - 1], next: examples[i + 1] },
+  }));
+}
+
+interface Props {
+  example: ShowcaseExample;
+  prev?: ShowcaseExample;
+  next?: ShowcaseExample;
+}
+
+const { example, prev, next } = Astro.props;
+---
+
+<Base title={example.title} description={example.description}>
+  <div class="page">
+    <p class="back"><a href={url('showcase/')}>← All examples</a></p>
+    <h1>{example.title}</h1>
+    {example.description && <p class="lead">{example.description}</p>}
+    <ExamplePanel example={example} headingLevel={2} detailLink={false} />
+    <nav class="pager" aria-label="Previous and next example">
+      {
+        prev ? (
+          <a href={url(`showcase/${prev.slug}/`)}>
+            <span class="dir">Previous</span>
+            <span class="label">{prev.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next && (
+          <a class="next" href={url(`showcase/${next.slug}/`)}>
+            <span class="dir">Next</span>
+            <span class="label">{next.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .page {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  .back {
+    margin: 0 0 18px;
+    font-size: 14px;
+  }
+  h1 {
+    margin: 0 0 12px;
+    color: var(--heading);
+    font-size: 38px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  .lead {
+    max-width: 62ch;
+    margin: 0 0 32px;
+    font-size: 17.5px;
+  }
+  .pager {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-top: 40px;
+  }
+  .pager a {
+    display: block;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  .pager a:hover {
+    border-color: var(--border-strong);
+  }
+  .pager .next {
+    text-align: right;
+  }
+  .dir {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .label {
+    color: var(--heading);
+    font-size: 15px;
+    font-weight: 500;
+  }
+</style>

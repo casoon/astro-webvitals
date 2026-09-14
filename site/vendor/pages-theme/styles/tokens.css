@@ -1,0 +1,106 @@
+/*
+ * Design tokens. Brand colours follow casoon.de (source of truth: web-casoon),
+ * adjusted for 4.5:1 text contrast on the page background.
+ * --brand carries CASOON, --accent carries the project (override via the
+ * integration's `accent` option).
+ */
+
+:root {
+  color-scheme: light;
+  --bg: #f6f6f5;
+  --bg-deep: #eeeeed;
+  --surface: #fff;
+  --glass: rgb(255 255 255 / 0.72);
+  --border: rgb(16 16 16 / 0.1);
+  --border-strong: rgb(16 16 16 / 0.18);
+  --text: #404242;
+  --heading: #101010;
+  --muted: #656969;
+  --brand: rgb(206 16 68);
+  --brand-soft: rgb(230 20 77 / 0.08);
+  --accent: rgb(0 118 133);
+  --accent-soft: color-mix(in srgb, var(--accent) 10%, transparent);
+  --code-bg: #f2f2f1;
+  --shadow: 0 1px 2px rgb(16 16 16 / 0.04), 0 6px 14px -8px rgb(16 16 16 / 0.16);
+
+  --font-sans: Onest, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --header-h: 62px;
+  --max: 1120px;
+
+  /* Terminal surface: dark in both themes. */
+  --term-bg: #15171a;
+  --term-text: #d8dde2;
+  --term-dim: #8b9297;
+  --term-border: rgb(255 255 255 / 0.08);
+  --ansi-0: #8b9297;
+  --ansi-1: #ff7b7b;
+  --ansi-2: #5fd7a7;
+  --ansi-3: #f2c66b;
+  --ansi-4: #8fd0ff;
+  --ansi-5: #e3a1f2;
+  --ansi-6: #7fdde6;
+  --ansi-7: #d8dde2;
+  --ansi-8: #8b9297;
+  --ansi-9: #ff9a9a;
+  --ansi-10: #7fe8bb;
+  --ansi-11: #f7d88f;
+  --ansi-12: #b0dcff;
+  --ansi-13: #eebcf7;
+  --ansi-14: #a4ecf2;
+  --ansi-15: #fff;
+
+  /* Syntax highlighting (Shiki "css-variables" theme). */
+  --astro-code-foreground: var(--text);
+  --astro-code-background: var(--code-bg);
+  --astro-code-token-keyword: var(--brand);
+  --astro-code-token-constant: var(--brand);
+  --astro-code-token-string: var(--accent);
+  --astro-code-token-string-expression: var(--accent);
+  --astro-code-token-function: var(--accent);
+  --astro-code-token-comment: var(--muted);
+  --astro-code-token-parameter: var(--heading);
+  --astro-code-token-punctuation: var(--text);
+  --astro-code-token-link: var(--accent);
+}
+
+/* Dark: explicit choice, or system preference when nothing is stored. Keep both blocks identical. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #101010;
+  --bg-deep: #0a0a0a;
+  --surface: #181919;
+  --glass: rgb(22 23 23 / 0.72);
+  --border: rgb(255 255 255 / 0.11);
+  --border-strong: rgb(255 255 255 / 0.2);
+  --text: #c3c7c7;
+  --heading: #f4f4f4;
+  --muted: #8c9090;
+  --brand: rgb(255 92 132);
+  --brand-soft: rgb(255 92 132 / 0.12);
+  --accent: rgb(58 206 222);
+  --code-bg: #131414;
+  --term-bg: #0c0d0e;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 14px -8px rgb(0 0 0 / 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #101010;
+    --bg-deep: #0a0a0a;
+    --surface: #181919;
+    --glass: rgb(22 23 23 / 0.72);
+    --border: rgb(255 255 255 / 0.11);
+    --border-strong: rgb(255 255 255 / 0.2);
+    --text: #c3c7c7;
+    --heading: #f4f4f4;
+    --muted: #8c9090;
+    --brand: rgb(255 92 132);
+    --brand-soft: rgb(255 92 132 / 0.12);
+    --accent: rgb(58 206 222);
+    --code-bg: #131414;
+    --term-bg: #0c0d0e;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 14px -8px rgb(0 0 0 / 0.6);
+  }
+}

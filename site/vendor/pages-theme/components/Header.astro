@@ -1,0 +1,166 @@
+---
+import config from 'virtual:casoon-pages/config';
+import { url } from '../lib/url';
+
+const path = Astro.url.pathname;
+const nav = [
+  { label: 'Docs', href: url('docs/') },
+  ...(config.hasShowcase ? [{ label: 'Showcase', href: url('showcase/') }] : []),
+  ...(config.changelog ? [{ label: 'Changelog', href: url('changelog/') }] : []),
+];
+---
+
+<header class="header">
+  <div class="inner">
+    <a class="home" href={url()}>
+      <span class="name">{config.name}</span>
+      {config.version && <span class="version">v{config.version}</span>}
+    </a>
+    <nav aria-label="Main">
+      <ul>
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <span class="sep" aria-hidden="true"></span>
+      <a href={`https://github.com/${config.repo}`}>GitHub</a>
+      <button class="theme" type="button" data-theme-toggle aria-label="Dark theme" aria-pressed="false" hidden>
+        <span class="icon-light" aria-hidden="true">☀</span>
+        <span class="icon-dark" aria-hidden="true">☾</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--border);
+    background: var(--glass);
+    backdrop-filter: blur(16px) saturate(1.6);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  }
+  .inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    max-width: var(--max);
+    height: var(--header-h);
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .home {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--heading);
+  }
+  .home:hover {
+    color: var(--heading);
+  }
+  .name {
+    font-size: 15.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .version {
+    padding: 1px 7px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+  }
+  ul {
+    display: flex;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  nav a {
+    display: block;
+    padding: 7px 12px;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14.5px;
+  }
+  nav a:hover {
+    background: var(--bg-deep);
+    color: var(--text);
+  }
+  nav a[aria-current='page'] {
+    color: var(--heading);
+    font-weight: 600;
+  }
+  .sep {
+    width: 1px;
+    height: 20px;
+    margin: 0 8px;
+    background: var(--border);
+  }
+  .theme {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: 4px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: none;
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .theme:hover {
+    border-color: var(--border-strong);
+  }
+  .theme[hidden] {
+    display: none;
+  }
+  :global([data-theme='dark']) .icon-light,
+  :global([data-theme='light']) .icon-dark {
+    display: none;
+  }
+  /* Narrow screens: navigation moves to a second row. */
+  @media (max-width: 640px) {
+    :global(:root) {
+      --header-h: 100px;
+    }
+    .inner {
+      flex-wrap: wrap;
+      gap: 4px 8px;
+      height: auto;
+      min-height: var(--header-h);
+      padding: 10px 16px;
+    }
+    nav {
+      width: 100%;
+      margin-left: -8px;
+    }
+    .sep {
+      display: none;
+    }
+    nav a {
+      padding: 7px 8px;
+    }
+    .theme {
+      margin-left: auto;
+    }
+  }
+</style>

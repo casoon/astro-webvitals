@@ -1,0 +1,9 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [
+    ".astro/types.d.ts",
+    "**/*"
+  ],
+  // vendor/ is the synced theme; it is checked where it is developed (gh-pages-template).
+  "exclude": ["dist", "vendor"]
+}

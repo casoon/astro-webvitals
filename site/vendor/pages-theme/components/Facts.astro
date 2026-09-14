@@ -1,0 +1,58 @@
+---
+/** Verifiable key figures. Real numbers only. */
+interface Props {
+  items: { value: string; label: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<section class="facts" aria-label="Key facts">
+  <dl>
+    {
+      items.map((f) => (
+        <div>
+          <dt>{f.label}</dt>
+          <dd>{f.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</section>
+
+<style>
+  .facts {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 24px 72px;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--border);
+  }
+  div {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    padding: 26px 22px;
+    background: var(--surface);
+  }
+  dd {
+    margin: 0 0 6px;
+    color: var(--heading);
+    font-family: var(--font-mono);
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+  dt {
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+</style>

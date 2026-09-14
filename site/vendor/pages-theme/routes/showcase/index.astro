@@ -1,0 +1,43 @@
+---
+import { examples } from 'virtual:casoon-pages/showcase';
+import ExamplePanel from '../../components/ExamplePanel.astro';
+import Base from '../../layouts/Base.astro';
+---
+
+<Base title="Showcase" description="Examples rendered during the build.">
+  <div class="page">
+    <h1>Showcase</h1>
+    <p class="lead">
+      Each example is rendered during the build from the same fixture files the test suite uses.
+      Input on the left, output on the right.
+    </p>
+    <div class="list">
+      {examples.map((example) => <ExamplePanel example={example} />)}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+  h1 {
+    margin: 0 0 12px;
+    color: var(--heading);
+    font-size: 38px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  .lead {
+    max-width: 62ch;
+    margin: 0 0 40px;
+    font-size: 17.5px;
+  }
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+</style>

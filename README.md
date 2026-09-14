@@ -2,6 +2,8 @@
 
 Lightweight Real User Monitoring (RUM) for Astro. It measures the official Web Vitals in the browser, optionally sends batched reports to an endpoint, and includes a development-only debug overlay.
 
+**Website and documentation:** [casoon.github.io/astro-webvitals](https://casoon.github.io/astro-webvitals/)
+
 Supports Astro v4–v7.
 
 ## What it measures

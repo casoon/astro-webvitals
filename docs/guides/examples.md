@@ -1,4 +1,8 @@
-# Examples
+---
+title: Examples
+description: Common configurations for production, diagnosis and analytics without an endpoint.
+order: 6
+---
 
 ## Production endpoint
 
@@ -42,3 +46,11 @@ import { WebVitals } from '@casoon/astro-webvitals';
   });
 </script>
 ```
+
+## Development only
+
+```astro
+<WebVitals debug={import.meta.env.DEV} consoleDock={import.meta.env.DEV} />
+```
+
+The [showcase](../../../showcase/) shows what these props turn into in a real build.

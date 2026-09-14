@@ -1,0 +1,37 @@
+---
+import { type CollectionEntry, getCollection, render } from 'astro:content';
+import config from 'virtual:casoon-pages/config';
+import * as components from '../../components/index';
+import Docs from '../../layouts/Docs.astro';
+import { buildDocsNav, docSlug } from '../../lib/docs';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('docs');
+  const paths = entries.map((entry) => ({ params: { slug: docSlug(entry.id) }, props: { entry } }));
+  // Without docs/index.md, /docs/ shows the first page of the sidebar.
+  if (entries.length > 0 && !entries.some((entry) => entry.id === 'index')) {
+    const first = buildDocsNav(entries, config.docsGroups)[0].items[0];
+    const entry = entries.find((e) => e.id === first.id) as CollectionEntry<'docs'>;
+    paths.push({ params: { slug: undefined }, props: { entry } });
+  }
+  return paths;
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const groups = buildDocsNav(await getCollection('docs'), config.docsGroups);
+// filePath is relative to site/; the repository root is one level up.
+const sourcePath = (entry.filePath ?? '').replace(/^(\.\.\/)+/, '');
+---
+
+<Docs
+  id={entry.id}
+  title={entry.data.title}
+  description={entry.data.description}
+  sourcePath={sourcePath}
+  groups={groups}
+  headings={headings}
+>
+  {/* docs/ sits outside site/ and cannot import packages; theme components are provided here. */}
+  <Content components={components} />
+</Docs>

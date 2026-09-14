@@ -1,0 +1,283 @@
+---
+import config from 'virtual:casoon-pages/config';
+import type { MarkdownHeading } from 'astro';
+import type { DocsNavGroup } from '../lib/docs';
+import Base from './Base.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  description?: string;
+  /** Path of the source file relative to the repository root, for the edit link. */
+  sourcePath: string;
+  groups: DocsNavGroup[];
+  headings: MarkdownHeading[];
+}
+
+const { id, title, description, sourcePath, groups, headings } = Astro.props;
+const flat = groups.flatMap((g) => g.items);
+const index = flat.findIndex((item) => item.id === id);
+const prev = index > 0 ? flat[index - 1] : undefined;
+const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : undefined;
+const group = groups.find((g) => g.items.some((item) => item.id === id));
+const toc = headings.filter((h) => h.depth === 2);
+const editUrl = `https://github.com/${config.repo}/edit/${config.branch}/${sourcePath}`;
+---
+
+<Base title={title} description={description}>
+  <div class="docs">
+    <aside class="sidebar">
+      <nav aria-label="Documentation">
+        {
+          groups.map((g) => (
+            <div class="group">
+              <p class="group-title">{g.label}</p>
+              <ul>
+                {g.items.map((item) => (
+                  <li>
+                    <a href={item.href} aria-current={item.id === id ? 'page' : undefined}>
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </nav>
+    </aside>
+
+    <article class="content">
+      <nav class="crumb" aria-label="Breadcrumb">
+        <ol>
+          <li>Docs</li>
+          {group && <li>{group.label}</li>}
+          <li aria-current="page">{title}</li>
+        </ol>
+      </nav>
+      <h1>{title}</h1>
+      {description && <p class="lead">{description}</p>}
+      <div class="cp-prose"><slot /></div>
+
+      {
+        (prev || next) && (
+          <nav class="pager" aria-label="Previous and next page">
+            {prev ? (
+              <a href={prev.href}>
+                <span class="dir">Previous</span>
+                <span class="label">{prev.label}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {next && (
+              <a class="next" href={next.href}>
+                <span class="dir">Next</span>
+                <span class="label">{next.label}</span>
+              </a>
+            )}
+          </nav>
+        )
+      }
+      <p class="meta">
+        <a href={editUrl}>Edit this page on GitHub</a>
+        {config.version && <span> · Docs for v{config.version}</span>}
+      </p>
+    </article>
+
+    {
+      toc.length > 0 && (
+        <aside class="toc">
+          <nav aria-labelledby="toc-title">
+            <p class="group-title" id="toc-title">
+              On this page
+            </p>
+            <ul>
+              {toc.map((h) => (
+                <li>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .docs {
+    display: flex;
+    align-items: flex-start;
+    gap: 48px;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .sidebar,
+  .toc {
+    position: sticky;
+    top: var(--header-h);
+    max-height: calc(100vh - var(--header-h));
+    overflow: auto;
+  }
+  .sidebar {
+    flex: 0 0 220px;
+    padding: 40px 0 60px;
+  }
+  .toc {
+    flex: 0 0 180px;
+    padding: 40px 0;
+    font-size: 13.5px;
+  }
+  .content {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 760px;
+    padding: 40px 0 96px;
+  }
+  .group {
+    margin-bottom: 26px;
+  }
+  .group-title {
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sidebar li + li {
+    margin-top: 1px;
+  }
+  .sidebar a {
+    display: block;
+    padding: 6px 10px;
+    border-left: 2px solid transparent;
+    border-radius: 0 7px 7px 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .sidebar a:hover {
+    color: var(--heading);
+  }
+  .sidebar a[aria-current='page'] {
+    border-left-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--heading);
+  }
+  .toc ul {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-left: 14px;
+    border-left: 1px solid var(--border);
+  }
+  .toc a {
+    color: var(--muted);
+  }
+  .toc a:hover {
+    color: var(--heading);
+  }
+  .crumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .crumb li + li::before {
+    content: '/';
+    margin-right: 8px;
+  }
+  .crumb [aria-current] {
+    color: var(--text);
+  }
+  h1 {
+    margin: 0 0 12px;
+    color: var(--heading);
+    font-size: clamp(28px, 3.4vw, 38px);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+  .lead {
+    margin: 0 0 36px;
+    font-size: 17.5px;
+  }
+  .pager {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-top: 56px;
+  }
+  .pager a {
+    display: block;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  .pager a:hover {
+    border-color: var(--border-strong);
+  }
+  .pager .next {
+    text-align: right;
+  }
+  .dir {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .label {
+    color: var(--heading);
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .meta {
+    margin: 28px 0 0;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+  /* Next to muted text the accent alone is not distinguishable enough (WCAG 1.4.1). */
+  .meta a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+  }
+  @media (max-width: 1100px) {
+    .toc {
+      display: none;
+    }
+  }
+  @media (max-width: 800px) {
+    .docs {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+    .sidebar {
+      position: static;
+      flex: none;
+      width: 100%;
+      max-height: none;
+      padding: 24px 0 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0 24px;
+    }
+  }
+</style>

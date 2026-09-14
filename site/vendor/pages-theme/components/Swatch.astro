@@ -1,0 +1,42 @@
+---
+/** Colour token preview for design documentation. */
+interface Props {
+  token: string;
+  value?: string;
+}
+
+const { token, value = 'theme-dependent' } = Astro.props;
+---
+
+<div class="swatch">
+  <div class="chip" style={`background: var(${token})`}></div>
+  <p class="token">{token}</p>
+  <p class="value">{value}</p>
+</div>
+
+<style>
+  .swatch {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  .chip {
+    height: 56px;
+    border-bottom: 1px solid var(--border);
+  }
+  p {
+    margin: 0 !important;
+    padding: 0 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .token {
+    padding-top: 10px;
+    color: var(--heading);
+  }
+  .value {
+    padding-bottom: 10px;
+    color: var(--muted);
+  }
+</style>

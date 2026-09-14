@@ -1,0 +1,59 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The showcase reads fixtures captured by examples/capture.mjs and committed in
+      # examples/output/, so the package itself is not built here.
+
+      # The root package.json pins pnpm 9 for the package; the site has its own manifest.
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+          package_json_file: site/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - uses: actions/configure-pages@v6
+
+      - name: Build site
+        working-directory: site
+        run: |
+          # The root pnpm-workspace.yaml would otherwise capture site/.
+          pnpm install --frozen-lockfile --ignore-workspace
+          pnpm build
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8] - 2026-08-11
+
+### Added
+- The local dashboard shows browser-visible page checks per route: title, description, canonical, language, H1, Open Graph, skip link, image `alt`, link text, form labels and valid JSON-LD.
+
+## [0.4.7] - 2026-08-11
+
+### Added
+- **Run sitemap pass** in the local dashboard opens every page listed in `/sitemap.xml` in the current tab and returns with local measurements. The explicitly started pass bypasses sampling; consent and Do Not Track still apply.
+
 ## [0.4.6] - 2026-08-11
 
 ### Changed
@@ -67,14 +77,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The FID measurement could register a duplicate `PerformanceObserver` on BFCache restore without disconnecting the previous one.
 - `console.log/info/warn/error` were monkey-patched on every tracked page load regardless of whether `debug` or `consoleDock` was enabled; now only patched when needed.
 
-## [0.1.6] - 2024-12-17
+## [0.1.6] - 2025-12-17
 
 ### Changed
 - **Documentation Update** - Comprehensive README overhaul with current features and usage
 - **Console Tab** - Renamed from "Console & Error Detection" to "Console Viewer" for clarity
 - **CHANGELOG** - Updated to reflect all features accurately
 
-## [0.1.5] - 2024-12-09
+## [0.1.5] - 2025-12-09
 
 ### Added
 - **Auto-FID Measurement** - Automatic FID measurement after 3 seconds using non-intrusive hidden element
@@ -106,7 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **LCP Not Updating** - Fixed renderTime/loadTime extraction for more reliable measurements
 - **FID Blocking** - FID simulation now uses isolated element that can't interfere with real user interactions
 
-## [0.1.4] - 2024-12-09
+## [0.1.4] - 2025-12-09
 
 ### Added
 - **Radial Gauge Visualization** - Performance score displayed as circular gauge with gradient
@@ -127,7 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **CLS Initial Display** - No longer shows "Monitoring layout shifts..." when there are no shifts
 
-## [0.1.3] - 2024-12-01
+## [0.1.3] - 2025-11-18
 
 ### Added
 - **Console Tab** - New Console tab displaying browser console output (log, info, warn, error)
@@ -138,7 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Responsive Mode** - Auto-updates position on viewport resize without refresh
 - **Desktop Position Options** - All four corners (top/bottom, left/right)
 
-## [0.1.2] - 2024-11-18
+## [0.1.2] - 2025-11-18
 
 ### Added
 - **Mobile responsive design** - Full-width footer bar for viewports < 700px
@@ -156,10 +166,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - More comprehensive timing metrics available immediately
 - Better visual hierarchy with grouped metrics
 
-## [0.1.1] - 2024-11-18
+## [0.1.1] - 2025-11-18
 
 ### Added
-- Note about extraction from [astro-v5-template](https://github.com/casoon/astro-v5-template)
+- Note about extraction from `astro-v5-template` (github.com/casoon/astro-v5-template)
 
 ### Improved
 - Redesigned accessibility tab to show summary counts instead of detailed lists
@@ -175,7 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Details tab now provides useful session and configuration information
 - Improved readability with better spacing and organization
 
-## [0.1.0] - 2024-11-18
+## [0.1.0] - 2025-11-18
 
 ### Added
 - **Initial Release** with Core Features:

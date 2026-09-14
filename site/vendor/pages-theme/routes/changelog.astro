@@ -64,6 +64,11 @@ const tone = (kind: string) =>
     background: var(--code-bg);
     font-size: 0.86em;
   }
+  li :global(a) {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+  }
   section {
     display: grid;
     grid-template-columns: 150px 1fr;

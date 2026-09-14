@@ -1,15 +1,16 @@
 ---
+import config from 'virtual:casoon-pages/config';
 import { examples } from 'virtual:casoon-pages/showcase';
 import ExamplePanel from '../../components/ExamplePanel.astro';
 import Base from '../../layouts/Base.astro';
 ---
 
-<Base title="Showcase" description="Examples rendered during the build.">
+<Base title="Showcase" description={`Real input and output of ${config.name}.`}>
   <div class="page">
     <h1>Showcase</h1>
     <p class="lead">
-      Each example is rendered during the build from the same fixture files the test suite uses.
-      Input on the left, output on the right.
+      Each example shows real output produced by {config.name} itself, from files in the project
+      repository. Input on the left, output on the right.
     </p>
     <div class="list">
       {examples.map((example) => <ExamplePanel example={example} />)}

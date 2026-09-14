@@ -17,6 +17,7 @@ import { measureWebVitals } from "./metrics/vitals";
 import { capturePageAudit } from "./page-audit";
 import { flushMetrics, retryFailedMetrics } from "./reporting";
 import { continueSitemapPass, isSitemapPassActive } from "./sitemap-pass";
+import { state } from "./state";
 
 declare global {
 	interface Window {
@@ -79,12 +80,15 @@ export function initWebVitals(bridgedConfig: BridgedConfig): void {
 	}
 }
 
+// The overlay, console tools, accessibility heuristic and SEO inspection are
+// loaded only here. Modules imported statically by this entry must not import
+// them (tests/entry-graph.test.ts guards this), or they end up in every page's
+// entry chunk again.
 async function initDebugFeatures(): Promise<void> {
 	const [
 		{ checkWCAG },
 		{ initConsoleCapture },
 		{ refreshSEO },
-		{ state },
 		{ initConsoleDock },
 		{ initDebugOverlay, preserveContentScroll, updateDebugOverlay },
 		{ initResponsive },
@@ -92,12 +96,12 @@ async function initDebugFeatures(): Promise<void> {
 		import("./accessibility"),
 		import("./console-capture"),
 		import("./seo"),
-		import("./state"),
 		import("./ui/console-dock"),
 		import("./ui/debug-overlay"),
 		import("./ui/responsive"),
 	]);
 
+	state.refreshDebugOverlay = updateDebugOverlay;
 	state.highlightEnabled = !!config.highlightAccessibility;
 	initResponsive();
 	initConsoleCapture();

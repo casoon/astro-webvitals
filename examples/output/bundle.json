@@ -1,11 +1,17 @@
 {
-  "entry": "WebVitals.astro_astro_type_script_index_0_lang.D8zFx58s.js",
+  "entry": "WebVitals.astro_astro_type_script_index_0_lang.KhS4lISl.js",
   "chunks": [
     {
       "file": "dashboard.astro_astro_type_script_index_0_lang.YQl8rvJm.js",
       "loading": "dashboard",
       "bytes": 4422,
       "gzip": 1655
+    },
+    {
+      "file": "debug-overlay.BMYmqzAH.js",
+      "loading": "dynamic",
+      "bytes": 49664,
+      "gzip": 11634
     },
     {
       "file": "web-vitals.attribution.DHzNuYO-.js",
@@ -20,34 +26,46 @@
       "gzip": 3205
     },
     {
-      "file": "console-dock.Kiw1TzLI.js",
+      "file": "console-dock.C_jCKOEr.js",
       "loading": "dynamic",
-      "bytes": 5578,
-      "gzip": 1884
+      "bytes": 5655,
+      "gzip": 1932
     },
     {
-      "file": "console-capture.CAIHXTOL.js",
+      "file": "console-capture.fPyKKS8J.js",
       "loading": "dynamic",
-      "bytes": 867,
-      "gzip": 500
+      "bytes": 925,
+      "gzip": 526
     },
     {
-      "file": "long-tasks.C8PDVWXC.js",
+      "file": "long-tasks.CCFuVN4E.js",
       "loading": "dynamic",
       "bytes": 415,
-      "gzip": 308
+      "gzip": 306
     },
     {
-      "file": "responsive.4jeKK-AH.js",
+      "file": "responsive.YxQJ-aBJ.js",
       "loading": "dynamic",
-      "bytes": 296,
-      "gzip": 243
+      "bytes": 354,
+      "gzip": 274
     },
     {
-      "file": "WebVitals.astro_astro_type_script_index_0_lang.D8zFx58s.js",
+      "file": "seo.iuA1j6xm.js",
+      "loading": "dynamic",
+      "bytes": 180,
+      "gzip": 158
+    },
+    {
+      "file": "accessibility.bS3TTF_Z.js",
+      "loading": "dynamic",
+      "bytes": 107,
+      "gzip": 118
+    },
+    {
+      "file": "WebVitals.astro_astro_type_script_index_0_lang.KhS4lISl.js",
       "loading": "static",
-      "bytes": 60217,
-      "gzip": 15379
+      "bytes": 10595,
+      "gzip": 3981
     },
     {
       "file": "sitemap-pass.D1sv_KO0.js",

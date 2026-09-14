@@ -112,6 +112,12 @@ export interface WebVitalsState {
 	seoInfo: SeoInfo | null;
 	lcpUnsupported: boolean;
 	expandedIssues: Set<string>;
+	/**
+	 * Re-renders the debug overlay. Registered by the lazily loaded debug
+	 * features, so always-loaded modules can refresh the overlay without
+	 * statically importing it (which would pull it into the entry chunk).
+	 */
+	refreshDebugOverlay: (() => void) | null;
 }
 
 export const state: WebVitalsState = {
@@ -133,4 +139,5 @@ export const state: WebVitalsState = {
 	seoInfo: null,
 	lcpUnsupported: false,
 	expandedIssues: new Set(),
+	refreshDebugOverlay: null,
 };

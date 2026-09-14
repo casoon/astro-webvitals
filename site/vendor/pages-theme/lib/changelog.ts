@@ -17,7 +17,7 @@ export interface Release {
   changes: Change[];
 }
 
-const RELEASE = /^##\s+\[?([^\]\s]+)\]?(?:\s*[-–]\s*(\S+))?/;
+const RELEASE = /^##\s+\[?([^\]\s]+)\]?(?:\s*[-–—]\s*(\S+))?/;
 const SECTION = /^###\s+(.+)/;
 const ITEM = /^\s*[-*]\s+(.*)/;
 

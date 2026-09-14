@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The debug overlay, accessibility heuristic and SEO inspection are now actually loaded only when enabled, as 0.4.2 stated. A static import from the navigation metrics had pulled them into the entry script every tracked page loads; in the demo build that script drops from 16.1 kB to 4.7 kB gzip, and Vite no longer warns about ineffective dynamic imports.
+
 ## [0.4.8] - 2026-08-11
 
 ### Added

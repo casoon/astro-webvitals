@@ -120,7 +120,7 @@ export const examples: ShowcaseExample[] = [
     slug: 'client-chunks',
     title: 'Client chunks',
     description:
-      'JavaScript from the demo build, all served from the site’s own origin. The entry script and its static import load with every tracked page; web-vitals (or its attribution build), Long Tasks and the console tools are dynamic imports. The debug overlay, the accessibility heuristic and the SEO inspection are currently bundled into the entry script.',
+      'JavaScript from the demo build, all served from the site’s own origin. The entry script and its static import load with every tracked page. web-vitals (or its attribution build), Long Tasks, the debug overlay, the console tools, the accessibility heuristic and the SEO inspection are dynamic imports, fetched only when the matching option is enabled.',
     file: 'examples/output/bundle.json',
     tags: ['bundle', 'gzip', 'web-vitals'],
     input: { code: 'pnpm install\nnode examples/capture.mjs', lang: 'shell' },

@@ -5,7 +5,6 @@
 import { config } from "../config";
 import { recordMetric } from "../reporting";
 import { state } from "../state";
-import { updateDebugOverlay } from "../ui/debug-overlay";
 
 function getNavEntry(): PerformanceNavigationTiming | undefined {
 	return performance.getEntriesByType("navigation")[0] as
@@ -31,7 +30,7 @@ export function measureDNS(): void {
 				navEntry.domainLookupEnd - navEntry.domainLookupStart,
 			);
 			recordNavigationMetric("DNS", state.vitals.DNS);
-			updateDebugOverlay();
+			state.refreshDebugOverlay?.();
 		}
 	} catch (e) {
 		if (config.debug)
@@ -47,7 +46,7 @@ export function measureTCP(): void {
 				navEntry.connectEnd - navEntry.connectStart,
 			);
 			recordNavigationMetric("TCP", state.vitals.TCP);
-			updateDebugOverlay();
+			state.refreshDebugOverlay?.();
 		}
 	} catch (e) {
 		if (config.debug)
@@ -63,7 +62,7 @@ export function measureDOM(): void {
 				navEntry.domInteractive - navEntry.responseEnd,
 			);
 			recordNavigationMetric("DOM", state.vitals.DOM);
-			updateDebugOverlay();
+			state.refreshDebugOverlay?.();
 		}
 	} catch (e) {
 		if (config.debug)
@@ -79,7 +78,7 @@ export function measureLOAD(): void {
 				navEntry.loadEventEnd - navEntry.startTime,
 			);
 			recordNavigationMetric("LOAD", state.vitals.LOAD);
-			updateDebugOverlay();
+			state.refreshDebugOverlay?.();
 		}
 	} catch (e) {
 		if (config.debug)

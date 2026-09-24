@@ -15,7 +15,6 @@
     "LICENSE"
   ],
   "scripts": {
-    "info": "npm-scripts-info",
     "build": "pnpm run type-check",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
@@ -27,7 +26,6 @@
     "prepublishOnly": "pnpm run check && pnpm run build"
   },
   "scripts-info": {
-    "info": "Zeigt diese Übersicht der verfügbaren Scripts",
     "build": "Baut das Paket (führt den Type-Check aus)",
     "type-check": "Prüft die Typen mit tsc, ohne Output zu erzeugen",
     "test": "Führt die Vitest-Tests einmalig aus",
@@ -76,7 +74,6 @@
     "@biomejs/biome": "^2.5.8",
     "astro": "^7.2.0",
     "jsdom": "^26.1.0",
-    "npm-scripts-info": "^0.3.9",
     "typescript": "^7.0.2",
     "vitest": "^4.1.0"
   },

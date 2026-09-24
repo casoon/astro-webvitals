@@ -15,6 +15,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "info": "npm-scripts-info",
     "build": "pnpm run type-check",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
@@ -25,10 +26,23 @@
     "check:fix": "biome check --write src",
     "prepublishOnly": "pnpm run check && pnpm run build"
   },
+  "scripts-info": {
+    "info": "Zeigt diese Übersicht der verfügbaren Scripts",
+    "build": "Baut das Paket (führt den Type-Check aus)",
+    "type-check": "Prüft die Typen mit tsc, ohne Output zu erzeugen",
+    "test": "Führt die Vitest-Tests einmalig aus",
+    "test:watch": "Führt die Vitest-Tests im Watch-Modus aus",
+    "lint": "Lintet src/ mit Biome",
+    "format": "Formatiert src/ mit Biome",
+    "check": "Prüft src/ mit Biome auf Lint-/Formatfehler",
+    "check:fix": "Behebt Biome-Lint-/Formatfehler in src/ automatisch",
+    "prepublishOnly": "Prüft und baut das Paket vor dem Veröffentlichen"
+  },
   "packageManager": "pnpm@9.15.0",
   "keywords": [
     "astro",
     "astro-component",
+    "astro-integration",
     "web-vitals",
     "performance",
     "core-web-vitals",
@@ -62,6 +76,7 @@
     "@biomejs/biome": "^2.5.8",
     "astro": "^7.2.0",
     "jsdom": "^26.1.0",
+    "npm-scripts-info": "^0.3.9",
     "typescript": "^7.0.2",
     "vitest": "^4.1.0"
   },

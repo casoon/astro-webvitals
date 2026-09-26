@@ -25,10 +25,22 @@
     "check:fix": "biome check --write src",
     "prepublishOnly": "pnpm run check && pnpm run build"
   },
+  "scripts-info": {
+    "build": "Baut das Paket (führt den Type-Check aus)",
+    "type-check": "Prüft die Typen mit tsc, ohne Output zu erzeugen",
+    "test": "Führt die Vitest-Tests einmalig aus",
+    "test:watch": "Führt die Vitest-Tests im Watch-Modus aus",
+    "lint": "Lintet src/ mit Biome",
+    "format": "Formatiert src/ mit Biome",
+    "check": "Prüft src/ mit Biome auf Lint-/Formatfehler",
+    "check:fix": "Behebt Biome-Lint-/Formatfehler in src/ automatisch",
+    "prepublishOnly": "Prüft und baut das Paket vor dem Veröffentlichen"
+  },
   "packageManager": "pnpm@9.15.0",
   "keywords": [
     "astro",
     "astro-component",
+    "astro-integration",
     "web-vitals",
     "performance",
     "core-web-vitals",

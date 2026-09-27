@@ -1,0 +1,80 @@
+---
+/**
+ * A stage for the project running live in the visitor's browser.
+ *
+ * The showcase shows what the package produced at build time; this shows the
+ * package itself, working. The stage is marked `data-demo` and that mark is
+ * load-bearing: a demo may deliberately contain what the project reports on —
+ * a broken form, a failing check, an unlabelled control — so the site check
+ * measures the page around the stage, not the exhibit inside it. Everything the
+ * demo needs, including its `<script is:inline>`, belongs in the default slot.
+ *
+ * Nothing here loads from another origin. A demo that needs a CDN is a demo
+ * that cannot ship on these pages.
+ */
+interface Props {
+  title: string;
+  /** One sentence above the stage: what the visitor is looking at. */
+  lead?: string;
+  /** Accessible name of the stage region. Default: the title. */
+  label?: string;
+}
+
+const { title, lead, label } = Astro.props;
+---
+
+<section class="demo">
+  <header>
+    <h2>{title}</h2>
+    {lead && <p class="lead">{lead}</p>}
+    <slot name="controls" />
+  </header>
+
+  <!-- data-demo: the exhibit. The site check excludes it from axe and expects
+       the demo's own scripts inside it. -->
+  <div class="stage" data-demo role="region" aria-label={label ?? title}>
+    <slot />
+  </div>
+
+  <slot name="note" />
+</section>
+
+<style>
+  .demo {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    margin: 0;
+    color: var(--heading);
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .lead {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+  header :global(> :last-child:not(.lead):not(h2)) {
+    margin-top: 14px;
+  }
+  .stage {
+    position: relative;
+    padding: 20px;
+    background: var(--bg-deep);
+  }
+  .demo :global(> [slot='note']) {
+    margin: 0;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+</style>

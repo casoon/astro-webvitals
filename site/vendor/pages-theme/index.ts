@@ -34,18 +34,37 @@ export interface CasoonPagesOptions {
   changelog?: string | false;
   /** Module exporting `examples: ShowcaseExample[]`, relative to the site root, or false. Default: "./src/showcase.ts". */
   showcase?: string | false;
+  /**
+   * Live demo: the header label linking to /demo/, or false for none. Default: false.
+   *
+   * The page itself belongs to the project (`src/pages/demo.astro`) and wraps its
+   * running instance in the `Demo` component — the theme only adds the entry.
+   */
+  demo?: string | false;
+  /**
+   * Module exporting `components: Record<string, AstroComponent>`, relative to the site
+   * root, for docs MDX next to the theme's own. `docs/` cannot import anything, so this
+   * is how a page reaches something only the site can build — a component rendering the
+   * project's own output, say. Same name as a theme component: the project's wins.
+   */
+  mdxComponents?: string;
 }
 
 export interface ResolvedConfig
-  extends Required<Omit<CasoonPagesOptions, 'accent' | 'changelog' | 'showcase'>> {
+  extends Required<
+    Omit<CasoonPagesOptions, 'accent' | 'changelog' | 'showcase' | 'demo' | 'mdxComponents'>
+  > {
   accent: { light: string; dark: string } | null;
   /** Absolute path to CHANGELOG.md, or null when disabled. */
   changelog: string | null;
   hasShowcase: boolean;
+  /** Header label of the demo page, or an empty string when there is none. */
+  demo: string;
 }
 
 const CONFIG_ID = 'virtual:casoon-pages/config';
 const SHOWCASE_ID = 'virtual:casoon-pages/showcase';
+const MDX_COMPONENTS_ID = 'virtual:casoon-pages/mdx-components';
 
 export default function casoonPages(options: CasoonPagesOptions): AstroIntegration {
   return {
@@ -74,6 +93,7 @@ export default function casoonPages(options: CasoonPagesOptions): AstroIntegrati
               ? null
               : resolve(root, options.changelog ?? '../CHANGELOG.md'),
           hasShowcase: showcasePath !== null,
+          demo: options.demo === false || options.demo === undefined ? '' : options.demo,
         };
 
         const route = (pattern: string, file: string) =>
@@ -91,6 +111,9 @@ export default function casoonPages(options: CasoonPagesOptions): AstroIntegrati
           [SHOWCASE_ID]: showcasePath
             ? `export { examples } from ${JSON.stringify(showcasePath)};`
             : 'export const examples = [];',
+          [MDX_COMPONENTS_ID]: options.mdxComponents
+            ? `export { components } from ${JSON.stringify(resolve(root, options.mdxComponents))};`
+            : 'export const components = {};',
         };
 
         updateConfig({

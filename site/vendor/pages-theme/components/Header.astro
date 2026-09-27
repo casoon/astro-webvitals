@@ -5,6 +5,7 @@ import { url } from '../lib/url';
 const path = Astro.url.pathname;
 const nav = [
   { label: 'Docs', href: url('docs/') },
+  ...(config.demo ? [{ label: config.demo, href: url('demo/') }] : []),
   ...(config.hasShowcase ? [{ label: 'Showcase', href: url('showcase/') }] : []),
   ...(config.changelog ? [{ label: 'Changelog', href: url('changelog/') }] : []),
 ];

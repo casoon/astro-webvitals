@@ -1,6 +1,7 @@
 ---
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import config from 'virtual:casoon-pages/config';
+import { components as projectComponents } from 'virtual:casoon-pages/mdx-components';
 import * as components from '../../components/index';
 import Docs from '../../layouts/Docs.astro';
 import { buildDocsNav, docSlug } from '../../lib/docs';
@@ -32,6 +33,7 @@ const sourcePath = (entry.filePath ?? '').replace(/^(\.\.\/)+/, '');
   groups={groups}
   headings={headings}
 >
-  {/* docs/ sits outside site/ and cannot import packages; theme components are provided here. */}
-  <Content components={components} />
+  {/* docs/ sits outside site/ and cannot import packages; theme components are provided
+      here, and the project's own (option `mdxComponents`) on top of them. */}
+  <Content components={{ ...components, ...projectComponents }} />
 </Docs>

@@ -5,6 +5,7 @@ export { default as BuildOutput } from './BuildOutput.astro';
 export { default as Button } from './Button.astro';
 export { default as Callout } from './Callout.astro';
 export { default as CodeBlock } from './CodeBlock.astro';
+export { default as Demo } from './Demo.astro';
 export { default as ExamplePanel } from './ExamplePanel.astro';
 export { default as Facts } from './Facts.astro';
 export { default as Features } from './Features.astro';

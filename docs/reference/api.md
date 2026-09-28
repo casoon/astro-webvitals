@@ -49,5 +49,5 @@ The request payload is described in [Reporting to an endpoint](../../guides/endp
 
 | Global | Set by | Purpose |
 | --- | --- | --- |
-| `window.__WEBVITALS_CONFIG__` | the component's inline script | Resolved props, read by the client module. |
+| `window.__WEBVITALS_CONFIG__` | the client module | Resolved props, parsed from the component's JSON config element. |
 | `window.__CASOON_WEBVITALS_INITIALIZED__` | the client | Prevents a second initialization when the component renders twice. |

@@ -1,7 +1,6 @@
 /**
  * The draggable/resizable debug overlay: creation, rendering, and the
- * window.* handlers invoked from inline onclick="..." HTML attribute
- * strings (which execute in global scope, not module scope).
+ * window.* handlers its data-webvitals-action elements call (see actions.ts).
  */
 
 import { checkWCAG, clearAccessibilityHighlights } from "../accessibility";
@@ -10,6 +9,7 @@ import { config } from "../config";
 import { formatMetricValue } from "../metric-format";
 import { formatSEOReport, getSEOContent } from "../seo";
 import { state } from "../state";
+import { bindActions } from "./actions";
 
 export function escapeHTML(str: unknown): string {
 	if (typeof str !== "string") return "";
@@ -514,7 +514,7 @@ export function getAccessibilityContent(): string {
         <div style="margin-bottom: 8px;">
           <!-- Category header (clickable) -->
           <div
-            onclick="window.toggleAccessibilityIssue('${type}')"
+            data-webvitals-action="toggleAccessibilityIssue" data-webvitals-arg="${type}"
             style="
               display: flex;
               justify-content: space-between;
@@ -646,7 +646,7 @@ export function getConsoleContent(): string {
       ">
         <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.03em;">Quick Actions</div>
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-          <button onclick="event.stopPropagation(); window.toggleConsoleDock()" style="
+          <button data-webvitals-action="toggleConsoleDock" style="
             background: ${state.consoleDockEnabled ? "#10B981" : "#4B5563"};
             border: none;
             color: white;
@@ -655,7 +655,7 @@ export function getConsoleContent(): string {
             font-size: 11px;
             cursor: pointer;
           ">${state.consoleDockEnabled ? "Close Console Dock" : "Open Console Dock"}</button>
-          <button onclick="window.toggleHighlightIssues()" style="
+          <button data-webvitals-action="toggleHighlightIssues" style="
             background: ${state.highlightEnabled ? "rgba(239, 68, 68, 0.15)" : "#1F2937"};
             border: 1px solid ${state.highlightEnabled ? "rgba(239, 68, 68, 0.4)" : "#374151"};
             color: ${state.highlightEnabled ? "#FCA5A5" : "#E5E7EB"};
@@ -664,7 +664,7 @@ export function getConsoleContent(): string {
             font-size: 11px;
             cursor: pointer;
           ">${state.highlightEnabled ? "Hide WCAG Highlights" : "Show WCAG Highlights"}</button>
-          <button onclick="window.clearConsoleErrors()" style="
+          <button data-webvitals-action="clearConsoleErrors" style="
             background: #4B5563;
             border: none;
             color: white;
@@ -825,6 +825,8 @@ export function preserveContentScroll(fn: () => void): void {
 	if (newContent) newContent.scrollTop = scrollTop;
 }
 
+let overlayStyleSheet: CSSStyleSheet | null = null;
+
 export function createDebugOverlay(): void {
 	state.debugContainer = document.createElement("div");
 	state.debugContainer.id = "astro-webvitals-debug";
@@ -835,11 +837,11 @@ export function createDebugOverlay(): void {
 	);
 	state.debugContainer.setAttribute("aria-live", "polite");
 
-	// Add global styles for animations
-	if (!document.getElementById("wv-styles")) {
-		const styleSheet = document.createElement("style");
-		styleSheet.id = "wv-styles";
-		styleSheet.textContent = `
+	// Add global styles for animations. A constructed stylesheet, not a <style>
+	// element: CSP style-src does not apply to it, so no 'unsafe-inline' needed.
+	if (!overlayStyleSheet) {
+		overlayStyleSheet = new CSSStyleSheet();
+		overlayStyleSheet.replaceSync(`
       @keyframes wv-pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
@@ -878,9 +880,40 @@ export function createDebugOverlay(): void {
       #astro-webvitals-debug::-webkit-scrollbar-thumb:hover {
         background: rgba(96, 165, 250, 0.8);
       }
-    `;
-		document.head.appendChild(styleSheet);
+    `);
+		document.adoptedStyleSheets = [
+			...document.adoptedStyleSheets,
+			overlayStyleSheet,
+		];
 	}
+
+	const w = window as any;
+	bindActions(state.debugContainer, {
+		toggleWebVitalsDebug: () => w.toggleWebVitalsDebug(),
+		setWebVitalsTab: (tab) => w.setWebVitalsTab(tab),
+		toggleAccessibilityIssue: (type) => w.toggleAccessibilityIssue(type),
+		copySEOReport: () => w.copySEOReport(),
+		toggleHighlightIssues: () => w.toggleHighlightIssues(),
+		toggleConsoleDock: () => w.toggleConsoleDock(),
+		clearConsoleErrors: () => w.clearConsoleErrors(),
+		closeDebugOverlay: () =>
+			document.getElementById("astro-webvitals-debug")?.remove(),
+	});
+	// Hover colours of the close button (formerly onmouseover/onmouseout).
+	const setCloseHover = (event: Event, color: string, background: string) => {
+		const button = (event.target as Element).closest<HTMLElement>(
+			"[data-webvitals-hover]",
+		);
+		if (!button) return;
+		button.style.color = color;
+		button.style.background = background;
+	};
+	state.debugContainer.addEventListener("mouseover", (event) =>
+		setCloseHover(event, "#EF4444", "rgba(239, 68, 68, 0.1)"),
+	);
+	state.debugContainer.addEventListener("mouseout", (event) =>
+		setCloseHover(event, "#6B7280", "transparent"),
+	);
 
 	// Minimized view by default
 	updateDebugOverlay();
@@ -966,7 +999,7 @@ export function updateDebugOverlay(): void {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         cursor: pointer;
         user-select: none;
-      " onclick="window.toggleWebVitalsDebug()">
+      " data-webvitals-action="toggleWebVitalsDebug">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 14px;">${scoreEmoji}</span>
@@ -983,7 +1016,8 @@ export function updateDebugOverlay(): void {
           <div style="display: flex; gap: 8px; align-items: center;">
             ${config.sampleRate < 1 ? `<span style="font-size: 10px; color: #9CA3AF;">📊 ${(config.sampleRate * 100).toFixed(0)}%</span>` : ""}
             <button
-              onclick="event.stopPropagation(); document.getElementById('astro-webvitals-debug').remove();"
+              data-webvitals-action="closeDebugOverlay"
+              data-webvitals-hover
               style="
                 background: transparent;
                 border: none;
@@ -1001,8 +1035,6 @@ export function updateDebugOverlay(): void {
                 line-height: 1;
                 font-weight: bold;
               "
-              onmouseover="this.style.color='#EF4444'; this.style.background='rgba(239, 68, 68, 0.1)';"
-              onmouseout="this.style.color='#6B7280'; this.style.background='transparent';"
               aria-label="Close performance monitor"
               title="Close (reopens on page reload)"
             >×</button>
@@ -1036,7 +1068,7 @@ export function updateDebugOverlay(): void {
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           padding: 0 16px;
         ">
-          <button onclick="window.setWebVitalsTab('vitals')" style="
+          <button data-webvitals-action="setWebVitalsTab" data-webvitals-arg="vitals" style="
             background: none;
             border: none;
             color: ${state.activeTab === "vitals" ? "#60A5FA" : "#9CA3AF"};
@@ -1048,7 +1080,7 @@ export function updateDebugOverlay(): void {
             transition: all 0.2s;
           ">Core Vitals</button>
 
-          <button onclick="window.setWebVitalsTab('seo')" style="
+          <button data-webvitals-action="setWebVitalsTab" data-webvitals-arg="seo" style="
             background: none;
             border: none;
             color: ${state.activeTab === "seo" ? "#60A5FA" : "#9CA3AF"};
@@ -1063,7 +1095,7 @@ export function updateDebugOverlay(): void {
           ${
 						config.checkAccessibility
 							? `
-            <button onclick="window.setWebVitalsTab('accessibility')" style="
+            <button data-webvitals-action="setWebVitalsTab" data-webvitals-arg="accessibility" style="
               background: none;
               border: none;
               color: ${state.activeTab === "accessibility" ? "#60A5FA" : "#9CA3AF"};
@@ -1098,7 +1130,7 @@ export function updateDebugOverlay(): void {
           ${
 						config.extendedMetrics || config.smartDetection
 							? `
-            <button onclick="window.setWebVitalsTab('details')" style="
+            <button data-webvitals-action="setWebVitalsTab" data-webvitals-arg="details" style="
               background: none;
               border: none;
               color: ${state.activeTab === "details" ? "#60A5FA" : "#9CA3AF"};
@@ -1113,7 +1145,7 @@ export function updateDebugOverlay(): void {
 							: ""
 					}
 
-          <button onclick="window.setWebVitalsTab('console')" style="
+          <button data-webvitals-action="setWebVitalsTab" data-webvitals-arg="console" style="
             background: none;
             border: none;
             color: ${state.activeTab === "console" ? "#60A5FA" : "#9CA3AF"};
@@ -1167,7 +1199,7 @@ export function updateDebugOverlay(): void {
             @casoon/astro-webvitals
           </a>
           <button
-            onclick="document.getElementById('astro-webvitals-debug').remove()"
+            data-webvitals-action="closeDebugOverlay"
             aria-label="Close monitor"
             style="
               background: none;

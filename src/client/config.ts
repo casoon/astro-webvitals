@@ -2,7 +2,7 @@
  * Resolved runtime configuration for the WebVitals client.
  *
  * Populated once at init from the config object bridged over from Astro's
- * frontmatter via `window.__WEBVITALS_CONFIG__` (see WebVitals.astro).
+ * frontmatter as inert JSON (see bridge.ts and WebVitals.astro).
  */
 
 export interface PerformanceBudget {

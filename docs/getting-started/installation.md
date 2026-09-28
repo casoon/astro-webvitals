@@ -47,8 +47,8 @@ Rendering it more than once is harmless: the client initializes only once per pa
 
 ## What it adds to the page
 
-Two script tags: an inline script with the resolved configuration, and a module script that Astro bundles and serves from your own origin, `web-vitals` included. The [default output](../../../showcase/default-output/) shows both, captured from a real build.
+Two script tags: a non-executable `<script type="application/json">` with the resolved configuration, and a module script that Astro bundles and serves from your own origin, `web-vitals` included.
 
-If your site sends a Content Security Policy, allow the inline script, for example with its hash, and your own origin as a script source.
+It works with Astro `security.csp` and other hash-based Content Security Policies without `'unsafe-inline'`: the only executable script is the bundled module, so allowing your own origin as a script source is enough.
 
 Next: [Quickstart](../quickstart/).

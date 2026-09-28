@@ -1,10 +1,11 @@
 /**
  * The dockable console log viewer: creation, rendering, resize handling,
- * and the window.* handlers invoked from inline onclick="..." strings.
+ * and the window.* handlers its data-webvitals-action buttons call.
  */
 
 import { config } from "../config";
 import { state } from "../state";
+import { bindActions } from "./actions";
 import { escapeHTML, updateDebugOverlay } from "./debug-overlay";
 
 export function createConsoleDock(): void {
@@ -59,7 +60,7 @@ export function createConsoleDock(): void {
     </div>
     <div style="display: flex; align-items: center; gap: 6px;">
       <button
-        onclick="window.clearConsoleErrors()"
+        data-webvitals-action="clearConsoleErrors"
         style="
           background: #1F2937;
           border: 1px solid #374151;
@@ -71,7 +72,7 @@ export function createConsoleDock(): void {
         "
       >Clear</button>
       <button
-        onclick="window.copyAllConsoleLogs()"
+        data-webvitals-action="copyAllConsoleLogs"
         style="
           background: #1F2937;
           border: 1px solid #374151;
@@ -83,7 +84,7 @@ export function createConsoleDock(): void {
         "
       >Copy All</button>
       <button
-        onclick="event.stopPropagation(); window.toggleConsoleDock(false)"
+        data-webvitals-action="closeConsoleDock"
         style="
           background: #111827;
           border: 1px solid #374151;
@@ -105,6 +106,13 @@ export function createConsoleDock(): void {
     font-size: 11px;
     line-height: 1.4;
   `;
+
+	bindActions(state.consoleDockEl, {
+		clearConsoleErrors: () => (window as any).clearConsoleErrors(),
+		copyAllConsoleLogs: () => (window as any).copyAllConsoleLogs(),
+		closeConsoleDock: () => (window as any).toggleConsoleDock(false),
+		copyConsoleLine: (index) => (window as any).copyConsoleLine(Number(index)),
+	});
 
 	state.consoleDockEl.appendChild(resizeHandle);
 	state.consoleDockEl.appendChild(header);
@@ -140,7 +148,7 @@ export function updateConsoleDock(): void {
       <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 10px; color: #9CA3AF;">
         <span style="color: ${typeColors[log.type] || "#9CA3AF"};">${(log.type || "log").toUpperCase()}</span>
         <span>${new Date(log.timestamp).toLocaleTimeString()}</span>
-        <button onclick="window.copyConsoleLine(${index})" style="background: transparent; border: 1px solid #4B5563; color: #9CA3AF; padding: 2px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;" title="Copy this line">Copy</button>
+        <button data-webvitals-action="copyConsoleLine" data-webvitals-arg="${index}" style="background: transparent; border: 1px solid #4B5563; color: #9CA3AF; padding: 2px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;" title="Copy this line">Copy</button>
       </div>
       <pre style="margin: 0; color: #E5E7EB; white-space: pre-wrap; word-break: break-word; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">${escapeHTML(log.message)}</pre>
     </div>

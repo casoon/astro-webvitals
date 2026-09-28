@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.10] - 2026-09-28
+
+### Fixed
+- Works with Astro `security.csp` and other hash-based Content Security Policies without `'unsafe-inline'`. The configuration is no longer an `is:inline define:vars` script, which Astro does not hash and the browser therefore blocked; it is rendered as inert `<script type="application/json">` and read by the bundled module script. `window.__WEBVITALS_CONFIG__` is still set.
+- The debug overlay and console dock no longer use inline `onclick`/`onmouseover` attributes (clicks are dispatched from `data-webvitals-action`), and the overlay's animation styles use a constructed stylesheet instead of an injected `<style>` element.
+
 ## [0.4.9] - 2026-09-14
 
 ### Fixed

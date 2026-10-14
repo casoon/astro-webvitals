@@ -122,6 +122,8 @@ window.addEventListener('webvitals:metric', (event) => {
 
 ## Privacy and security
 
+Works with Astro `security.csp` (no `'unsafe-inline'` needed): the component passes its configuration as inert JSON (`<script type="application/json">`) and all code runs from the bundled module script, which Astro serves from your own origin. The debug overlay and console dock use no inline event handlers.
+
 Use `consent` or `respectDnt` where required. Do not put secrets in `headers`: Astro serializes component props into the browser, so such values are public. Prefer a same-origin endpoint protected by normal session cookies.
 
 The optional retry queue and attribution data should be enabled only after reviewing your privacy requirements.

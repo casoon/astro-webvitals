@@ -1,5 +1,5 @@
 {
-  "entry": "WebVitals.astro_astro_type_script_index_0_lang.KhS4lISl.js",
+  "entry": "WebVitals.astro_astro_type_script_index_0_lang.DH73zi6S.js",
   "chunks": [
     {
       "file": "dashboard.astro_astro_type_script_index_0_lang.YQl8rvJm.js",
@@ -8,10 +8,10 @@
       "gzip": 1655
     },
     {
-      "file": "debug-overlay.BMYmqzAH.js",
+      "file": "debug-overlay.AnaxBXTr.js",
       "loading": "dynamic",
-      "bytes": 49664,
-      "gzip": 11634
+      "bytes": 50448,
+      "gzip": 11845
     },
     {
       "file": "web-vitals.attribution.DHzNuYO-.js",
@@ -26,46 +26,46 @@
       "gzip": 3205
     },
     {
-      "file": "console-dock.C_jCKOEr.js",
+      "file": "console-dock.BoMlDZOJ.js",
       "loading": "dynamic",
-      "bytes": 5655,
-      "gzip": 1932
+      "bytes": 5894,
+      "gzip": 1967
     },
     {
-      "file": "console-capture.fPyKKS8J.js",
+      "file": "console-capture.DtYr6z5_.js",
       "loading": "dynamic",
       "bytes": 925,
       "gzip": 526
     },
     {
-      "file": "long-tasks.CCFuVN4E.js",
+      "file": "long-tasks.B1yVKtFj.js",
       "loading": "dynamic",
       "bytes": 415,
-      "gzip": 306
+      "gzip": 308
     },
     {
-      "file": "responsive.YxQJ-aBJ.js",
+      "file": "responsive.YUVfLXyV.js",
       "loading": "dynamic",
       "bytes": 354,
-      "gzip": 274
+      "gzip": 273
     },
     {
-      "file": "seo.iuA1j6xm.js",
+      "file": "seo.CtMWT1Iw.js",
       "loading": "dynamic",
-      "bytes": 180,
-      "gzip": 158
+      "bytes": 185,
+      "gzip": 160
     },
     {
-      "file": "accessibility.bS3TTF_Z.js",
+      "file": "accessibility.Bg7i2yAT.js",
       "loading": "dynamic",
       "bytes": 107,
       "gzip": 118
     },
     {
-      "file": "WebVitals.astro_astro_type_script_index_0_lang.KhS4lISl.js",
+      "file": "WebVitals.astro_astro_type_script_index_0_lang.DH73zi6S.js",
       "loading": "static",
-      "bytes": 10595,
-      "gzip": 3981
+      "bytes": 10928,
+      "gzip": 4064
     },
     {
       "file": "sitemap-pass.D1sv_KO0.js",

@@ -8,6 +8,8 @@
  * @see https://github.com/casoon/astro-webvitals
  */
 
+import { serializeBridgedConfig } from "./client/bridge";
+
 export interface Props {
 	/**
 	 * Enable debug overlay (shows metrics and accessibility issues)
@@ -187,42 +189,52 @@ const defaultBudgets = {
 	INP: 200,
 	...performanceBudget,
 };
+
+const config = {
+	debug,
+	consoleDock,
+	endpoint,
+	position,
+	desktopPositions,
+	mobilePosition,
+	batchReporting,
+	batchInterval,
+	checkAccessibility,
+	highlightAccessibility,
+	extendedMetrics,
+	smartDetection,
+	performanceBudget: defaultBudgets,
+	headers,
+	sessionId,
+	userId,
+	sampleRate: Math.min(1, Math.max(0, Number.isFinite(sampleRate) ? sampleRate : 1)),
+	trackSoftNavigations,
+	attribution,
+	trackLongTasks,
+	maxBatchSize: Math.max(1, Math.floor(Number.isFinite(maxBatchSize) ? maxBatchSize : 10)),
+	retryFailedMetrics,
+	respectDnt,
+	consent,
+	dashboard,
+};
+
+// The config travels as inert JSON (not an executable inline script), so pages
+// work under a hash-based Content-Security-Policy such as Astro's security.csp.
+// Escaping keeps string props from closing the <script> element early.
+const serializedConfig = serializeBridgedConfig(config);
 ---
 
 {shouldTrack && (
-  <script is:inline define:vars={{
-    config: {
-      debug,
-      consoleDock,
-      endpoint,
-      position,
-      desktopPositions,
-      mobilePosition,
-      batchReporting,
-      batchInterval,
-      checkAccessibility,
-      highlightAccessibility,
-      extendedMetrics,
-      smartDetection,
-      performanceBudget: defaultBudgets,
-      headers,
-      sessionId,
-		userId,
-	      sampleRate: Math.min(1, Math.max(0, Number.isFinite(sampleRate) ? sampleRate : 1)),
-	      trackSoftNavigations,
-	      attribution,
-	      trackLongTasks,
-	      maxBatchSize: Math.max(1, Math.floor(Number.isFinite(maxBatchSize) ? maxBatchSize : 10)),
-	      retryFailedMetrics,
-	      respectDnt,
-	      consent,
-	      dashboard
-    }
-  }}>
-    window.__WEBVITALS_CONFIG__ = config;
-  </script>
+  <script type="application/json" data-astro-webvitals-config set:html={serializedConfig}></script>
   <script type="module">
     import { initWebVitals } from './client/index';
-    initWebVitals(window.__WEBVITALS_CONFIG__);
+    import { readBridgedConfig } from './client/bridge';
+    window.__WEBVITALS_CONFIG__ = readBridgedConfig();
+    // Keep the global current across ClientRouter navigations, as the former
+    // inline config script did; initialization itself still happens once.
+    document.addEventListener('astro:after-swap', () => {
+      window.__WEBVITALS_CONFIG__ = readBridgedConfig() ?? window.__WEBVITALS_CONFIG__;
+    });
+    if (window.__WEBVITALS_CONFIG__) initWebVitals(window.__WEBVITALS_CONFIG__);
   </script>
 )}

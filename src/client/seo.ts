@@ -407,7 +407,7 @@ export function getSEOContent(): string {
 
       <div style="padding: 10px; background: rgba(31,41,55,0.4); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; align-items: center; justify-content: space-between;">
         <div style="color: #9CA3AF; font-size: 11px;">Copy a shareable SEO report</div>
-        <button onclick="window.copySEOReport()" style="
+        <button data-webvitals-action="copySEOReport" style="
           background: #4B5563;
           border: 1px solid #6B7280;
           color: #E5E7EB;

@@ -90,7 +90,7 @@ export const examples: ShowcaseExample[] = [
     slug: 'default-output',
     title: 'Default component output',
     description:
-      'What <WebVitals /> adds to a statically built page: the resolved configuration as an inline script and one module script from the site’s own origin. Captured from dist/index.html of the demo build, formatted for reading.',
+      'What <WebVitals /> adds to a statically built page: the resolved configuration as inert JSON and one module script from the site’s own origin. Captured from dist/index.html of the demo build, formatted for reading.',
     file: 'examples/output/default.html',
     tags: ['WebVitals', 'defaults', 'static build'],
     input: { code: file('examples/demo/src/pages/index.astro'), lang: 'astro' },

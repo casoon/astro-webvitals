@@ -13,6 +13,7 @@ import {
   Terminal,
 } from '@casoon/pages-theme/components';
 import Base from '@casoon/pages-theme/layouts/Base.astro';
+import pages from 'virtual:casoon-pages/config';
 import { checksAnsi, defaultOutput, entryGzip, kB } from '../showcase';
 
 const layout = `---
@@ -52,7 +53,7 @@ export const POST: APIRoute = async ({ request }) => {
     />
     <Badges>
       <Badge>MIT</Badge>
-      <Badge>npm 0.4.9</Badge>
+      <Badge>npm {pages.version}</Badge>
       <Badge>Astro 4–7</Badge>
       <Badge>Node 18.17+</Badge>
     </Badges>

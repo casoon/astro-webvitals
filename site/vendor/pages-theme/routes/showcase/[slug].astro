@@ -1,8 +1,10 @@
 ---
+import config from 'virtual:casoon-pages/config';
 import { examples } from 'virtual:casoon-pages/showcase';
 import ExamplePanel from '../../components/ExamplePanel.astro';
 import Base from '../../layouts/Base.astro';
-import type { ShowcaseExample } from '../../lib/showcase';
+import { t } from '../../lib/i18n';
+import { descriptionHtml, descriptionText, type ShowcaseExample } from '../../lib/showcase';
 import { url } from '../../lib/url';
 
 export function getStaticPaths() {
@@ -19,19 +21,20 @@ interface Props {
 }
 
 const { example, prev, next } = Astro.props;
+const s = t(config.lang);
 ---
 
-<Base title={example.title} description={example.description}>
+<Base title={example.title} description={example.description && descriptionText(example.description)}>
   <div class="page">
-    <p class="back"><a href={url('showcase/')}>← All examples</a></p>
+    <p class="back"><a href={url('showcase/')}>← {s.allExamples}</a></p>
     <h1>{example.title}</h1>
-    {example.description && <p class="lead">{example.description}</p>}
+    {example.description && <p class="lead cp-inline-code" set:html={descriptionHtml(example.description)} />}
     <ExamplePanel example={example} headingLevel={2} detailLink={false} />
-    <nav class="pager" aria-label="Previous and next example">
+    <nav class="pager" aria-label={s.pagerShowcase}>
       {
         prev ? (
           <a href={url(`showcase/${prev.slug}/`)}>
-            <span class="dir">Previous</span>
+            <span class="dir">{s.previous}</span>
             <span class="label">{prev.title}</span>
           </a>
         ) : (
@@ -41,7 +44,7 @@ const { example, prev, next } = Astro.props;
       {
         next && (
           <a class="next" href={url(`showcase/${next.slug}/`)}>
-            <span class="dir">Next</span>
+            <span class="dir">{s.next}</span>
             <span class="label">{next.title}</span>
           </a>
         )

@@ -73,10 +73,10 @@ export function parseChangelog(md: string): Release[] {
   return releases.filter((r) => r.changes.length > 0);
 }
 
-export function formatDate(iso: string): string {
+export function formatDate(iso: string, locale = 'en-GB'): string {
   const date = new Date(`${iso}T00:00:00Z`);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString('en-GB', {
+  return date.toLocaleDateString(locale, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

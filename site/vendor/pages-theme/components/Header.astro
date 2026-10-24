@@ -1,23 +1,33 @@
 ---
 import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
 import { url } from '../lib/url';
 
+const s = t(config.lang);
 const path = Astro.url.pathname;
+const websiteHost = config.website && new URL(config.website).host.replace(/^www\./, '');
 const nav = [
-  { label: 'Docs', href: url('docs/') },
+  { label: s.docs, href: url('docs/') },
   ...(config.demo ? [{ label: config.demo, href: url('demo/') }] : []),
-  ...(config.hasShowcase ? [{ label: 'Showcase', href: url('showcase/') }] : []),
-  ...(config.changelog ? [{ label: 'Changelog', href: url('changelog/') }] : []),
+  ...(config.hasShowcase ? [{ label: s.showcase, href: url('showcase/') }] : []),
+  ...(config.changelog ? [{ label: s.changelog, href: url('changelog/') }] : []),
 ];
 ---
 
-<header class="header">
+<header class="header" data-website={websiteHost ? '' : undefined}>
   <div class="inner">
     <a class="home" href={url()}>
       <span class="name">{config.name}</span>
       {config.version && <span class="version">v{config.version}</span>}
     </a>
-    <nav aria-label="Main">
+    {
+      websiteHost && (
+        <a class="website" href={config.website}>
+          {websiteHost}
+        </a>
+      )
+    }
+    <nav aria-label={s.mainNav}>
       <ul>
         {
           nav.map((item) => (
@@ -30,8 +40,8 @@ const nav = [
         }
       </ul>
       <span class="sep" aria-hidden="true"></span>
-      <a href={`https://github.com/${config.repo}`}>GitHub</a>
-      <button class="theme" type="button" data-theme-toggle aria-label="Dark theme" aria-pressed="false" hidden>
+      {config.repo && <a href={`https://github.com/${config.repo}`}>GitHub</a>}
+      <button class="theme" type="button" data-theme-toggle aria-label={s.darkTheme} aria-pressed="false" hidden>
         <!-- Shows the theme a click switches to: moon while light, sun while dark. -->
         <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
           <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
@@ -85,6 +95,17 @@ const nav = [
     color: var(--muted);
     font-family: var(--font-mono);
     font-size: 12px;
+  }
+  .website {
+    padding: 3px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 13.5px;
+  }
+  .website:hover {
+    border-color: var(--accent);
+    color: var(--heading);
   }
   nav {
     display: flex;
@@ -174,6 +195,32 @@ const nav = [
       padding: 7px 8px;
     }
     .theme {
+      margin-left: auto;
+    }
+  }
+  /* With the website pill one row needs more room, so the second row starts earlier. */
+  @media (max-width: 900px) {
+    :global(:root:has(.header[data-website])) {
+      --header-h: 100px;
+    }
+    [data-website] .inner {
+      flex-wrap: wrap;
+      gap: 4px 8px;
+      height: auto;
+      min-height: var(--header-h);
+      padding: 10px 16px;
+    }
+    [data-website] nav {
+      width: 100%;
+      margin-left: -8px;
+    }
+    [data-website] .sep {
+      display: none;
+    }
+    [data-website] nav a {
+      padding: 7px 8px;
+    }
+    [data-website] .theme {
       margin-left: auto;
     }
   }

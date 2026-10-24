@@ -1,11 +1,14 @@
 ---
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
 interface Props {
   title: string;
   lead: string;
   eyebrow?: string;
 }
 
-const { title, lead, eyebrow = 'CASOON Open Source' } = Astro.props;
+const { title, lead, eyebrow = t(config.lang).heroEyebrow } = Astro.props;
 ---
 
 <section class="hero">

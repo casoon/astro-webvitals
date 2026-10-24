@@ -3,18 +3,82 @@ import config from 'virtual:casoon-pages/config';
 import { examples } from 'virtual:casoon-pages/showcase';
 import ExamplePanel from '../../components/ExamplePanel.astro';
 import Base from '../../layouts/Base.astro';
+import { t } from '../../lib/i18n';
+import { descriptionHtml, type ShowcaseExample } from '../../lib/showcase';
+import { url } from '../../lib/url';
+
+const s = t(config.lang);
+
+// Examples in groups (in the order of each group's first example); without groups one list.
+const groups: { label: string; id: string; items: ShowcaseExample[] }[] = [];
+for (const example of examples as ShowcaseExample[]) {
+  const label = example.group ?? '';
+  let group = groups.find((g) => g.label === label);
+  if (!group) {
+    const id = `group-${
+      label
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || 'all'
+    }`;
+    group = { label, id, items: [] };
+    groups.push(group);
+  }
+  group.items.push(example);
+}
+const grouped = groups.some((g) => g.label !== '');
 ---
 
-<Base title="Showcase" description={`Real input and output of ${config.name}.`}>
+<Base title={s.showcase} description={s.showcaseDescription(config.name)}>
   <div class="page">
-    <h1>Showcase</h1>
-    <p class="lead">
-      Each example shows real output produced by {config.name} itself, from files in the project
-      repository. Input on the left, output on the right.
-    </p>
-    <div class="list">
-      {examples.map((example) => <ExamplePanel example={example} />)}
-    </div>
+    <h1>{s.showcase}</h1>
+    <p class="lead">{config.showcaseLead || s.showcaseLead(config.name)}</p>
+    {
+      grouped && (
+        <nav class="jump" aria-label={s.showcase}>
+          <ul>
+            {groups.map((g) => (
+              <li>
+                <a href={`#${g.id}`}>
+                  {g.label || s.showcase} <span class="count">{g.items.length}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+    {
+      groups.map((group) => (
+        <section class="group" id={grouped ? group.id : undefined}>
+          {grouped && group.label && <h2>{group.label}</h2>}
+          <div class="list">
+            {group.items
+              .filter((example) => !example.preview)
+              .map((example) => (
+                <ExamplePanel example={example} />
+              ))}
+          </div>
+          {group.items.some((example) => example.preview) && (
+            <ul class="cards">
+              {group.items
+                .filter((example) => example.preview)
+                .map((example) => (
+                  <li class="card">
+                    <a href={url(`showcase/${example.slug}/`)}>
+                      <span class="preview" set:html={example.preview!.html} />
+                      <span class="name">{example.title}</span>
+                      {example.description && (
+                        <span class="text cp-inline-code" set:html={descriptionHtml(example.description)} />
+                      )}
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </section>
+      ))
+    }
   </div>
 </Base>
 
@@ -31,14 +95,101 @@ import Base from '../../layouts/Base.astro';
     font-weight: 600;
     letter-spacing: -0.025em;
   }
+  h2 {
+    margin: 0 0 16px;
+    color: var(--heading);
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
   .lead {
     max-width: 62ch;
-    margin: 0 0 40px;
+    margin: 0 0 32px;
     font-size: 17.5px;
+  }
+  .jump ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 40px;
+    padding: 0;
+    list-style: none;
+  }
+  .jump a {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .jump a:hover,
+  .jump a:focus-visible {
+    border-color: var(--accent);
+    color: var(--heading);
+  }
+  .count {
+    color: var(--muted);
+  }
+  .group + .group {
+    margin-top: 56px;
+  }
+  .group {
+    scroll-margin-top: 80px;
   }
   .list {
     display: flex;
     flex-direction: column;
     gap: 20px;
+  }
+  .list:not(:empty) + .cards {
+    margin-top: 20px;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .card a {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .card a:hover,
+  .card a:focus-visible {
+    border-color: var(--accent);
+  }
+  .preview {
+    display: block;
+    line-height: 0;
+  }
+  .preview :global(img) {
+    width: 100%;
+    height: auto;
+  }
+  .name {
+    color: var(--heading);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .text {
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+  .text :global(code) {
+    font-size: 0.9em;
   }
 </style>

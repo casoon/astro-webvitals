@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,6 +6,7 @@ import mdx from '@astrojs/mdx';
 import type { AstroIntegration } from 'astro';
 import type { Lang } from './lib/i18n';
 import { renderOgImage } from './lib/og';
+import { projectVersion } from './lib/version';
 
 export interface PackageLink {
   /** Label shown in the footer and as badge, e.g. "crates.io" or "npm". */
@@ -26,8 +27,9 @@ export interface CasoonPagesOptions {
   catalog?: string | false;
   /** GitHub repository as "owner/name". Omit for a private repository: no GitHub or edit links. */
   repo?: string;
-  /** Current release, shown in the header and on docs pages. */
-  version?: string;
+  /** Current release, shown in the header and on docs pages.
+   *  Omitted: read from package.json or Cargo.toml next to site/. `false` shows none. */
+  version?: string | false;
   /** SPDX licence identifier, or false for proprietary code (no licence named). Default: "MIT". */
   license?: string | false;
   /** Default branch, used for "Edit this page" links. Default: "main". */
@@ -108,7 +110,10 @@ export default function casoonPages(options: CasoonPagesOptions): AstroIntegrati
           catalog:
             options.catalog === false ? '' : (options.catalog ?? options.repo?.split('/')[1] ?? ''),
           repo: options.repo ?? '',
-          version: options.version ?? '',
+          version:
+            options.version === false
+              ? ''
+              : (options.version ?? projectVersion(resolve(root, '..'))),
           license: options.license ?? 'MIT',
           branch: options.branch ?? 'main',
           accent: options.accent ?? null,
@@ -160,6 +165,17 @@ export default function casoonPages(options: CasoonPagesOptions): AstroIntegrati
             // docs/, examples/ and CHANGELOG.md live next to site/ in the project repository.
             server: { fs: { allow: [resolve(root, '..')] } },
           },
+        });
+      },
+      // Project pages may import the virtual modules too (`config.version` on a start page),
+      // so the declarations go into the project's generated types, not just the theme's.
+      'astro:config:done': ({ injectTypes }) => {
+        injectTypes({
+          filename: 'virtual.d.ts',
+          content: readFileSync(new URL('./virtual.d.ts', import.meta.url), 'utf8').replace(
+            "'./index'",
+            "'@casoon/pages-theme'"
+          ),
         });
       },
       // Sitemap and OG image need absolute URLs, so both depend on `site`.

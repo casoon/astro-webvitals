@@ -158,23 +158,21 @@ const hasSource = Astro.slots.has('source');
     max-width: 62ch;
     margin-inline: auto;
   }
+  /* Input over output, not beside it: side by side, neither the source nor the file names
+     get enough width inside --max — the code is cut off and the names wrap to a second row. */
   .is-stack .band {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.05fr);
-    gap: 24px;
-    align-items: center;
-  }
-  .is-stack .band:not(:has(.source)) {
-    grid-template-columns: minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
   }
   .is-stack .source {
     min-width: 0;
   }
   .step {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    gap: 12px;
     margin: 0;
   }
   .pill {
@@ -188,6 +186,7 @@ const hasSource = Astro.slots.has('source');
     white-space: nowrap;
   }
   .arrow {
+    rotate: 90deg;
     color: var(--brand);
     font-size: 20px;
     line-height: 1;
@@ -236,19 +235,6 @@ const hasSource = Astro.slots.has('source');
 
     background: var(--invert-bg);
     color: var(--text);
-  }
-
-  @media (max-width: 900px) {
-    .is-stack .band {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .step {
-      flex-direction: row;
-      justify-content: center;
-    }
-    .arrow {
-      rotate: 90deg;
-    }
   }
 
   @media (max-width: 640px) {

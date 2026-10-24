@@ -67,7 +67,7 @@ export const collections = { docs: docsCollection() };
 | `tagline` | – | A few words for the start page's `<title>` and the OG image; see „Search engines" |
 | `website` | – | The project's landing page (`https://judge.casoon.de`): header, footer, JSON-LD `sameAs` |
 | `catalog` | repository name | Slug of the project's entry on casoon.dev (`#projekt-<slug>`), linked in the footer; `false` for none |
-| `version` | – | Header badge, "Docs for vX" |
+| `version` | the project's manifest | Header badge, "Docs for vX"; see „Version" | 
 | `license` | `MIT` | SPDX id for footer and JSON-LD; `false` for proprietary code names no licence |
 | `branch` | `main` | "Edit this page" links |
 | `accent` | CASOON petrol | `{ light, dark }` project colour; needs 4.5:1 on `#f6f6f5` and `#101010` |
@@ -79,6 +79,18 @@ export const collections = { docs: docsCollection() };
 | `mdxComponents` | – | Module exporting `components` for docs MDX, next to the theme's; see „Docs frontmatter" |
 | `lang` | `en` | `en` or `de`: `<html lang>` and the theme's own UI strings (`lib/i18n.ts`); props passed by the project win |
 | `showcaseLead` | – | Lead paragraph of the showcase overview, instead of the theme's generic one |
+
+#### Version
+
+Left out, `version` comes from the manifest next to `site/`: `version` in `package.json`, else
+`[package]` or `[workspace.package]` in `Cargo.toml`. So the number is maintained in one place,
+and a release updates the site by itself. Pages read it as `config.version` from
+`virtual:casoon-pages/config` — a start page that shows the release in a `Badge` takes it from
+there instead of typing it out.
+
+A wrong number is worse than none, so anything that cannot be read with certainty yields none:
+a workspace whose version sits in a member crate, a `package.json` without `version`, a project
+with neither manifest. Those pass `version` themselves, and `false` shows none at all.
 
 ### Routes
 
@@ -147,14 +159,17 @@ files.
 | Colour field | `tone="invert"` on any layout | `Terminal`, or whatever the project shows |
 | Editorial | `layout="editorial"` | `FileSet view="rail"` — names and one line each |
 
-The stack layout reads as a pipeline: the `source` slot (usually a `CodeBlock` with the
-configuration), the `command` pill, then the output. Without a `source` slot the band is just
-the output, full width. Below 900 px the three parts stack and the arrow turns down.
+The stack layout reads as a pipeline from top to bottom: the `source` slot (usually a
+`CodeBlock` with the configuration), the `command` pill, then the output — each over the full
+width of the container. Side by side the three do not fit inside `--max`: the source is cut off
+mid-line and the file names wrap to a second row. Without a `source` slot the band is just the
+output.
 
 `FileSet` takes `files` — `id`, `name` and optional `path`, `size`, `note` — and one named slot
 per `id` holding that file's content, the same way `Tabs` does. The `rail` view needs no slots.
-The tab strip wraps instead of scrolling, so no file name is ever hidden, and each pane scrolls
-on its own for long lines.
+The tab strip stays on one row at every width: below 640 px the names lose their suffix
+(`robots.txt` → `robots`, and only when the stems stay distinct), and a strip that still does not
+fit scrolls sideways. Each pane scrolls on its own for long lines.
 
 `tone="invert"` redefines the colour tokens inside the hero, so `Install`, `Badges` and
 `FileSet` follow without knowing about it. The ground is `--invert-bg` with `--invert-accent`,

@@ -17,6 +17,10 @@ interface Props {
 
 const { files, view = 'tabs', label = t(config.lang).filesLabel } = Astro.props;
 const uid = `files-${files.map((f) => f.id).join('-')}`;
+// Narrow screens show the name without its suffix, so five tabs still fit on one line.
+// Only when the stems stay distinct — `data.txt` next to `data.xml` would read as two tabs alike.
+const stems = files.map((f) => f.name.replace(/\.[^.]+$/, ''));
+const abbreviate = new Set(stems).size === files.length;
 const panels =
   view === 'rail'
     ? []
@@ -26,7 +30,7 @@ const panels =
 {
   view === 'tabs' && (
     <div class="files">
-      <div class="list" role="radiogroup" aria-label={label}>
+      <div class:list={['list', abbreviate && 'abbrev']} role="radiogroup" aria-label={label}>
         {files.map((f, i) => (
           <>
             <input
@@ -37,7 +41,10 @@ const panels =
               value={i}
               checked={i === 0}
             />
-            <label for={`${uid}-${i}`}>{f.name}</label>
+            <label for={`${uid}-${i}`}>
+              <span class="full">{f.name}</span>
+              {abbreviate && <span class="stem">{stems[i]}</span>}
+            </label>
           </>
         ))}
       </div>
@@ -93,16 +100,21 @@ const panels =
     background: var(--surface);
     box-shadow: var(--shadow);
   }
+  /* One row at every width: the names shorten first, and only then does the strip scroll. */
   .list {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 2px;
+    overflow-x: auto;
     border-bottom: 1px solid var(--border);
     background: var(--bg-deep);
+    scrollbar-width: none;
+  }
+  .list::-webkit-scrollbar {
+    display: none;
   }
   label {
-    flex: 1 1 auto;
-    min-width: 104px;
+    flex: 1 0 auto;
     padding: 13px 10px;
     border-top: 2px solid transparent;
     color: var(--muted);
@@ -119,6 +131,21 @@ const panels =
   input:focus-visible + label {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
+  }
+  .stem {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    .abbrev .full {
+      display: none;
+    }
+    .abbrev .stem {
+      display: inline;
+    }
+    label {
+      padding: 13px 6px;
+      font-size: 12px;
+    }
   }
   .panel {
     display: none;

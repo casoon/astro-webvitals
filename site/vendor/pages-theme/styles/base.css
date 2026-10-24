@@ -219,6 +219,7 @@ pre.astro-code {
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
 }
+.cp-inline-code code,
 .cp-prose :not(pre) > code {
   padding: 1px 5px;
   border-radius: 5px;
@@ -245,6 +246,13 @@ pre.astro-code {
   border-spacing: 0;
   overflow: hidden;
   font-size: 14.5px;
+}
+/* Narrow screens: a wide table scrolls inside itself instead of widening the page. */
+@media (max-width: 900px) {
+  .cp-prose table {
+    display: block;
+    overflow-x: auto;
+  }
 }
 .cp-prose th {
   padding: 11px 16px;

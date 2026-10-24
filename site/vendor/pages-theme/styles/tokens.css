@@ -50,6 +50,10 @@
   --ansi-14: #a4ecf2;
   --ansi-15: #fff;
 
+  /* Inverted hero ground (Hero tone="invert"): dark in both themes. */
+  --invert-bg: #07343a;
+  --invert-accent: #7fdde6;
+
   /* Syntax highlighting (Shiki "css-variables" theme). */
   --astro-code-foreground: var(--text);
   --astro-code-background: var(--code-bg);

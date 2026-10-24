@@ -1,7 +1,11 @@
+import { existsSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
 import type { AstroIntegration } from 'astro';
+import type { Lang } from './lib/i18n';
+import { renderOgImage } from './lib/og';
 
 export interface PackageLink {
   /** Label shown in the footer and as badge, e.g. "crates.io" or "npm". */
@@ -14,12 +18,18 @@ export interface CasoonPagesOptions {
   name: string;
   /** One sentence; used as default meta description. */
   description: string;
-  /** GitHub repository as "owner/name". */
-  repo: string;
+  /** A few words for the start page's `<title>` and the OG image: "<name> – <tagline> | CASOON". */
+  tagline?: string;
+  /** The project's own landing page, e.g. "https://judge.casoon.de". Linked in header and footer. */
+  website?: string;
+  /** Slug of the project's entry on casoon.dev (`#projekt-<slug>`), or false. Default: repository name. */
+  catalog?: string | false;
+  /** GitHub repository as "owner/name". Omit for a private repository: no GitHub or edit links. */
+  repo?: string;
   /** Current release, shown in the header and on docs pages. */
   version?: string;
-  /** SPDX licence identifier. Default: "MIT". */
-  license?: string;
+  /** SPDX licence identifier, or false for proprietary code (no licence named). Default: "MIT". */
+  license?: string | false;
   /** Default branch, used for "Edit this page" links. Default: "main". */
   branch?: string;
   /** Project accent colour for light and dark theme. Default: CASOON petrol. Both must meet 4.5:1 on the page background. */
@@ -48,11 +58,18 @@ export interface CasoonPagesOptions {
    * project's own output, say. Same name as a theme component: the project's wins.
    */
   mdxComponents?: string;
+  /** Language of the theme's own UI strings and of `<html lang>`. Default: "en". */
+  lang?: Lang;
+  /** Lead paragraph of the showcase overview, instead of the theme's generic one. */
+  showcaseLead?: string;
 }
 
 export interface ResolvedConfig
   extends Required<
-    Omit<CasoonPagesOptions, 'accent' | 'changelog' | 'showcase' | 'demo' | 'mdxComponents'>
+    Omit<
+      CasoonPagesOptions,
+      'accent' | 'changelog' | 'showcase' | 'demo' | 'mdxComponents' | 'catalog'
+    >
   > {
   accent: { light: string; dark: string } | null;
   /** Absolute path to CHANGELOG.md, or null when disabled. */
@@ -60,6 +77,8 @@ export interface ResolvedConfig
   hasShowcase: boolean;
   /** Header label of the demo page, or an empty string when there is none. */
   demo: string;
+  /** casoon.dev catalog slug, or an empty string when there is none. */
+  catalog: string;
 }
 
 const CONFIG_ID = 'virtual:casoon-pages/config';
@@ -67,20 +86,28 @@ const SHOWCASE_ID = 'virtual:casoon-pages/showcase';
 const MDX_COMPONENTS_ID = 'virtual:casoon-pages/mdx-components';
 
 export default function casoonPages(options: CasoonPagesOptions): AstroIntegration {
+  let resolved: ResolvedConfig;
+  /** Absolute URL of the site's base path, or null without `site`. */
+  let site: URL | null = null;
   return {
     name: '@casoon/pages-theme',
     hooks: {
       'astro:config:setup': ({ config, updateConfig, injectRoute }) => {
+        site = config.site ? new URL(config.base.replace(/\/?$/, '/'), config.site) : null;
         const root = fileURLToPath(config.root);
         const showcasePath =
           options.showcase === false
             ? null
             : resolve(root, options.showcase ?? './src/showcase.ts');
 
-        const resolved: ResolvedConfig = {
+        resolved = {
           name: options.name,
           description: options.description,
-          repo: options.repo,
+          tagline: options.tagline ?? '',
+          website: options.website ?? '',
+          catalog:
+            options.catalog === false ? '' : (options.catalog ?? options.repo?.split('/')[1] ?? ''),
+          repo: options.repo ?? '',
           version: options.version ?? '',
           license: options.license ?? 'MIT',
           branch: options.branch ?? 'main',
@@ -94,6 +121,8 @@ export default function casoonPages(options: CasoonPagesOptions): AstroIntegrati
               : resolve(root, options.changelog ?? '../CHANGELOG.md'),
           hasShowcase: showcasePath !== null,
           demo: options.demo === false || options.demo === undefined ? '' : options.demo,
+          lang: options.lang ?? 'en',
+          showcaseLead: options.showcaseLead ?? '',
         };
 
         const route = (pattern: string, file: string) =>
@@ -132,6 +161,27 @@ export default function casoonPages(options: CasoonPagesOptions): AstroIntegrati
             server: { fs: { allow: [resolve(root, '..')] } },
           },
         });
+      },
+      // Sitemap and OG image need absolute URLs, so both depend on `site`.
+      'astro:build:done': async ({ dir, pages }) => {
+        const base = site;
+        if (!base) return;
+        // A project that writes its own sitemap keeps it: this one is the fallback, not the
+        // authority. It only sees that file when the project's integration is listed first.
+        const sitemap = new URL('sitemap.xml', dir);
+        if (!existsSync(sitemap)) {
+          const urls = pages
+            .map((page) => page.pathname)
+            .filter((pathname) => pathname !== '404/')
+            .map((pathname) => `  <url><loc>${new URL(pathname, base).href}</loc></url>`);
+          await writeFile(
+            sitemap,
+            '<?xml version="1.0" encoding="UTF-8"?>\n' +
+              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+              `${urls.join('\n')}\n</urlset>\n`
+          );
+        }
+        await writeFile(new URL('og.png', dir), await renderOgImage(resolved, base));
       },
     },
   };

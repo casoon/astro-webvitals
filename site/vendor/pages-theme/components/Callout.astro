@@ -1,10 +1,13 @@
 ---
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
 interface Props {
   type?: 'note' | 'tip' | 'caution' | 'deprecated';
   title?: string;
 }
 
-const TITLES = { note: 'Note', tip: 'Tip', caution: 'Caution', deprecated: 'Deprecated' };
+const TITLES = t(config.lang).callout;
 const { type = 'note', title = TITLES[type] } = Astro.props;
 ---
 

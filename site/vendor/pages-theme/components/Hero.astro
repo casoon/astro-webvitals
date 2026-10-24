@@ -1,31 +1,106 @@
 ---
+/**
+ * Start-page hero in three layouts:
+ *   split     — text beside the `output` slot (default)
+ *   stack     — centred text, then a band: `source` slot → `command` → `output` slot
+ *   editorial — full-width title, lead beside the default slot, `output` slot below
+ * `tone="invert"` puts any of them on a dark brand ground.
+ */
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
 interface Props {
   title: string;
   lead: string;
   eyebrow?: string;
+  layout?: 'split' | 'stack' | 'editorial';
+  /** Shown between the `source` and `output` slots of the stack layout, e.g. `astro build`. */
+  command?: string;
+  tone?: 'plain' | 'invert';
 }
 
-const { title, lead, eyebrow = 'CASOON Open Source' } = Astro.props;
+const {
+  title,
+  lead,
+  eyebrow = t(config.lang).heroEyebrow,
+  layout = 'split',
+  command,
+  tone = 'plain',
+} = Astro.props;
+const hasSource = Astro.slots.has('source');
 ---
 
-<section class="hero">
-  <div>
-    <p class="eyebrow">{eyebrow}</p>
-    <h1>{title}</h1>
-    <p class="lead">{lead}</p>
-    <slot />
-  </div>
-  <div class="output">
-    <slot name="output" />
-  </div>
+<section class:list={['hero', `is-${layout}`, tone === 'invert' && 'invert']}>
+  {
+    layout === 'split' && (
+      <div class="inner">
+        <div>
+          <p class="eyebrow">{eyebrow}</p>
+          <h1>{title}</h1>
+          <p class="lead">{lead}</p>
+          <slot />
+        </div>
+        <div class="output">
+          <slot name="output" />
+        </div>
+      </div>
+    )
+  }
+
+  {
+    layout === 'stack' && (
+      <div class="inner">
+        <div class="head">
+          <p class="eyebrow">{eyebrow}</p>
+          <h1>{title}</h1>
+          <p class="lead">{lead}</p>
+        </div>
+        <div class="band">
+          {hasSource && (
+            <div class="source">
+              <slot name="source" />
+            </div>
+          )}
+          {hasSource && command && (
+            <p class="step">
+              <span class="pill">{command}</span>
+              <span class="arrow" aria-hidden="true">
+                →
+              </span>
+            </p>
+          )}
+          <div class="output">
+            <slot name="output" />
+          </div>
+        </div>
+        <div class="actions">
+          <slot />
+        </div>
+      </div>
+    )
+  }
+
+  {
+    layout === 'editorial' && (
+      <div class="inner">
+        <p class="eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
+        <div class="row">
+          <p class="lead">{lead}</p>
+          <div class="actions">
+            <slot />
+          </div>
+        </div>
+        <div class="output">
+          <slot name="output" />
+        </div>
+      </div>
+    )
+  }
 </section>
 
 <style>
-  .hero {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
-    gap: 56px;
-    align-items: center;
+  .inner {
     max-width: var(--max);
     margin: 0 auto;
     padding: 72px 24px 56px;
@@ -64,5 +139,130 @@ const { title, lead, eyebrow = 'CASOON Open Source' } = Astro.props;
   }
   .output {
     min-width: 0;
+  }
+
+  .is-split .inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+    gap: 56px;
+    align-items: center;
+  }
+
+  .is-stack .head {
+    text-align: center;
+  }
+  .is-stack .eyebrow {
+    display: inline-flex;
+  }
+  .is-stack .lead {
+    max-width: 62ch;
+    margin-inline: auto;
+  }
+  .is-stack .band {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.05fr);
+    gap: 24px;
+    align-items: center;
+  }
+  .is-stack .band:not(:has(.source)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .is-stack .source {
+    min-width: 0;
+  }
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+  }
+  .pill {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--brand);
+    /* The page ground, not white: on the light brand of the dark theme white reaches only 3:1. */
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .arrow {
+    color: var(--brand);
+    font-size: 20px;
+    line-height: 1;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+  }
+  .is-stack .actions {
+    justify-content: center;
+    margin-top: 34px;
+  }
+
+  .is-editorial h1 {
+    margin-bottom: 36px;
+    font-size: clamp(38px, 6.2vw, 74px);
+    line-height: 1.02;
+  }
+  .is-editorial .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    margin-bottom: 44px;
+  }
+  .is-editorial .lead {
+    flex: 1 1 300px;
+    margin: 0;
+  }
+
+  /* Dark brand ground. Child components follow through the tokens. */
+  .invert {
+    --heading: #fff;
+    --text: rgb(255 255 255 / 0.78);
+    --muted: rgb(255 255 255 / 0.68);
+    --border: rgb(255 255 255 / 0.2);
+    --border-strong: rgb(255 255 255 / 0.32);
+    --surface: rgb(255 255 255 / 0.07);
+    --bg-deep: rgb(255 255 255 / 0.1);
+    --code-bg: rgb(255 255 255 / 0.07);
+    --accent: var(--invert-accent);
+    --shadow: none;
+
+    background: var(--invert-bg);
+    color: var(--text);
+  }
+
+  @media (max-width: 900px) {
+    .is-stack .band {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .step {
+      flex-direction: row;
+      justify-content: center;
+    }
+    .arrow {
+      rotate: 90deg;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .inner {
+      padding: 52px 24px 44px;
+    }
+    .is-stack .actions {
+      margin-top: 26px;
+    }
+    .is-editorial h1 {
+      margin-bottom: 26px;
+    }
+    .is-editorial .row {
+      margin-bottom: 32px;
+    }
   }
 </style>

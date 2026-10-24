@@ -1,6 +1,8 @@
 ---
 /** One showcase example: input next to the output the package produced at build time. */
 import { Code } from 'astro:components';
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
 import type { ShowcaseExample } from '../lib/showcase';
 import { url } from '../lib/url';
 
@@ -12,6 +14,7 @@ interface Props {
 }
 
 const { example, headingLevel = 2, detailLink = true } = Astro.props;
+const s = t(config.lang);
 const Heading = `h${headingLevel}` as 'h2' | 'h3';
 const outputKind = example.output.kind ?? 'terminal';
 ---
@@ -23,16 +26,16 @@ const outputKind = example.output.kind ?? 'terminal';
     {
       detailLink && (
         <a href={url(`showcase/${example.slug}/`)}>
-          Detail<span class="visually-hidden">: {example.title}</span> →
+          {s.detail}<span class="visually-hidden">: {example.title}</span> →
         </a>
       )
     }
   </header>
   <div class="grid">
-    <div class="input" aria-label="Input">
+    <div class="input" aria-label={s.input}>
       <Code code={example.input.code} lang={(example.input.lang ?? 'text') as never} theme="css-variables" />
     </div>
-    <div class:list={['output', outputKind]} aria-label="Output">
+    <div class:list={['output', outputKind]} aria-label={s.output}>
       {outputKind === 'terminal' ? <pre tabindex="0" set:html={example.output.html} /> : <Fragment set:html={example.output.html} />}
     </div>
   </div>
@@ -82,15 +85,35 @@ const outputKind = example.output.kind ?? 'terminal';
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    container-type: inline-size;
   }
+  /* Side by side, the output sets the height of the row and a longer input scrolls inside it,
+     so a large data set does not stretch the page. Stacked, the input gets a fixed cap. */
   .input {
     min-width: 0;
+    height: 0;
+    min-height: 100%;
     border-right: 1px solid var(--border);
     background: var(--code-bg);
   }
   .input :global(pre.astro-code) {
+    box-sizing: border-box;
     height: 100%;
+    max-height: none;
+    margin: 0;
+    overflow: auto;
     font-size: 12.5px;
+  }
+  @container (max-width: 579px) {
+    .input {
+      height: auto;
+      min-height: 0;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .input :global(pre.astro-code) {
+      max-height: 24rem;
+    }
   }
   .output {
     min-width: 0;

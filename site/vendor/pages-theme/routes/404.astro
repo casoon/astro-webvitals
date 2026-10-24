@@ -1,17 +1,21 @@
 ---
+import config from 'virtual:casoon-pages/config';
 import Button from '../components/Button.astro';
 import Base from '../layouts/Base.astro';
+import { t } from '../lib/i18n';
 import { url } from '../lib/url';
+
+const s = t(config.lang);
 ---
 
-<Base title="Page not found">
+<Base title={s.notFoundTitle}>
   <div class="page">
     <p class="code">404</p>
-    <h1>This page does not exist.</h1>
-    <p>The address may be outdated, or the page moved when the docs were restructured.</p>
+    <h1>{s.notFoundHeading}</h1>
+    <p>{s.notFoundBody}</p>
     <div class="actions">
-      <Button href={url()}>Back to the start page</Button>
-      <Button href={url('docs/')} variant="secondary">Open the documentation</Button>
+      <Button href={url()}>{s.backToStart}</Button>
+      <Button href={url('docs/')} variant="secondary">{s.openDocs}</Button>
     </div>
   </div>
 </Base>

@@ -1,5 +1,8 @@
 ---
 /** Verifiable key figures. Real numbers only. */
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
 interface Props {
   items: { value: string; label: string }[];
 }
@@ -7,7 +10,7 @@ interface Props {
 const { items } = Astro.props;
 ---
 
-<section class="facts" aria-label="Key facts">
+<section class="facts" aria-label={t(config.lang).keyFacts}>
   <dl>
     {
       items.map((f) => (

@@ -1,11 +1,14 @@
 ---
 /** 3–5 core points, each backed by something checkable. */
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
 interface Props {
   items: { title: string; body: string }[];
   heading?: string;
 }
 
-const { items, heading = 'What it does' } = Astro.props;
+const { items, heading = t(config.lang).featuresHeading } = Astro.props;
 ---
 
 <section class="features">

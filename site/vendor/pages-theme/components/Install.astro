@@ -1,11 +1,15 @@
 ---
 /** Install commands per ecosystem: CSS-only tabs, copy button when JS is available. */
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
 interface Props {
   commands: { label: string; command: string }[];
   label?: string;
 }
 
-const { commands, label = 'Package manager' } = Astro.props;
+const s = t(config.lang);
+const { commands, label = s.installLabel } = Astro.props;
 const uid = `install-${commands.map((c) => c.label.replace(/\W/g, '')).join('-')}`;
 ---
 
@@ -35,8 +39,8 @@ const uid = `install-${commands.map((c) => c.label.replace(/\W/g, '')).join('-')
         </span>
         {/* Long commands scroll horizontally; tabindex keeps the region keyboard-reachable. */}
         <code id={`${uid}-cmd-${i}`} tabindex="0">{c.command}</code>
-        <button class="copy" type="button" data-copy={`${uid}-cmd-${i}`} hidden>
-          Copy
+        <button class="copy" type="button" data-copy={`${uid}-cmd-${i}`} data-copied={s.copied} hidden>
+          {s.copy}
         </button>
       </div>
     ))

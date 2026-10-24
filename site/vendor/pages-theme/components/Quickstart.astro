@@ -1,4 +1,6 @@
 ---
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
 import { url } from '../lib/url';
 import Button from './Button.astro';
 
@@ -9,11 +11,8 @@ interface Props {
   title?: string;
 }
 
-const {
-  steps,
-  lead = 'From install to a first result. The full walkthrough lives in the documentation.',
-  title = 'Quickstart',
-} = Astro.props;
+const s = t(config.lang);
+const { steps, lead = s.quickstartLead, title = s.quickstartTitle } = Astro.props;
 ---
 
 <section class="quickstart">
@@ -32,7 +31,7 @@ const {
         ))
       }
     </ol>
-    <div class="cta"><Button href={url('docs/')}>Read the documentation</Button></div>
+    <div class="cta"><Button href={url('docs/')}>{s.readDocs}</Button></div>
   </div>
   <div class="code"><slot /></div>
 </section>

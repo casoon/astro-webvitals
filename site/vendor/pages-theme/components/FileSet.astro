@@ -1,0 +1,231 @@
+---
+/**
+ * The files a run produced, in three views:
+ *   tabs — CSS-only tabs, one pane per file (hero layout "stack")
+ *   grid — one card per file, the first lines of each
+ *   rail — file names with a one-line note, no content
+ * One named slot per file id holds the content; `rail` needs none.
+ */
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
+interface Props {
+  files: { id: string; name: string; path?: string; size?: string; note?: string }[];
+  view?: 'tabs' | 'grid' | 'rail';
+  label?: string;
+}
+
+const { files, view = 'tabs', label = t(config.lang).filesLabel } = Astro.props;
+const uid = `files-${files.map((f) => f.id).join('-')}`;
+const panels =
+  view === 'rail'
+    ? []
+    : await Promise.all(files.map((f) => (Astro.slots.has(f.id) ? Astro.slots.render(f.id) : '')));
+---
+
+{
+  view === 'tabs' && (
+    <div class="files">
+      <div class="list" role="radiogroup" aria-label={label}>
+        {files.map((f, i) => (
+          <>
+            <input
+              class="visually-hidden"
+              type="radio"
+              name={uid}
+              id={`${uid}-${i}`}
+              value={i}
+              checked={i === 0}
+            />
+            <label for={`${uid}-${i}`}>{f.name}</label>
+          </>
+        ))}
+      </div>
+      {files.map((f, i) => (
+        <div class="panel" data-i={i}>
+          {/* Long lines scroll horizontally; tabindex keeps the region keyboard-reachable. */}
+          <pre tabindex="0" set:html={panels[i]} />
+          {(f.path || f.size) && (
+            <p class="meta">
+              {f.path && <span class="path">{f.path}</span>}
+              {f.size && <span>{f.size}</span>}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+{
+  view === 'grid' && (
+    <ul class="grid" aria-label={label}>
+      {files.map((f, i) => (
+        <li>
+          <p class="name">{f.name}</p>
+          <pre set:html={panels[i]} />
+          {f.note && <p class="note">{f.note}</p>}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+{
+  view === 'rail' && (
+    <ul class="rail" aria-label={label}>
+      {files.map((f) => (
+        <li>
+          <span class="dot" aria-hidden="true" />
+          <p class="name">{f.name}</p>
+          {f.note && <p class="note">{f.note}</p>}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  .files {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-deep);
+  }
+  label {
+    flex: 1 1 auto;
+    min-width: 104px;
+    padding: 13px 10px;
+    border-top: 2px solid transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    text-align: center;
+    cursor: pointer;
+  }
+  input:checked + label {
+    border-top-color: var(--accent);
+    background: var(--surface);
+    color: var(--heading);
+  }
+  input:focus-visible + label {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  .panel {
+    display: none;
+  }
+  /* First panel is the no-:has() fallback. */
+  .panel[data-i='0'],
+  .files:has(input[value='1']:checked) .panel[data-i='1'],
+  .files:has(input[value='2']:checked) .panel[data-i='2'],
+  .files:has(input[value='3']:checked) .panel[data-i='3'],
+  .files:has(input[value='4']:checked) .panel[data-i='4'],
+  .files:has(input[value='5']:checked) .panel[data-i='5'] {
+    display: block;
+  }
+  .files:has(input:not([value='0']):checked) .panel[data-i='0'] {
+    display: none;
+  }
+  .panel pre {
+    min-height: 210px;
+    max-height: 300px;
+    margin: 0;
+    padding: 16px 20px;
+    overflow: auto;
+    color: var(--text);
+    font-size: 12.5px;
+    line-height: 1.75;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin: 0;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+  .path {
+    color: var(--accent);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .grid li {
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  .grid .name {
+    margin: 0 0 8px;
+    color: var(--heading);
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+  .grid pre {
+    max-height: 72px;
+    margin: 0;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.7;
+    /* The excerpt ends in a fade, so the cut reads as deliberate rather than broken. */
+    mask-image: linear-gradient(to bottom, #000 58%, transparent);
+  }
+  .grid .note {
+    margin: 8px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .rail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr));
+    gap: 24px;
+    margin: 0;
+    padding: 22px 0 0;
+    border-top: 1px solid var(--border-strong);
+    list-style: none;
+  }
+  .rail .dot {
+    display: block;
+    width: 7px;
+    height: 7px;
+    margin-bottom: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .rail .name {
+    margin: 0 0 5px;
+    color: var(--heading);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .rail .note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+</style>

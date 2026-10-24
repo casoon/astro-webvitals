@@ -1,6 +1,7 @@
 ---
 /** Home section showing one real output generated during the build. */
 import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
 import { url } from '../lib/url';
 
 interface Props {
@@ -9,13 +10,14 @@ interface Props {
   heading?: string;
 }
 
-const { caption, file, heading = 'Generated at build time' } = Astro.props;
+const s = t(config.lang);
+const { caption, file, heading = s.buildOutputHeading } = Astro.props;
 ---
 
 <section class="build">
   <div class="head">
     <h2 class="cp-label">{heading}</h2>
-    {config.hasShowcase && <a href={url('showcase/')}>All examples →</a>}
+    {config.hasShowcase && <a href={url('showcase/')}>{s.allExamples} →</a>}
   </div>
   <figure>
     <div class="output"><slot /></div>

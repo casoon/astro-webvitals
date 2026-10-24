@@ -1,6 +1,6 @@
 {
   "name": "@casoon/pages-theme",
-  "version": "0.4.1",
+  "version": "0.7.1",
   "private": true,
   "description": "Shared Astro theme for the GitHub Pages sites of CASOON open-source projects",
   "type": "module",
@@ -41,6 +41,7 @@
     "astro": "^7.3.2"
   },
   "dependencies": {
-    "@astrojs/mdx": "^8.0.1"
+    "@astrojs/mdx": "^8.0.1",
+    "sharp": "^0.35.4"
   }
 }

@@ -1,6 +1,8 @@
 ---
 /** Overview entry for a public type or function. Item-level docs stay on docs.rs / TypeDoc. */
 import { Code } from 'astro:components';
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
 
 interface Props {
   kind: string;
@@ -26,7 +28,7 @@ const { kind, name, signature, lang = 'rust', since, params = [] } = Astro.props
     {
       params.length > 0 && (
         <>
-          <p class="label">Parameters</p>
+          <p class="label">{t(config.lang).parameters}</p>
           <dl>
             {params.map((p) => (
               <div>

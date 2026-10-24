@@ -2,6 +2,7 @@
 import config from 'virtual:casoon-pages/config';
 import type { MarkdownHeading } from 'astro';
 import type { DocsNavGroup } from '../lib/docs';
+import { t } from '../lib/i18n';
 import Base from './Base.astro';
 
 interface Props {
@@ -21,13 +22,16 @@ const prev = index > 0 ? flat[index - 1] : undefined;
 const next = index >= 0 && index < flat.length - 1 ? flat[index + 1] : undefined;
 const group = groups.find((g) => g.items.some((item) => item.id === id));
 const toc = headings.filter((h) => h.depth === 2);
-const editUrl = `https://github.com/${config.repo}/edit/${config.branch}/${sourcePath}`;
+const s = t(config.lang);
+const editUrl = config.repo
+  ? `https://github.com/${config.repo}/edit/${config.branch}/${sourcePath}`
+  : '';
 ---
 
 <Base title={title} description={description}>
   <div class="docs">
     <aside class="sidebar">
-      <nav aria-label="Documentation">
+      <nav aria-label={s.docsNav}>
         {
           groups.map((g) => (
             <div class="group">
@@ -48,9 +52,9 @@ const editUrl = `https://github.com/${config.repo}/edit/${config.branch}/${sourc
     </aside>
 
     <article class="content">
-      <nav class="crumb" aria-label="Breadcrumb">
+      <nav class="crumb" aria-label={s.breadcrumb}>
         <ol>
-          <li>Docs</li>
+          <li>{s.docs}</li>
           {group && <li>{group.label}</li>}
           <li aria-current="page">{title}</li>
         </ol>
@@ -61,10 +65,10 @@ const editUrl = `https://github.com/${config.repo}/edit/${config.branch}/${sourc
 
       {
         (prev || next) && (
-          <nav class="pager" aria-label="Previous and next page">
+          <nav class="pager" aria-label={s.pagerDocs}>
             {prev ? (
               <a href={prev.href}>
-                <span class="dir">Previous</span>
+                <span class="dir">{s.previous}</span>
                 <span class="label">{prev.label}</span>
               </a>
             ) : (
@@ -72,7 +76,7 @@ const editUrl = `https://github.com/${config.repo}/edit/${config.branch}/${sourc
             )}
             {next && (
               <a class="next" href={next.href}>
-                <span class="dir">Next</span>
+                <span class="dir">{s.next}</span>
                 <span class="label">{next.label}</span>
               </a>
             )}
@@ -80,8 +84,8 @@ const editUrl = `https://github.com/${config.repo}/edit/${config.branch}/${sourc
         )
       }
       <p class="meta">
-        <a href={editUrl}>Edit this page on GitHub</a>
-        {config.version && <span> · Docs for v{config.version}</span>}
+        {editUrl && <a href={editUrl}>{s.editPage}</a>}
+        {config.version && <span>{editUrl && ' · '}{s.docsFor(config.version)}</span>}
       </p>
     </article>
 
@@ -90,7 +94,7 @@ const editUrl = `https://github.com/${config.repo}/edit/${config.branch}/${sourc
         <aside class="toc">
           <nav aria-labelledby="toc-title">
             <p class="group-title" id="toc-title">
-              On this page
+              {s.onThisPage}
             </p>
             <ul>
               {toc.map((h) => (

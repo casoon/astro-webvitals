@@ -2,30 +2,38 @@
 import config from 'virtual:casoon-pages/config';
 import logo from '../assets/casoon-logo.svg';
 import logoDark from '../assets/casoon-logo-dark.svg';
-import { url } from '../lib/url';
+import { t } from '../lib/i18n';
+import { CASOON_URL, catalogUrl, url } from '../lib/url';
 
-const IMPRESSUM = 'https://www.casoon.de/impressum/';
-const DATENSCHUTZ = 'https://www.casoon.de/datenschutz/';
-const MORE_PROJECTS = 'https://www.casoon.dev';
+const s = t(config.lang);
+const IMPRESSUM = `${CASOON_URL}impressum/`;
+const DATENSCHUTZ = `${CASOON_URL}datenschutz/`;
 
 const columns = [
   {
-    title: 'Project',
+    title: s.footerProject,
     links: [
-      { label: 'Documentation', href: url('docs/') },
-      ...(config.hasShowcase ? [{ label: 'Showcase', href: url('showcase/') }] : []),
-      ...(config.changelog ? [{ label: 'Changelog', href: url('changelog/') }] : []),
+      ...(config.website ? [{ label: s.website(config.name), href: config.website }] : []),
+      { label: s.documentation, href: url('docs/') },
+      ...(config.hasShowcase ? [{ label: s.showcase, href: url('showcase/') }] : []),
+      ...(config.changelog ? [{ label: s.changelog, href: url('changelog/') }] : []),
     ],
   },
   {
-    title: 'Packages',
-    links: [{ label: 'GitHub', href: `https://github.com/${config.repo}` }, ...config.packages],
+    title: s.footerPackages,
+    links: [
+      ...(config.repo ? [{ label: 'GitHub', href: `https://github.com/${config.repo}` }] : []),
+      ...config.packages,
+    ],
   },
   {
     title: 'CASOON',
     links: [
-      { label: 'casoon.de', href: 'https://www.casoon.de' },
-      { label: 'Weitere Projekte', href: MORE_PROJECTS },
+      { label: 'casoon.de', href: CASOON_URL },
+      ...(config.catalog
+        ? [{ label: s.catalogEntry(config.name), href: catalogUrl(config.lang, config.catalog) }]
+        : []),
+      { label: s.allProjects, href: catalogUrl(config.lang) },
     ],
   },
 ];
@@ -34,14 +42,14 @@ const columns = [
 <footer class="footer">
   <div class="cols">
     <div>
-      <a class="logo" href="https://www.casoon.de">
+      <a class="logo" href={CASOON_URL}>
         <img class="logo-light" src={logo.src} width="150" height="41" alt="CASOON" />
         <img class="logo-dark" src={logoDark.src} width="150" height="41" alt="CASOON" />
       </a>
       <p>Ein Projekt von CASOON · Jörn Seidel</p>
     </div>
     {
-      columns.map((col) => (
+      columns.filter((col) => col.links.length > 0).map((col) => (
         <nav aria-label={col.title}>
           <p class="title">{col.title}</p>
           <ul>
@@ -56,11 +64,10 @@ const columns = [
     }
   </div>
   <div class="bottom">
-    <span>{config.license} License · © {new Date().getFullYear()} Jörn Seidel</span>
+    <span>{config.license && `${s.license(config.license)} · `}© {new Date().getFullYear()} Jörn Seidel</span>
     <span class="legal">
       <a href={IMPRESSUM}>Impressum</a>
       <a href={DATENSCHUTZ}>Datenschutz</a>
-      <a href={MORE_PROJECTS}>Weitere Projekte</a>
     </span>
   </div>
 </footer>

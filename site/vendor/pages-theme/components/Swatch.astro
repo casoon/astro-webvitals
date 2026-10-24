@@ -1,11 +1,14 @@
 ---
 /** Colour token preview for design documentation. */
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
 interface Props {
   token: string;
   value?: string;
 }
 
-const { token, value = 'theme-dependent' } = Astro.props;
+const { token, value = t(config.lang).themeDependent } = Astro.props;
 ---
 
 <div class="swatch">

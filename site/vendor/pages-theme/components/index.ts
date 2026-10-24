@@ -9,6 +9,7 @@ export { default as Demo } from './Demo.astro';
 export { default as ExamplePanel } from './ExamplePanel.astro';
 export { default as Facts } from './Facts.astro';
 export { default as Features } from './Features.astro';
+export { default as FileSet } from './FileSet.astro';
 export { default as Hero } from './Hero.astro';
 export { default as Install } from './Install.astro';
 export { default as Quickstart } from './Quickstart.astro';

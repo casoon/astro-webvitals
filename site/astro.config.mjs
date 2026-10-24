@@ -11,6 +11,7 @@ export default defineConfig({
       name: 'astro-webvitals',
       description:
         'Web Vitals monitoring for Astro: official metrics, consent-gated reporting to your own endpoint, a local dashboard and a development overlay.',
+      tagline: 'Web Vitals monitoring for Astro',
       repo: 'casoon/astro-webvitals',
       version: '0.4.9',
       license: 'MIT',

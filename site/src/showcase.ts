@@ -53,21 +53,6 @@ export const entryGzip = bundle.chunks
   .filter((chunk) => chunk.loading === 'static')
   .reduce((sum, chunk) => sum + chunk.gzip, 0);
 
-/** The component's output on the default demo page, escaped for a terminal panel. */
-export const defaultOutput = escapeHtml(file('examples/output/default.html'));
-
-/** Page checks as terminal lines for the start page. */
-export const checksAnsi = (() => {
-  const colour = { pass: '32', issue: '33', info: '36' } as const;
-  const width = Math.max(...pageChecks.checks.map((check) => check.name.length));
-  return pageChecks.checks
-    .map(
-      ({ name, state, detail }) =>
-        `\x1b[${colour[state]}m${state.padEnd(5)}\x1b[0m  ${name.padEnd(width)}  ${detail}`,
-    )
-    .join('\n');
-})();
-
 function table(caption: string, head: string[], rows: string[][]): string {
   const th = head.map((cell) => `<th scope="col" style="text-align:left">${escapeHtml(cell)}</th>`).join('');
   const tr = rows

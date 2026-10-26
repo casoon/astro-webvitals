@@ -2,48 +2,40 @@
 import {
   Badge,
   Badges,
-  BuildOutput,
-  Callout,
+  Button,
   CodeBlock,
   Facts,
   Features,
   Hero,
   Install,
   Quickstart,
-  Terminal,
 } from '@casoon/pages-theme/components';
 import Base from '@casoon/pages-theme/layouts/Base.astro';
 import pages from 'virtual:casoon-pages/config';
-import { checksAnsi, defaultOutput, entryGzip, kB } from '../showcase';
+import { url } from '@casoon/pages-theme/url';
+// Real captures, 26 October 2026. dashboard*.webp: the dashboard route of the live demo
+// (https://astro-v7-template.casoon.dev/web-vitals/) after "Run sitemap pass" in a headless
+// Chromium; the narrow file is the first page card of the same dashboard at 400 px.
+// overlay-*.webp: the debug overlay of <WebVitals debug /> on a copy of
+// examples/pages/sample.html in the demo build (examples/demo/). Retake them when the UI changes.
+import dashboardNarrow from '../assets/dashboard-narrow.webp?url';
+import dashboardShot from '../assets/dashboard.webp?url';
+import overlayA11y from '../assets/overlay-accessibility.webp?url';
+import overlayVitals from '../assets/overlay-vitals.webp?url';
+import Diagram from '../components/Diagram.astro';
+import { entryGzip, kB } from '../showcase';
 
 const layout = `---
 import { WebVitals } from '@casoon/astro-webvitals';
 ---
-
-<html lang="en">
-  <body>
-    <slot />
-    <WebVitals endpoint="/api/analytics/vitals" sampleRate={0.1} />
-  </body>
-</html>`;
-
-// Runs on request (needs an adapter). The prerender export is left out of this snippet on
-// purpose: Astro would detect it in this page's frontmatter and treat the page as on-demand.
-const endpoint = `import type { APIRoute } from 'astro';
-
-export const POST: APIRoute = async ({ request }) => {
-  const { metrics } = await request.json();
-  for (const metric of metrics) {
-    // Validate, rate-limit and store; sum deltas per metric.id.
-  }
-  return new Response(null, { status: 204 });
-};`;
+<WebVitals endpoint="/api/analytics/vitals" sampleRate={0.1} />`;
 ---
 
 <Base>
   <Hero
+    layout="editorial"
     title="Web Vitals from real visits, for Astro."
-    lead="astro-webvitals measures LCP, CLS, INP, FCP and TTFB with Google’s web-vitals library and sends them in batches to an endpoint you own. Collection can be gated on consent, Do Not Track and a sample rate; a local dashboard and a development overlay help while you build."
+    lead="One component in your layout measures LCP, CLS, INP, FCP and TTFB on every visit and sends them to an endpoint you own: no third-party script, no account, and nothing collected without consent if you say so."
   >
     <Install
       commands={[
@@ -55,10 +47,41 @@ export const POST: APIRoute = async ({ request }) => {
       <Badge>MIT</Badge>
       <Badge>npm {pages.version}</Badge>
       <Badge>Astro 4–7</Badge>
-      <Badge>Node 18.17+</Badge>
+      <Badge tone="accent">your endpoint only</Badge>
     </Badges>
-    <Terminal slot="output" title="dashboard page checks · sample.html" dots ansi={checksAnsi} />
+    <figure slot="output" class="shot">
+      <picture>
+        <source media="(max-width: 640px)" srcset={dashboardNarrow} width="800" height="940" />
+        <img
+          src={dashboardShot}
+          width="1400"
+          height="950"
+          alt="Screenshot of the Web Vitals dashboard of the live demo after a sitemap pass: 4 pages, 20 latest metrics, 0 page issues. The card for /de/contact/ shows CLS 0.000, DOM 51 ms, FCP 112 ms, LCP 112 ms and TTFB 54 ms, all rated Good, and 10 passed page checks such as title length, canonical, language, one H1, Open Graph, skip link, image alt, link text and form labels."
+        />
+      </picture>
+      <figcaption>
+        The local dashboard of the <a class="inline" href="https://astro-v7-template.casoon.dev/web-vitals/">live demo</a> after a sitemap pass in one browser, 26 October 2026: QA data from a single visit, not field data.
+      </figcaption>
+    </figure>
   </Hero>
+
+  <Features
+    heading="Who it is for"
+    items={[
+      {
+        title: 'Astro sites that want field data',
+        body: 'Lab scores tell you how a page loads on one machine. The component reports what your visitors’ browsers measured, page by page.',
+      },
+      {
+        title: 'Teams that keep data in-house',
+        body: 'Reports go to a route on your own domain, or nowhere: without an endpoint every metric is only a browser event for the analytics you already run.',
+      },
+      {
+        title: 'Developers checking a page before release',
+        body: 'A local dashboard and a development overlay show metrics, page checks and likely accessibility gaps while you build, without sending anything.',
+      },
+    ]}
+  />
 
   <Facts
     items={[
@@ -69,54 +92,140 @@ export const POST: APIRoute = async ({ request }) => {
     ]}
   />
 
-  <Features
-    items={[
-      {
-        title: 'Official metric definitions',
-        body: 'LCP, CLS, INP, FCP and TTFB come from the web-vitals package, with its ratings, stable metric IDs and deltas, so repeated CLS and INP reports aggregate correctly.',
-      },
-      {
-        title: 'Reports go to your endpoint',
-        body: 'Metrics are batched, flushed when the page is hidden and sent with sendBeacon where possible. Without an endpoint nothing is sent; every metric is also dispatched as a webvitals:metric event.',
-      },
-      {
-        title: 'Collection gates',
-        body: 'consent={false} and respectDnt stop the client before any observer is registered. sampleRate is decided per page load in the browser, not baked into a static build.',
-      },
-      {
-        title: 'Local dashboard',
-        body: 'webVitalsDashboard() adds a static, noindex route that reads this browser’s localStorage, runs a sitemap pass and shows page checks – for development and QA, not field analytics.',
-      },
-      {
-        title: 'Development overlay',
-        body: 'debug shows live metrics, an SEO inspection and a small accessibility heuristic. It is a development aid, not a WCAG audit.',
-      },
-    ]}
-  />
+  <section class="how" aria-labelledby="how-heading">
+    <h2 id="how-heading">From a page load to your endpoint</h2>
+    <div class="text">
+      <p>
+        Consent, Do Not Track and the sample rate are checked in the browser on every page load.
+        If one of them says no, no observer is registered and nothing is measured.
+      </p>
+      <p>
+        Otherwise the metrics come from Google’s web-vitals library, are collected in a batch and
+        sent when the page is hidden, with <code>sendBeacon</code> where the browser allows it.
+      </p>
+    </div>
+    <Diagram name="reporting" format="svg" narrow={{ width: 380, height: 760 }} />
+    <div class="links">
+      <Button href={url('docs/guides/endpoint/')} variant="secondary">Reporting to an endpoint</Button>
+      <Button href={url('docs/guides/privacy/')} variant="secondary">Privacy and consent</Button>
+    </div>
+  </section>
 
-  <BuildOutput
-    caption="What <WebVitals /> adds to a statically built page, captured from the demo build by examples/capture.mjs and formatted for reading."
-    file="examples/output/default.html"
-  >
-    <Terminal><Fragment set:html={defaultOutput} /></Terminal>
-  </BuildOutput>
-
-  <Callout title="Why this site does not measure itself">
-    This site ships no JavaScript beyond the theme’s two inline scripts. The component would add
-    its own configuration and module script, so the examples here are captured build output of
-    the package instead of live measurements. No metric values are shown: Web Vitals depend on
-    each visitor’s device and connection.
-  </Callout>
+  <section class="dev" aria-labelledby="dev-heading">
+    <div class="dev-text">
+      <h2 id="dev-heading">While you build</h2>
+      <p>
+        <code>debug</code> opens an overlay on the page: the current Web Vitals, an SEO
+        inspection, a small accessibility heuristic and the console. It is a development aid,
+        not a WCAG audit, and <code>import.meta.env.DEV</code> keeps it out of production.
+      </p>
+      <Button href={url('docs/guides/dashboard/')} variant="secondary">Dashboard and overlay</Button>
+    </div>
+    <div class="dev-shots">
+      <img
+        src={overlayVitals}
+        width="848"
+        height="1038"
+        loading="lazy"
+        alt="Screenshot of the debug overlay, tab Core Vitals: performance score 100 with 5 of 5 metrics measured, LCP 36 ms, CLS 0.000 and INP 24 ms, each rated good."
+      />
+      <img
+        src={overlayA11y}
+        width="848"
+        height="1038"
+        loading="lazy"
+        alt="Screenshot of the debug overlay, tab Accessibility, on a sample page with deliberate gaps: 4 issues found in 3 categories, missing alt text (1), missing labels (2) and heading issues (1)."
+      />
+    </div>
+  </section>
 
   <Quickstart
-    lead="Three steps from install to your first reports. The full walkthrough lives in the documentation."
+    lead="Three steps from install to your first reports. The endpoint, the dashboard route and every option are covered in the documentation."
     steps={[
-      'Install <code>@casoon/astro-webvitals</code>.',
+      'Install <code>@casoon/astro-webvitals</code> with one of the lines above.',
       'Add <code>&lt;WebVitals /&gt;</code> once to your shared layout, right before <code>&lt;/body&gt;</code>.',
       'Store the batches in a same-origin route, or listen for the <code>webvitals:metric</code> event.',
     ]}
   >
     <CodeBlock code={layout} lang="astro" title="src/layouts/Layout.astro" label="Layout" />
-    <CodeBlock code={endpoint} lang="ts" title="src/pages/api/analytics/vitals.ts" label="Endpoint" />
   </Quickstart>
 </Base>
+
+<style>
+  .shot {
+    margin: 0;
+  }
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .shot figcaption {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+  .inline {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .how,
+  .dev {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+  h2 {
+    margin: 0 0 14px;
+    color: var(--heading);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .text {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    gap: 0 48px;
+  }
+  .text p,
+  .dev-text p {
+    margin: 0 0 16px;
+    font-size: 15.5px;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .dev {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 48px;
+    align-items: center;
+  }
+  .dev-shots {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .dev-shots img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+  }
+  @media (max-width: 860px) {
+    .dev {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+  @media (max-width: 640px) {
+    .dev-shots {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

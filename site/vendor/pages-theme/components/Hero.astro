@@ -141,11 +141,21 @@ const hasSource = Astro.slots.has('source');
     min-width: 0;
   }
 
+  /* Text gets a little more than half and a slightly smaller title, so a title of about 40
+     characters fits on two lines at desktop width; in two equal halves it took three. */
   .is-split .inner {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
-    gap: 56px;
+    gap: 44px;
     align-items: center;
+  }
+  @media (min-width: 900px) {
+    .is-split .inner {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 48px;
+    }
+    .is-split h1 {
+      font-size: clamp(36px, 3.4vw, 48px);
+    }
   }
 
   .is-stack .head {
@@ -215,9 +225,14 @@ const hasSource = Astro.slots.has('source');
     gap: 32px;
     margin-bottom: 44px;
   }
+  /* Lead and actions share the row about evenly; the actions keep the install box's width, so
+     the badges go below it instead of squeezing the lead into a narrow column. */
   .is-editorial .lead {
-    flex: 1 1 300px;
+    flex: 1 1 380px;
     margin: 0;
+  }
+  .is-editorial .actions {
+    flex: 0 1 470px;
   }
 
   /* Dark brand ground. Child components follow through the tokens. */

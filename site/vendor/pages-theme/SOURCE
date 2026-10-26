@@ -1,6 +1,6 @@
-@casoon/pages-theme 0.8.0
-source: gh-pages-template@25f2f64
-synced: 2026-10-24
+@casoon/pages-theme 0.8.3
+source: gh-pages-template@8287402
+synced: 2026-10-26
 
 Vendored copy. Do not edit here: change the theme in gh-pages-template,
 then run scripts/sync-theme.sh <this repo>.

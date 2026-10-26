@@ -1,0 +1,13 @@
+---
+import { type DiagramOptions, diagram } from '../diagrams';
+
+interface Props extends DiagramOptions {
+  /** File name in site/diagrams/ without .json */
+  name: string;
+}
+
+const { name, ...options } = Astro.props;
+const html = diagram(name, options);
+---
+
+<Fragment set:html={html} />

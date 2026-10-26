@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "type": "flow",
+  "title": "From a page load to your endpoint",
+  "description": "On every page load the component first checks consent, Do Not Track and the sample rate in the browser; if a gate closes, nothing is measured. Otherwise Google's web-vitals library measures LCP, CLS, INP, FCP and TTFB. Every metric is dispatched as a webvitals:metric browser event and, when an endpoint is set, collected in a batch that is flushed when the batch is full, after the batch interval or when the page is hidden, and sent with sendBeacon, or with fetch and keepalive when custom headers are set.",
+  "source": "src/client/index.ts (initWebVitals), src/client/metrics/vitals.ts (publishMetric), src/client/reporting.ts (recordMetric, flushMetrics, sendMetrics)",
+  "width": 1240,
+  "height": 300,
+  "flow": {
+    "nodes": [
+      { "id": "load", "label": "Page load", "sublabel": "<WebVitals /> runs", "kind": "start" },
+      { "id": "gates", "label": "Gates open?", "sublabel": "consent, DNT, sample rate", "kind": "decision" },
+      { "id": "off", "label": "Nothing measured", "sublabel": "no observer registered", "kind": "end" },
+      { "id": "measure", "label": "web-vitals", "sublabel": "LCP, CLS, INP, FCP, TTFB" },
+      { "id": "event", "label": "webvitals:metric", "sublabel": "browser event", "kind": "end" },
+      { "id": "batch", "label": "Batch", "sublabel": "sent when the page hides", "kind": "store" },
+      { "id": "endpoint", "label": "Your endpoint", "sublabel": "sendBeacon or fetch", "kind": "end" }
+    ],
+    "edges": [
+      { "from": "load", "to": "gates" },
+      { "from": "gates", "to": "off", "label": "closed" },
+      { "from": "gates", "to": "measure", "label": "open" },
+      { "from": "measure", "to": "event", "label": "dispatches" },
+      { "from": "measure", "to": "batch", "label": "records" },
+      { "from": "batch", "to": "endpoint", "label": "POST" }
+    ],
+    "mainPath": ["load", "gates", "measure", "batch", "endpoint"],
+    "orientation": "landscape"
+  }
+}

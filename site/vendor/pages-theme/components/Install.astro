@@ -11,6 +11,17 @@ interface Props {
 const s = t(config.lang);
 const { commands, label = s.installLabel } = Astro.props;
 const uid = `install-${commands.map((c) => c.label.replace(/\W/g, '')).join('-')}`;
+
+/** Splits a command into the units a line may break between: words, and inside a word the path
+    segments after each "/" ("https://" is one). "./", "../", "~/" and a leading "/" stay with
+    what follows. Spaces are kept as separate parts. */
+const units = (command: string) =>
+  command
+    .split(/( +)/)
+    .filter(Boolean)
+    .map((word) =>
+      word.startsWith(' ') ? word : word.split(/(?<=\/)(?!\/)(?<!^(?:\.{1,2}|~)?\/)/)
+    );
 ---
 
 <div class="install">
@@ -37,8 +48,14 @@ const uid = `install-${commands.map((c) => c.label.replace(/\W/g, '')).join('-')
         <span class="prompt" aria-hidden="true">
           $
         </span>
-        {/* Long commands scroll horizontally; tabindex keeps the region keyboard-reachable. */}
-        <code id={`${uid}-cmd-${i}`} tabindex="0">{c.command}</code>
+        {/* Long commands wrap instead of being cut off, so all of it stays visible and selectable.
+            Each unit is an inline-block, so a line breaks only at spaces and after a "/", never at a
+            hyphen; a unit wider than the box still breaks inside as a last resort. */}
+        <code id={`${uid}-cmd-${i}`}>
+          {units(c.command).map((part) =>
+            typeof part === 'string' ? part : part.map((unit) => <span class="unit">{unit}</span>),
+          )}
+        </code>
         <button class="copy" type="button" data-copy={`${uid}-cmd-${i}`} data-copied={s.copied} hidden>
           {s.copy}
         </button>
@@ -82,7 +99,7 @@ const uid = `install-${commands.map((c) => c.label.replace(/\W/g, '')).join('-')
   }
   .panel {
     display: none;
-    align-items: center;
+    align-items: baseline;
     gap: 12px;
     padding: 14px 16px;
   }
@@ -103,12 +120,19 @@ const uid = `install-${commands.map((c) => c.label.replace(/\W/g, '')).join('-')
     font-family: var(--font-mono);
     font-size: 13px;
   }
+  /* Breaks between units (see above); a unit longer than the line breaks anywhere. */
   code {
     flex: 1;
-    overflow: auto;
+    min-width: 0;
     color: var(--heading);
     font-size: 13.5px;
-    white-space: nowrap;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .unit {
+    display: inline-block;
+    max-width: 100%;
   }
   .copy {
     flex-shrink: 0;

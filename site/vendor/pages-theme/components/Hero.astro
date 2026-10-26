@@ -220,13 +220,14 @@ const hasSource = Astro.slots.has('source');
   .is-editorial .row {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 32px;
     margin-bottom: 44px;
   }
   /* Lead and actions share the row about evenly; the actions keep the install box's width, so
-     the badges go below it instead of squeezing the lead into a narrow column. */
+     the badges go below it instead of squeezing the lead into a narrow column. Both start at the
+     top, so the lead follows the title directly however tall the actions are. */
   .is-editorial .lead {
     flex: 1 1 380px;
     margin: 0;

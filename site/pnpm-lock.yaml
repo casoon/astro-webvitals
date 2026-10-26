@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@casoon/chartlet':
+        specifier: ^0.21.0
+        version: 0.21.0(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))
       '@casoon/pages-theme':
         specifier: file:./vendor/pages-theme
         version: file:vendor/pages-theme(@astrojs/markdown-satteri@0.4.1)(@types/node@24.13.4)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))
@@ -202,6 +205,15 @@ packages:
   '@capsizecss/unpack@4.0.1':
     resolution: {integrity: sha512-CuNiSqg7+e1cO/GjffyMOm5Tt2jUF9CWHHnvQ/UkqvtkGfHdgwEC0wpmq7fkN3gxwpRnrAN0WzO3vREKmNolMQ==}
     engines: {node: '>=18'}
+
+  '@casoon/chartlet@0.21.0':
+    resolution: {integrity: sha512-b8K9zhK5oK3PFEUFlYC2vZH6Z4GpbTvRWiMPGAbnnpIdzN5ffqgmOGOTMgw4pwB9Eq3++KQo6tl/kO9V3dEZbQ==}
+    engines: {node: '>=22.12.0'}
+    peerDependencies:
+      astro: '>=6.0.0'
+    peerDependenciesMeta:
+      astro:
+        optional: true
 
   '@casoon/pages-theme@file:vendor/pages-theme':
     resolution: {directory: vendor/pages-theme, type: directory}
@@ -1868,6 +1880,10 @@ snapshots:
   '@capsizecss/unpack@4.0.1':
     dependencies:
       fontkitten: 1.0.3
+
+  '@casoon/chartlet@0.21.0(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))':
+    optionalDependencies:
+      astro: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1)
 
   '@casoon/pages-theme@file:vendor/pages-theme(@astrojs/markdown-satteri@0.4.1)(@types/node@24.13.4)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))':
     dependencies:

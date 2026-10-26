@@ -9,6 +9,7 @@
     "type-check": "astro check"
   },
   "dependencies": {
+    "@casoon/chartlet": "^0.21.0",
     "@casoon/pages-theme": "file:./vendor/pages-theme",
     "astro": "^7.3.2"
   },

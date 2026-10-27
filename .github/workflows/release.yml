@@ -54,4 +54,5 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Publish
-        run: npm publish --access public
+        # `verify` already ran check, type-check and tests; prepublishOnly needs pnpm
+        run: npm publish --access public --ignore-scripts

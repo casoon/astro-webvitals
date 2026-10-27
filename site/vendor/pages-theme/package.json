@@ -1,6 +1,6 @@
 {
   "name": "@casoon/pages-theme",
-  "version": "0.8.3",
+  "version": "0.11.1",
   "private": true,
   "description": "Shared Astro theme for the GitHub Pages sites of CASOON open-source projects",
   "type": "module",
@@ -15,7 +15,7 @@
     "./url": "./lib/url.ts",
     "./showcase": "./lib/showcase.ts",
     "./layouts/*": "./layouts/*",
-    "./lib/*": "./lib/*",
+    "./lib/*": "./lib/*.ts",
     "./routes/*": "./routes/*",
     "./styles/*": "./styles/*"
   },

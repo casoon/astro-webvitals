@@ -1,0 +1,110 @@
+---
+/**
+ * Teaser of one release's changes on the start page, from the same `Release` the changelog
+ * route renders — parse CHANGELOG.md once with `parseChangelog`. Pass the first release whose
+ * version isn't "Unreleased" (`releases.find((r) => r.version.toLowerCase() !== 'unreleased')`),
+ * not `releases[0]`: an `## [Unreleased]` section with entries already in it would otherwise
+ * show up here as "New in vUnreleased". Never maintained twice: the entry text is the
+ * changelog entry.
+ */
+import config from 'virtual:casoon-pages/config';
+import type { Release } from '../lib/changelog';
+import { t } from '../lib/i18n';
+import { url } from '../lib/url';
+
+interface Props {
+  release: Release;
+  heading?: string;
+  /** Cap on how many of the release's entries to show. Default 6. */
+  max?: number;
+}
+
+const s = t(config.lang);
+const { release, heading = s.newIn(release.version), max = 6 } = Astro.props;
+const tone = (kind: string) =>
+  ['breaking', 'removed', 'security'].includes(kind)
+    ? 'brand'
+    : kind === 'fixed'
+      ? 'accent'
+      : 'muted';
+const changes = release.changes.slice(0, max);
+---
+
+<section class="release-highlights">
+  <div class="head">
+    <h2 class="cp-label">{heading}</h2>
+    {config.changelog && <a href={url('changelog/')}>{s.changelog} →</a>}
+  </div>
+  <ul>
+    {
+      changes.map((change) => (
+        <li>
+          <span class:list={['dot', tone(change.kind)]} aria-hidden="true" />
+          <span set:html={change.html} />
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .release-highlights {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .head h2 {
+    margin: 0;
+  }
+  .head a {
+    font-size: 14px;
+  }
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: 20px 40px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    gap: 12px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  .dot {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    margin-top: 7px;
+    border-radius: 50%;
+  }
+  .dot.muted {
+    background: var(--muted);
+  }
+  .dot.accent {
+    background: var(--accent);
+  }
+  .dot.brand {
+    background: var(--brand);
+  }
+  li :global(strong) {
+    color: var(--heading);
+  }
+  li :global(code) {
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: var(--code-bg);
+    font-size: 0.9em;
+  }
+</style>

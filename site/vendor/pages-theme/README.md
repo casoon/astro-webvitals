@@ -123,13 +123,19 @@ Import from `@casoon/pages-theme/components` in `.astro` files; available direct
 | Component | Use |
 | --- | --- |
 | `Hero` | Title, lead, default slot (install, badges), `output` slot (real output); `layout`, `command` and `tone` pick the variant |
+| `AnchorGrid` | Card grid under the hero, each linking to a section further down or out to a doc |
 | `Install` | Install command per ecosystem, CSS-only tabs, copy button; long commands wrap at spaces and after a `/` |
 | `Badge`, `Badges` | Static badges (no external badge services) |
-| `Facts` | Verifiable key figures |
-| `Features` | 3–5 core points |
+| `Facts` | Verifiable key figures; `layout="grid"` (tiles) or `"list"` (spec sheet) |
+| `Features` | Core points; `layout="numbered"` (3–5 items) or `"grid"` (an icon-tile catalog) |
+| `Spotlight` | Repeatable two-column feature section — eyebrow, title, lead, bullets, links, beside a media slot |
+| `Integrations` | Grid of what the project plugs into: icon tile, name, category |
 | `FileSet` | The files a run produced: `tabs`, `grid` or `rail` view |
 | `BuildOutput` | One real build output on the start page |
 | `Quickstart` | Steps, docs link, code slot |
+| `Keymap` | Keyboard shortcuts or CLI flags, grouped cards of label + `<kbd>` keys |
+| `ReleaseHighlights` | Teaser of one changelog release on the start page |
+| `Faq` | Native `<details>` accordion, no JS |
 | `CodeBlock` | Build-time highlighting (Shiki, theme-aware), copy button |
 | `Terminal` | `ansi` prop (converted at build time) or pre-rendered HTML as slot |
 | `Callout` | `note`, `tip`, `caution`, `deprecated` |

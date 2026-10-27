@@ -5,14 +5,18 @@ import {
   Button,
   CodeBlock,
   Facts,
+  Faq,
   Features,
   Hero,
   Install,
   Quickstart,
+  ReleaseHighlights,
 } from '@casoon/pages-theme/components';
 import Base from '@casoon/pages-theme/layouts/Base.astro';
+import { parseChangelog } from '@casoon/pages-theme/lib/changelog';
 import pages from 'virtual:casoon-pages/config';
 import { url } from '@casoon/pages-theme/url';
+import { readFile } from 'node:fs/promises';
 // Real captures, 26 October 2026. dashboard*.webp: the dashboard route of the live demo
 // (https://astro-v7-template.casoon.dev/web-vitals/) after "Run sitemap pass" in a headless
 // Chromium; the narrow file is the first page card of the same dashboard at 400 px.
@@ -29,6 +33,13 @@ const layout = `---
 import { WebVitals } from '@casoon/astro-webvitals';
 ---
 <WebVitals endpoint="/api/analytics/vitals" sampleRate={0.1} />`;
+
+// Skip "Unreleased": it has no version to show as "New in v…" yet.
+const latestRelease = pages.changelog
+  ? parseChangelog(await readFile(pages.changelog, 'utf8')).find(
+      (r) => r.version.toLowerCase() !== 'unreleased'
+    )
+  : undefined;
 ---
 
 <Base>
@@ -149,6 +160,33 @@ import { WebVitals } from '@casoon/astro-webvitals';
   >
     <CodeBlock code={layout} lang="astro" title="src/layouts/Layout.astro" label="Layout" />
   </Quickstart>
+
+  {latestRelease && <ReleaseHighlights release={latestRelease} />}
+
+  <Faq
+    items={[
+      {
+        q: 'Does this work with a strict Content Security Policy?',
+        a: "Yes. With Astro's security.csp, the component's configuration is passed as inert JSON (<script type=\"application/json\">) and all code runs from the bundled module script Astro serves from your own origin, so no 'unsafe-inline' is needed.",
+      },
+      {
+        q: 'What about the debug overlay and console dock — do those need CSP exceptions?',
+        a: 'No. The debug overlay and console dock use no inline event handlers; clicks are dispatched from a data-webvitals-action attribute instead of onclick.',
+      },
+      {
+        q: 'Where do the metrics go?',
+        a: "Every reported metric is emitted locally as a webvitals:metric browser event, which you can listen for without an HTTP endpoint. If you pass an endpoint prop, metrics are also batched and sent there with sendBeacon where the browser allows it.",
+      },
+      {
+        q: 'What does the local dashboard show?',
+        a: "It's a static route backed only by the browser's localStorage — no server or database. It shows the latest metric per route, and Run sitemap pass opens every page from your sitemap.xml and adds browser-visible page checks: title, description, canonical, language, H1, Open Graph, skip link, image alt, link text, form labels and valid JSON-LD.",
+      },
+      {
+        q: 'Which Astro versions and metrics are supported?',
+        a: "Astro 4–7. The component reports the Core Web Vitals LCP, CLS and INP, the supporting metrics FCP and TTFB, navigation timings, and optionally Long Tasks and diagnostic attribution.",
+      },
+    ]}
+  />
 </Base>
 
 <style>

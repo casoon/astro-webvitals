@@ -1,16 +1,22 @@
 ---
-/** Verifiable key figures. Real numbers only. */
+/**
+ * Verifiable key figures. Real numbers only.
+ * `layout="grid"` (default): a tile per fact, the value large. `layout="list"`: one card, a
+ * label/value row per fact — for a spec sheet (license, runtime, platforms) rather than a
+ * dashboard of numbers.
+ */
 import config from 'virtual:casoon-pages/config';
 import { t } from '../lib/i18n';
 
 interface Props {
   items: { value: string; label: string }[];
+  layout?: 'grid' | 'list';
 }
 
-const { items } = Astro.props;
+const { items, layout = 'grid' } = Astro.props;
 ---
 
-<section class="facts" aria-label={t(config.lang).keyFacts}>
+<section class:list={['facts', `is-${layout}`]} aria-label={t(config.lang).keyFacts}>
   <dl>
     {
       items.map((f) => (
@@ -30,32 +36,66 @@ const { items } = Astro.props;
     padding: 0 24px 72px;
   }
   dl {
+    margin: 0;
+  }
+  .is-grid dl {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 1px;
-    margin: 0;
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 16px;
     background: var(--border);
   }
-  div {
+  .is-grid div {
     display: flex;
     flex-direction: column-reverse;
     justify-content: flex-end;
     padding: 26px 22px;
     background: var(--surface);
   }
-  dd {
+  .is-grid dd {
     margin: 0 0 6px;
     color: var(--heading);
     font-family: var(--font-mono);
     font-size: 26px;
     letter-spacing: -0.02em;
   }
-  dt {
+  .is-grid dt {
     color: var(--muted);
     font-size: 13.5px;
     line-height: 1.5;
+  }
+
+  /* Spec sheet: one card, a label/value row per fact. */
+  .is-list dl {
+    max-width: 440px;
+    margin-inline: auto;
+    padding: 4px 24px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .is-list div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 15px 0;
+    border-top: 1px solid var(--border);
+  }
+  .is-list div:first-child {
+    border-top: 0;
+  }
+  .is-list dt {
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+  .is-list dd {
+    margin: 0;
+    color: var(--heading);
+    font-weight: 600;
+    text-align: right;
   }
 </style>

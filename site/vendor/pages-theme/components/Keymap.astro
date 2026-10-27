@@ -1,0 +1,102 @@
+---
+/**
+ * Keyboard shortcuts or CLI flags, grouped into cards: a label and one or more `<kbd>` keys per
+ * row. `keys` is a key sequence (chorded) — `['ctrl', 'k']` renders as two adjacent keycaps.
+ */
+interface Props {
+  groups: {
+    heading: string;
+    items: { label: string; keys: string[] }[];
+  }[];
+  /** Section heading. Omitted: the section carries no heading of its own. */
+  heading?: string;
+}
+
+const { groups, heading } = Astro.props;
+---
+
+<section class="keymap">
+  {heading && <h2 class="cp-label">{heading}</h2>}
+  <div class="groups">
+    {
+      groups.map((group) => (
+        <div class="group">
+          <p class="heading">{group.heading}</p>
+          <ul>
+            {group.items.map((item) => (
+              <li>
+                <span class="label">{item.label}</span>
+                <span class="keys">
+                  {item.keys.map((key) => (
+                    <kbd>{key}</kbd>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .keymap {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+  .keymap > h2 {
+    margin: 0 0 20px;
+  }
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+    gap: 18px;
+  }
+  .group {
+    padding: 20px 22px;
+    border-radius: 16px;
+    background: var(--bg-deep);
+  }
+  .heading {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 0;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+  }
+  li:first-child {
+    border-top: 0;
+  }
+  .keys {
+    display: flex;
+    flex-shrink: 0;
+    gap: 4px;
+  }
+  kbd {
+    min-width: 22px;
+    padding: 3px 6px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    box-shadow: 0 1px 0 var(--border-strong);
+    color: var(--heading);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: center;
+  }
+</style>

@@ -33,7 +33,8 @@ const columns = [
       ...(config.catalog
         ? [{ label: s.catalogEntry(config.name), href: catalogUrl(config.lang, config.catalog) }]
         : []),
-      { label: s.allProjects, href: catalogUrl(config.lang) },
+      // Only a public GitHub project is actually part of the open-source catalog.
+      ...(config.repo ? [{ label: s.allProjects, href: catalogUrl(config.lang) }] : []),
     ],
   },
 ];
@@ -46,7 +47,8 @@ const columns = [
         <img class="logo-light" src={logo.src} width="150" height="41" alt="CASOON" />
         <img class="logo-dark" src={logoDark.src} width="150" height="41" alt="CASOON" />
       </a>
-      <p>Ein Projekt von CASOON · Jörn Seidel</p>
+      <p>{config.description}</p>
+      <p class="by">{s.footerBy} · Jörn Seidel</p>
     </div>
     {
       columns.filter((col) => col.links.length > 0).map((col) => (
@@ -66,8 +68,8 @@ const columns = [
   <div class="bottom">
     <span>{config.license && `${s.license(config.license)} · `}© {new Date().getFullYear()} Jörn Seidel</span>
     <span class="legal">
-      <a href={IMPRESSUM}>Impressum</a>
-      <a href={DATENSCHUTZ}>Datenschutz</a>
+      <a href={IMPRESSUM}>{s.imprint}</a>
+      <a href={DATENSCHUTZ}>{s.privacyPolicy}</a>
     </span>
   </div>
 </footer>
@@ -114,6 +116,11 @@ const columns = [
   }
   p {
     margin: 0 0 6px;
+    max-width: 32ch;
+  }
+  .by {
+    color: var(--muted);
+    font-size: 12.5px;
   }
   .title {
     margin-bottom: 12px;

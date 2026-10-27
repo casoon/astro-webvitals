@@ -1,0 +1,154 @@
+---
+/**
+ * A repeatable two-column feature section further down the page (unlike `Hero`, which is
+ * singular): eyebrow, title, lead, an optional bullet list and link row, beside a `media` slot
+ * (a `Terminal`, `CodeBlock`, screenshot — whatever shows the feature). `reverse` swaps sides,
+ * for alternating sections down a page. `lead` and `points` accept the changelog's inline
+ * Markdown subset (`` `code` ``, `**bold**`, `[text](url)`), reused rather than re-parsed.
+ */
+import { inlineMarkdown } from '../lib/changelog';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead: string;
+  points?: string[];
+  links?: { label: string; href: string }[];
+  reverse?: boolean;
+}
+
+const { eyebrow, title, lead, points, links, reverse = false } = Astro.props;
+---
+
+<section class:list={['spotlight', reverse && 'reverse']}>
+  <div class="text">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h2>{title}</h2>
+    <p class="lead" set:html={inlineMarkdown(lead)} />
+    {
+      points && points.length > 0 && (
+        <ul class="points">
+          {points.map((point) => (
+            <li set:html={inlineMarkdown(point)} />
+          ))}
+        </ul>
+      )
+    }
+    {
+      links && links.length > 0 && (
+        <div class="links">
+          {links.map((link) => (
+            <a href={link.href}>{link.label} →</a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+  <div class="media">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .spotlight {
+    display: grid;
+    gap: 44px;
+    align-items: center;
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+  @media (min-width: 900px) {
+    .spotlight {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      gap: 56px;
+    }
+    .spotlight.reverse {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    }
+    .spotlight.reverse .text {
+      order: 1;
+    }
+    .spotlight.reverse .media {
+      order: 2;
+    }
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brand);
+  }
+  h2 {
+    margin: 0 0 16px;
+    color: var(--heading);
+    font-size: clamp(26px, 3vw, 34px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .lead {
+    margin: 0;
+    font-size: 16.5px;
+    line-height: 1.65;
+  }
+  .lead :global(strong) {
+    color: var(--heading);
+  }
+  .lead :global(code) {
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: var(--code-bg);
+    font-size: 0.9em;
+  }
+  .points {
+    margin: 22px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .points li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 12px;
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+  .points li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+  }
+  .points :global(strong) {
+    color: var(--heading);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 26px;
+    margin-top: 24px;
+  }
+  .links a {
+    color: var(--heading);
+    font-weight: 600;
+    font-size: 14.5px;
+  }
+  .links a:hover {
+    color: var(--accent);
+  }
+  .media {
+    min-width: 0;
+  }
+</style>

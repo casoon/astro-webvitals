@@ -18,6 +18,9 @@ const en = {
   website: (name: string) => `${name} website`,
   catalogEntry: (name: string) => `${name} on casoon.dev`,
   allProjects: 'All open-source projects by CASOON',
+  footerBy: 'A CASOON project',
+  imprint: 'Imprint',
+  privacyPolicy: 'Privacy Policy',
   license: (id: string) => `${id} License`,
   docsNav: 'Documentation',
   breadcrumb: 'Breadcrumb',
@@ -34,6 +37,7 @@ const en = {
   buildOutputHeading: 'Generated at build time',
   allExamples: 'All examples',
   featuresHeading: 'What it does',
+  overview: 'Overview',
   quickstartTitle: 'Quickstart',
   quickstartLead:
     'From install to a first result. The full walkthrough lives in the documentation.',
@@ -57,6 +61,8 @@ const en = {
   showcaseDescription: (name: string) => `Real input and output of ${name}.`,
   showcaseLead: (name: string) =>
     `Each example shows real output produced by ${name} itself, from files in the project repository. Input on the left, output on the right.`,
+  faqHeading: 'Frequently asked questions',
+  newIn: (version: string) => `New in v${version}`,
 };
 
 export type Strings = typeof en;
@@ -77,6 +83,9 @@ const de: Strings = {
   website: (name) => `Website von ${name}`,
   catalogEntry: (name) => `${name} auf casoon.dev`,
   allProjects: 'Alle Open-Source-Projekte von CASOON',
+  footerBy: 'Ein Projekt von CASOON',
+  imprint: 'Impressum',
+  privacyPolicy: 'Datenschutz',
   license: (id) => `${id}-Lizenz`,
   docsNav: 'Dokumentation',
   breadcrumb: 'Navigationspfad',
@@ -93,6 +102,7 @@ const de: Strings = {
   buildOutputHeading: 'Beim Build erzeugt',
   allExamples: 'Alle Beispiele',
   featuresHeading: 'Was es kann',
+  overview: 'Überblick',
   quickstartTitle: 'Schnellstart',
   quickstartLead:
     'Von der Installation zum ersten Ergebnis. Die ausführliche Anleitung steht in der Dokumentation.',
@@ -117,6 +127,8 @@ const de: Strings = {
   showcaseDescription: (name) => `Echte Ein- und Ausgaben von ${name}.`,
   showcaseLead: (name) =>
     `Jedes Beispiel zeigt echte Ausgabe, die ${name} selbst erzeugt hat, aus Dateien im Projekt-Repository. Links die Eingabe, rechts die Ausgabe.`,
+  faqHeading: 'Häufige Fragen',
+  newIn: (version) => `Neu in v${version}`,
 };
 
 export const strings: Record<Lang, Strings> = { en, de };

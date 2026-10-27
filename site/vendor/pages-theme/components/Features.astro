@@ -1,25 +1,38 @@
 ---
-/** 3–5 core points, each backed by something checkable. */
+/**
+ * Core points, each backed by something checkable.
+ * `layout="numbered"` (default, 3–5 items): a numbered list. `layout="grid"`: a denser catalog
+ * for more items — an icon tile per entry (`icon`, a short mono label) instead of the index.
+ */
 import config from 'virtual:casoon-pages/config';
 import { t } from '../lib/i18n';
 
 interface Props {
-  items: { title: string; body: string }[];
+  items: { title: string; body: string; icon?: string }[];
   heading?: string;
+  layout?: 'numbered' | 'grid';
 }
 
-const { items, heading = t(config.lang).featuresHeading } = Astro.props;
+const { items, heading = t(config.lang).featuresHeading, layout = 'numbered' } = Astro.props;
 ---
 
-<section class="features">
+<section class:list={['features', `is-${layout}`]}>
   <h2 class="cp-label">{heading}</h2>
-  <ol>
+  <ul>
     {
       items.map((ft, i) => (
         <li>
-          <span class="n" aria-hidden="true">
-            {String(i + 1).padStart(2, '0')}
-          </span>
+          {layout === 'numbered' ? (
+            <span class="n" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+          ) : (
+            ft.icon && (
+              <span class="icon" aria-hidden="true">
+                {ft.icon}
+              </span>
+            )
+          )}
           <div>
             <h3>{ft.title}</h3>
             <p>{ft.body}</p>
@@ -27,7 +40,7 @@ const { items, heading = t(config.lang).featuresHeading } = Astro.props;
         </li>
       ))
     }
-  </ol>
+  </ul>
 </section>
 
 <style>
@@ -36,15 +49,17 @@ const { items, heading = t(config.lang).featuresHeading } = Astro.props;
     margin: 0 auto;
     padding: 0 24px 80px;
   }
-  ol {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-    gap: 28px 48px;
+  ul {
     margin: 0;
     padding: 0;
     list-style: none;
   }
-  li {
+  .is-numbered ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: 28px 48px;
+  }
+  .is-numbered li {
     display: flex;
     gap: 18px;
     padding-top: 20px;
@@ -67,5 +82,33 @@ const { items, heading = t(config.lang).featuresHeading } = Astro.props;
     margin: 0;
     font-size: 14.5px;
     line-height: 1.6;
+  }
+
+  /* Denser catalog: an icon-tile card per entry, no numbering. */
+  .is-grid ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 16px;
+  }
+  .is-grid li {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+    border-radius: 16px;
+    background: var(--bg-deep);
+  }
+  .is-grid .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--heading);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
   }
 </style>

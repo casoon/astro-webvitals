@@ -1,0 +1,135 @@
+---
+/**
+ * A grid of things the project plugs into — registries, CI providers, editors. `icon` is a
+ * short mono label (an abbreviation, not a logo image: no external badge or icon service, same
+ * reasoning as `Badge`). `more`, given, appends a dashed placeholder card.
+ */
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
+interface Props {
+  items: { name: string; category: string; icon: string; href?: string }[];
+  heading?: string;
+  /** Label for a trailing "more coming" placeholder card. Omitted: no placeholder card. */
+  more?: string;
+}
+
+const { items, heading, more } = Astro.props;
+const s = t(config.lang);
+---
+
+<section class="integrations" aria-label={heading ?? s.overview}>
+  {heading && <p class="cp-label">{heading}</p>}
+  <ul>
+    {
+      items.map((item) => (
+        <li>
+          {item.href ? (
+            <a href={item.href}>
+              <span class="icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <p class="name">{item.name}</p>
+              <p class="category">{item.category}</p>
+            </a>
+          ) : (
+            <div>
+              <span class="icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <p class="name">{item.name}</p>
+              <p class="category">{item.category}</p>
+            </div>
+          )}
+        </li>
+      ))
+    }
+    {
+      more && (
+        <li class="more">
+          <span class="icon plus" aria-hidden="true">
+            +
+          </span>
+          <p class="name">{more}</p>
+        </li>
+      )
+    }
+  </ul>
+</section>
+
+<style>
+  .integrations {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a,
+  div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    height: 100%;
+    padding: 24px 16px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--text);
+    text-align: center;
+  }
+  a {
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+  a:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+  .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--bg-deep);
+    color: var(--heading);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .name {
+    margin: 0;
+    color: var(--heading);
+    font-weight: 600;
+    font-size: 14.5px;
+  }
+  .category {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .more {
+    border-style: dashed;
+    color: var(--muted);
+  }
+  .plus {
+    background: none;
+    border: 1px dashed var(--border-strong);
+    font-size: 18px;
+    font-weight: 400;
+  }
+  .more .name {
+    color: var(--muted);
+    font-weight: 500;
+  }
+</style>

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Project page:** the start page shows real captures of the local dashboard and the debug overlay and a diagram of the way from a page load to your endpoint; the endpoint code and the component output moved to the [documentation](https://casoon.github.io/astro-webvitals/docs/getting-started/quickstart/) and the [showcase](https://casoon.github.io/astro-webvitals/showcase/).
+- **Project page:** the footer follows the page's language instead of a hardcoded German, and the start page now carries a release teaser and an FAQ (theme 0.11.1).
 
 ## [0.4.11] - 2026-10-27
 

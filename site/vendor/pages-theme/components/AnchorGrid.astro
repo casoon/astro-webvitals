@@ -1,0 +1,160 @@
+---
+/**
+ * Cards right under the hero, each jumping to a section further down the page (or out, to a
+ * doc). For projects with more than one entry point or audience — "what's in it for you,
+ * specifically" before the long-form pitch. The solid label pill reuses the Hero `step` pill;
+ * the tinted card background reuses the brand/accent-soft tokens Callout already carries.
+ */
+import config from 'virtual:casoon-pages/config';
+import { t } from '../lib/i18n';
+
+interface Props {
+  items: {
+    label: string;
+    title: string;
+    body: string;
+    href: string;
+    tone?: 'accent' | 'brand';
+  }[];
+  /** Section label above the grid. Omitted: the grid carries no heading of its own. */
+  heading?: string;
+}
+
+const TONES: Array<'accent' | 'brand'> = ['accent', 'brand'];
+const { items, heading } = Astro.props;
+---
+
+<nav class="anchor-grid" aria-label={heading ?? t(config.lang).overview}>
+  {heading && <p class="cp-label">{heading}</p>}
+  <ul>
+    {
+      items.map((item, i) => (
+        <li>
+          <a class={item.tone ?? TONES[i % TONES.length]} href={item.href}>
+            <span class="label">{item.label}</span>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+            <span class="go" aria-hidden="true">
+              →
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .anchor-grid {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+    gap: 18px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    padding: 26px 60px 52px 26px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    color: var(--text);
+    transition:
+      border-color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+  a.accent {
+    background: var(--accent-soft);
+  }
+  a.brand {
+    background: var(--brand-soft);
+  }
+  a:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-3px);
+  }
+  a.accent:hover {
+    border-color: var(--accent);
+  }
+  a.brand:hover {
+    border-color: var(--brand);
+  }
+  .label {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 5px 13px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    /* The page ground, not white: on the light brand/accent of the dark theme white falls below
+       4.5:1 — same reasoning as the Hero step pill. */
+    color: var(--bg);
+  }
+  .accent .label {
+    background: var(--accent);
+  }
+  .brand .label {
+    background: var(--brand);
+  }
+  h3 {
+    margin: 0;
+    color: var(--heading);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .go {
+    position: absolute;
+    right: 22px;
+    bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1;
+    transition:
+      color 0.18s ease,
+      border-color 0.18s ease,
+      background 0.18s ease,
+      transform 0.18s ease;
+  }
+  a.accent:hover .go,
+  a.accent:focus-visible .go {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--bg);
+    transform: translateX(2px);
+  }
+  a.brand:hover .go,
+  a.brand:focus-visible .go {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--bg);
+    transform: translateX(2px);
+  }
+</style>

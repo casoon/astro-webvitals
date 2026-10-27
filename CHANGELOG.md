@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Project page:** the start page shows real captures of the local dashboard and the debug overlay and a diagram of the way from a page load to your endpoint; the endpoint code and the component output moved to the [documentation](https://casoon.github.io/astro-webvitals/docs/getting-started/quickstart/) and the [showcase](https://casoon.github.io/astro-webvitals/showcase/).
 
+## [0.4.11] - 2026-10-27
+
+### Changed
+
+- **Release:** the package is published from a GitHub Actions workflow with npm Trusted Publishing and provenance after approval in the `npm` environment; the code is unchanged from 0.4.10.
+
 ## [0.4.10] - 2026-09-28
 
 ### Fixed

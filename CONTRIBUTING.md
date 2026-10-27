@@ -325,11 +325,12 @@ Keep the component lightweight:
 Maintainers follow this process:
 
 1. Update version in package.json
-2. Update CHANGELOG.md
+2. Update CHANGELOG.md (move `[Unreleased]` to the new version)
 3. Create release PR
 4. Merge after review
-5. Tag release
-6. Publish to npm
+5. Tag `vX.Y.Z` on the merge commit and push the tag
+
+The tag starts `.github/workflows/release.yml`: it checks the package and, after a maintainer approves the `npm` environment, publishes to npm with Trusted Publishing (provenance, no token).
 
 ## Getting Help
 

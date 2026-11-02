@@ -11,12 +11,17 @@ import { t } from '../lib/i18n';
 interface Props {
   items: { value: string; label: string }[];
   layout?: 'grid' | 'list';
+  /**
+   * Region label. Default "Key facts" — override on a page that uses `Facts` more than once,
+   * so the two regions don't share one accessible name (axe: landmark-unique).
+   */
+  label?: string;
 }
 
-const { items, layout = 'grid' } = Astro.props;
+const { items, layout = 'grid', label } = Astro.props;
 ---
 
-<section class:list={['facts', `is-${layout}`]} aria-label={t(config.lang).keyFacts}>
+<section class:list={['facts', `is-${layout}`]} aria-label={label ?? t(config.lang).keyFacts}>
   <dl>
     {
       items.map((f) => (
@@ -33,38 +38,45 @@ const { items, layout = 'grid' } = Astro.props;
   .facts {
     max-width: var(--max);
     margin: 0 auto;
-    padding: 0 24px 72px;
+    padding: 0 24px 80px;
   }
   dl {
     margin: 0;
   }
+  /* Sunken frame holding stat panels, after hypercitations.com's "the shift" cards. */
   .is-grid dl {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 1px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: var(--border);
+    /* Two columns on phones instead of one tall card per fact. */
+    grid-template-columns: repeat(auto-fit, minmax(min(200px, calc(50% - 5px)), 1fr));
+    gap: 10px;
+    padding: 10px;
+    border-radius: var(--r-card);
+    background: var(--bg-sunken);
   }
   .is-grid div {
     display: flex;
     flex-direction: column-reverse;
     justify-content: flex-end;
-    padding: 26px 22px;
+    min-height: clamp(120px, 30vw, 170px);
+    padding: 24px;
+    border-radius: 12px;
     background: var(--surface);
+    box-shadow: 0 2px 0 var(--shadow-hard);
   }
   .is-grid dd {
-    margin: 0 0 6px;
+    margin: auto 0 8px;
     color: var(--heading);
-    font-family: var(--font-mono);
-    font-size: 26px;
+    font-size: clamp(34px, 3.4vw, 46px);
+    font-weight: 600;
     letter-spacing: -0.02em;
+    line-height: 1;
   }
   .is-grid dt {
     color: var(--muted);
-    font-size: 13.5px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
     line-height: 1.5;
+    text-transform: uppercase;
   }
 
   /* Spec sheet: one card, a label/value row per fact. */
@@ -72,10 +84,9 @@ const { items, layout = 'grid' } = Astro.props;
     max-width: 440px;
     margin-inline: auto;
     padding: 4px 24px;
-    border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: var(--r-card);
     background: var(--surface);
-    box-shadow: var(--shadow);
+    box-shadow: 2px 2px 0 var(--shadow-hard);
   }
   .is-list div {
     display: flex;

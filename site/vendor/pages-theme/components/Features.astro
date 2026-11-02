@@ -47,68 +47,93 @@ const { items, heading = t(config.lang).featuresHeading, layout = 'numbered' } =
   .features {
     max-width: var(--max);
     margin: 0 auto;
-    padding: 0 24px 80px;
+    padding: 80px 24px;
   }
   ul {
     margin: 0;
     padding: 0;
     list-style: none;
   }
+  /* Large light numerals, as on hypercitations.com's agent steps. */
   .is-numbered ul {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-    gap: 28px 48px;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 10px;
   }
   .is-numbered li {
     display: flex;
-    gap: 18px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 28px;
+    padding: 30px 24px;
+    border-radius: var(--r-card);
+    background: var(--bg-deep);
   }
   .n {
-    padding-top: 3px;
-    color: var(--brand);
-    font-family: var(--font-mono);
-    font-size: 12px;
+    margin-top: auto;
+    color: var(--heading);
+    font-size: 46px;
+    font-weight: 200;
+    letter-spacing: -0.02em;
+    line-height: 1;
   }
   h3 {
-    margin: 0 0 6px;
+    margin: 0 0 8px;
     color: var(--heading);
-    font-size: 17px;
+    font-size: 22px;
     font-weight: 600;
-    letter-spacing: -0.01em;
+    line-height: 1.3;
   }
   p {
     margin: 0;
-    font-size: 14.5px;
-    line-height: 1.6;
+    font-size: 16px;
+    line-height: 1.56;
   }
 
-  /* Denser catalog: an icon-tile card per entry, no numbering. */
+  /* Catalog: cream, ink and accent cards in turn, like the feature grid of hypercitations.com. */
   .is-grid ul {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: 10px;
   }
   .is-grid li {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 22px;
-    border-radius: 16px;
+    gap: 30px;
+    min-height: 240px;
+    padding: 30px 24px;
+    border-radius: var(--r-card);
     background: var(--bg-deep);
+  }
+  .is-grid li:nth-child(6n + 1),
+  .is-grid li:nth-child(6n + 6) {
+    background: #000;
+    color: #ccc;
+  }
+  .is-grid li:nth-child(6n + 2) {
+    background: var(--accent-fill);
+    color: #fff;
+  }
+  .is-grid li:nth-child(6n + 1) h3,
+  .is-grid li:nth-child(6n + 6) h3,
+  .is-grid li:nth-child(6n + 2) h3 {
+    color: #fff;
   }
   .is-grid .icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: var(--surface);
-    color: var(--heading);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
     font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .is-grid li:nth-child(6n + 2) .icon {
+    background: #fff;
+    color: var(--accent-fill);
   }
 </style>

@@ -119,7 +119,8 @@ const editUrl = config.repo
     margin: 0 auto;
     padding: 0 24px;
   }
-  .sidebar,
+  /* The sidebar scrolls with the page: as a sticky box with its own scroll area, a long menu
+     was cut off at the footer on short pages. The table of contents stays in view. */
   .toc {
     position: sticky;
     top: var(--header-h);
@@ -271,10 +272,8 @@ const editUrl = config.repo
       gap: 0;
     }
     .sidebar {
-      position: static;
       flex: none;
       width: 100%;
-      max-height: none;
       padding: 24px 0 0;
       border-bottom: 1px solid var(--border);
     }

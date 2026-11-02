@@ -75,9 +75,15 @@ const columns = [
 </footer>
 
 <style>
+  /* Black footer, as on hypercitations.com, in both themes. */
   .footer {
-    border-top: 1px solid var(--border);
-    background: var(--surface);
+    --text: #b3b3b3;
+    --muted: #b3b3b3;
+    --heading: #fff;
+    --border: rgb(255 255 255 / 0.12);
+
+    background: #000;
+    color: var(--text);
     font-size: 14px;
   }
   .cols {
@@ -86,7 +92,7 @@ const columns = [
     gap: 40px;
     max-width: var(--max);
     margin: 0 auto;
-    padding: 48px 24px 32px;
+    padding: 80px 24px 48px;
   }
   .logo {
     display: inline-block;
@@ -97,22 +103,8 @@ const columns = [
     width: 120px;
     height: auto;
   }
-  .logo-dark {
+  .logo-light {
     display: none !important;
-  }
-  :global([data-theme='dark']) .logo-light {
-    display: none !important;
-  }
-  :global([data-theme='dark']) .logo-dark {
-    display: block !important;
-  }
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme='light'])) .logo-light {
-      display: none !important;
-    }
-    :global(:root:not([data-theme='light'])) .logo-dark {
-      display: block !important;
-    }
   }
   p {
     margin: 0 0 6px;
@@ -123,17 +115,15 @@ const columns = [
     font-size: 12.5px;
   }
   .title {
-    margin-bottom: 12px;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
+    margin-bottom: 16px;
+    color: var(--heading);
+    font-size: 18px;
+    font-weight: 500;
   }
   ul {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 12px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -142,7 +132,7 @@ const columns = [
     color: var(--text);
   }
   ul a:hover {
-    color: var(--brand);
+    color: var(--heading);
   }
   .bottom {
     display: flex;
@@ -165,6 +155,6 @@ const columns = [
     color: var(--muted);
   }
   .legal a:hover {
-    color: var(--brand);
+    color: var(--heading);
   }
 </style>

@@ -19,117 +19,107 @@ const s = t(config.lang);
 ---
 
 <section class="integrations" aria-label={heading ?? s.overview}>
-  {heading && <p class="cp-label">{heading}</p>}
-  <ul>
+  {heading && <p class="title">{heading}</p>}
+  <div class="marquee">
     {
-      items.map((item) => (
-        <li>
-          {item.href ? (
-            <a href={item.href}>
-              <span class="icon" aria-hidden="true">
-                {item.icon}
+      [false, true].map((copy) => (
+        <ul aria-hidden={copy ? 'true' : undefined}>
+          {items.map((item) => (
+            <li>
+              {item.href && !copy ? (
+                <a href={item.href}>
+                  <span class="icon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span class="name">{item.name}</span>
+                  <span class="visually-hidden">{item.category}</span>
+                </a>
+              ) : (
+                <span class="item">
+                  <span class="icon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span class="name">{item.name}</span>
+                </span>
+              )}
+            </li>
+          ))}
+          {more && (
+            <li>
+              <span class="item more">
+                <span class="name">{more}</span>
               </span>
-              <p class="name">{item.name}</p>
-              <p class="category">{item.category}</p>
-            </a>
-          ) : (
-            <div>
-              <span class="icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <p class="name">{item.name}</p>
-              <p class="category">{item.category}</p>
-            </div>
+            </li>
           )}
-        </li>
+        </ul>
       ))
     }
-    {
-      more && (
-        <li class="more">
-          <span class="icon plus" aria-hidden="true">
-            +
-          </span>
-          <p class="name">{more}</p>
-        </li>
-      )
-    }
-  </ul>
+  </div>
 </section>
 
 <style>
+  /* Logo row that drifts sideways, as "Measured across" on hypercitations.com. The list is
+     rendered twice; the copy is hidden from assistive tech and not focusable. */
   .integrations {
-    max-width: var(--max);
-    margin: 0 auto;
-    padding: 0 24px 80px;
-  }
-  ul {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 14px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  a,
-  div {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    height: 100%;
-    padding: 24px 16px;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: var(--surface);
-    color: var(--text);
+    padding: 64px 0 80px;
+    background: var(--bg-deep);
     text-align: center;
   }
-  a {
-    transition:
-      border-color 0.15s ease,
-      transform 0.15s ease;
+  .title {
+    margin: 0 0 32px;
+    color: var(--heading);
+    font-size: 18px;
   }
-  a:hover {
-    border-color: var(--border-strong);
-    transform: translateY(-2px);
+  .marquee {
+    display: flex;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 10% 90%, transparent);
   }
-  .icon {
+  ul {
+    display: flex;
+    flex: none;
+    gap: 72px;
+    margin: 0;
+    padding: 0 72px 0 0;
+    list-style: none;
+    animation: marquee 25s linear infinite;
+  }
+  .marquee:hover ul {
+    animation-play-state: paused;
+  }
+  a,
+  .item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: var(--bg-deep);
+    gap: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  a:hover {
     color: var(--heading);
+  }
+  .icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
     font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
   }
   .name {
-    margin: 0;
-    color: var(--heading);
-    font-weight: 600;
-    font-size: 14.5px;
-  }
-  .category {
-    margin: 0;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .more {
-    border-style: dashed;
-    color: var(--muted);
-  }
-  .plus {
-    background: none;
-    border: 1px dashed var(--border-strong);
-    font-size: 18px;
-    font-weight: 400;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
   }
   .more .name {
-    color: var(--muted);
-    font-weight: 500;
+    font-weight: 400;
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-100%);
+    }
   }
 </style>

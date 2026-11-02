@@ -1,0 +1,64 @@
+---
+/**
+ * Closing band on the accent ground: one large centred line and one button, as at the end of
+ * hypercitations.com. Put it last on the start page, right above the footer.
+ */
+interface Props {
+  title: string;
+  href: string;
+  label: string;
+}
+
+const { title, href, label } = Astro.props;
+---
+
+<section class="cta">
+  <h2>{title}</h2>
+  <a class="btn" href={href}><span class="label">{label}</span></a>
+</section>
+
+<style>
+  .cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    padding: 120px 24px;
+    background: var(--accent-fill);
+    text-align: center;
+  }
+  h2 {
+    max-width: 14ch;
+    margin: 0;
+    color: #fff;
+    font-size: clamp(40px, 6vw, 70px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .btn {
+    --roll: 3.2em;
+    display: inline-flex;
+    align-items: center;
+    min-height: 60px;
+    padding: 0 25px;
+    overflow: hidden;
+    border-radius: 30px;
+    background: linear-gradient(180deg, #363636 0%, #000 25%, #000 100%);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .btn:hover {
+    color: #fff;
+  }
+  .label {
+    display: block;
+    text-shadow: 0 var(--roll) 0 currentColor;
+    transition: transform 0.4s var(--ease-roll);
+  }
+  .btn:hover .label,
+  .btn:focus-visible .label {
+    transform: translateY(calc(-1 * var(--roll)));
+  }
+</style>

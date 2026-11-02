@@ -50,13 +50,23 @@ const { eyebrow, title, lead, points, links, reverse = false } = Astro.props;
 </section>
 
 <style>
+  /* Large rounded sand panel, as hypercitations.com sets its demo and dashboard sections. */
   .spotlight {
     display: grid;
     gap: 44px;
     align-items: center;
-    max-width: var(--max);
-    margin: 0 auto;
-    padding: 0 24px 80px;
+    max-width: calc(var(--max) + 160px);
+    margin: 0 auto 80px;
+    padding: 80px;
+    border-radius: var(--r-panel);
+    background: var(--bg-deep);
+  }
+  @media (max-width: 900px) {
+    .spotlight {
+      margin-inline: 8px;
+      padding: 56px 24px;
+      border-radius: 32px;
+    }
   }
   @media (min-width: 900px) {
     .spotlight {
@@ -78,10 +88,8 @@ const { eyebrow, title, lead, points, links, reverse = false } = Astro.props;
     align-items: center;
     gap: 8px;
     margin: 0 0 16px;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.09em;
+    color: var(--heading);
+    font-size: 14px;
     text-transform: uppercase;
   }
   .eyebrow::before {
@@ -89,19 +97,19 @@ const { eyebrow, title, lead, points, links, reverse = false } = Astro.props;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--brand);
+    background: var(--accent-fill);
   }
   h2 {
-    margin: 0 0 16px;
+    margin: 0 0 20px;
     color: var(--heading);
-    font-size: clamp(26px, 3vw, 34px);
+    font-size: clamp(32px, 4vw, 50px);
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.1;
   }
   .lead {
     margin: 0;
-    font-size: 16.5px;
+    font-size: 18px;
     line-height: 1.65;
   }
   .lead :global(strong) {
@@ -113,6 +121,12 @@ const { eyebrow, title, lead, points, links, reverse = false } = Astro.props;
     background: var(--code-bg);
     font-size: 0.9em;
   }
+  .lead :global(a),
+  .points :global(a) {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+  }
   .points {
     margin: 22px 0 0;
     padding: 0;
@@ -120,16 +134,25 @@ const { eyebrow, title, lead, points, links, reverse = false } = Astro.props;
   }
   .points li {
     position: relative;
-    padding-left: 20px;
-    margin-bottom: 12px;
-    font-size: 14.5px;
+    padding-left: 32px;
+    margin-bottom: 14px;
+    font-size: 16px;
     line-height: 1.6;
   }
   .points li::before {
-    content: '—';
+    content: '✓';
     position: absolute;
+    top: 2px;
     left: 0;
-    color: var(--muted);
+    display: grid;
+    place-items: center;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--heading);
+    font-size: 12px;
+    font-weight: 700;
   }
   .points :global(strong) {
     color: var(--heading);

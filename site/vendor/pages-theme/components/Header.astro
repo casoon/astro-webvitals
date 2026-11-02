@@ -41,7 +41,7 @@ const nav = [
           }
         </ul>
         <span class="sep" aria-hidden="true"></span>
-        {config.repo && <a href={`https://github.com/${config.repo}`}>GitHub</a>}
+        {config.repo && <a class="cta" href={`https://github.com/${config.repo}`}>GitHub</a>}
       </nav>
     </div>
     <button class="theme" type="button" data-theme-toggle aria-label={s.darkTheme} aria-pressed="false" hidden>
@@ -58,23 +58,26 @@ const nav = [
 </header>
 
 <style>
+  /* Floating white pill over the page, after hypercitations.com. */
   .header {
     position: sticky;
     top: 0;
     z-index: 50;
-    border-bottom: 1px solid var(--border);
-    background: var(--glass);
-    backdrop-filter: blur(16px) saturate(1.6);
-    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    padding: 14px 24px 0;
+    pointer-events: none;
   }
   .inner {
     display: flex;
     align-items: center;
     gap: 20px;
-    max-width: var(--max);
+    max-width: 1000px;
     height: var(--header-h);
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 10px 0 24px;
+    border-radius: 40px;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+    pointer-events: auto;
   }
   .home {
     display: flex;
@@ -86,8 +89,8 @@ const nav = [
     color: var(--heading);
   }
   .name {
-    font-size: 15.5px;
-    font-weight: 600;
+    font-size: 19px;
+    font-weight: 500;
     letter-spacing: -0.01em;
   }
   .version {
@@ -132,19 +135,24 @@ const nav = [
   }
   nav a {
     display: block;
-    padding: 7px 12px;
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 14.5px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    color: var(--heading);
+    font-size: 15px;
+    font-weight: 500;
     white-space: nowrap;
   }
   nav a:hover {
-    background: var(--bg-deep);
-    color: var(--text);
+    color: var(--accent);
   }
   nav a[aria-current='page'] {
     color: var(--heading);
     font-weight: 600;
+  }
+  nav a.cta {
+    padding: 8px 18px;
+    background: linear-gradient(180deg, var(--accent-top) 0%, var(--accent-fill) 25%, var(--accent-fill) 100%);
+    color: #fff;
   }
   .sep {
     width: 1px;
@@ -160,10 +168,10 @@ const nav = [
     height: 32px;
     /* Close to the GitHub link, as if it were the last nav entry: 20px gap - 14px. */
     margin-left: -14px;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    background: none;
-    color: var(--text);
+    border: 0;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--heading);
     cursor: pointer;
   }
   .theme:hover {
@@ -186,10 +194,15 @@ const nav = [
   }
   /* Narrow screens: name and theme toggle on the first row, the links on a second row that
      stays one line and scrolls sideways when it does not fit — no wrapped labels, nothing cut
-     off. A header with a website pill or a demo entry needs the second row earlier. */
+     off. A header with a website pill or a demo entry needs the second row earlier. The website
+     pill is dropped from that row: it repeats in the footer's "Project" column, and it was the
+     single widest entry, pushing GitHub out of view. */
   @media (max-width: 640px) {
     :global(:root) {
       --header-h: 92px;
+    }
+    .header {
+      padding: 8px 8px 0;
     }
     .inner {
       flex-wrap: wrap;
@@ -197,6 +210,7 @@ const nav = [
       gap: 2px 8px;
       height: var(--header-h);
       padding: 0 16px;
+      border-radius: 24px;
     }
     .links {
       flex: 0 0 calc(100% + 32px);
@@ -207,6 +221,9 @@ const nav = [
       padding: 3px 8px;
       overflow-x: auto;
       scrollbar-width: none;
+    }
+    .website {
+      display: none;
     }
     .theme {
       margin-left: auto;
@@ -241,6 +258,9 @@ const nav = [
       padding: 3px 8px;
       overflow-x: auto;
       scrollbar-width: none;
+    }
+    [data-wide] .website {
+      display: none;
     }
     [data-wide] .theme {
       margin-left: auto;

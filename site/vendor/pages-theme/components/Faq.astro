@@ -10,22 +10,27 @@ interface Props {
 
 const s = t(config.lang);
 const { items, heading = s.faqHeading } = Astro.props;
+// Two columns, filled top to bottom, as on hypercitations.com.
+const half = Math.ceil(items.length / 2);
+const columns = [items.slice(0, half), items.slice(half)].filter((col) => col.length > 0);
 ---
 
 <section class="faq">
   <h2>{heading}</h2>
-  <div class="list">
+  <div class="frame">
     {
-      items.map((item) => (
-        <details>
-          <summary>
-            <span>{item.q}</span>
-            <span class="icon" aria-hidden="true">
-              +
-            </span>
-          </summary>
-          <p>{item.a}</p>
-        </details>
+      columns.map((col) => (
+        <div class="list">
+          {col.map((item) => (
+            <details>
+              <summary>
+                <span>{item.q}</span>
+                <span class="icon" aria-hidden="true" />
+              </summary>
+              <p>{item.a}</p>
+            </details>
+          ))}
+        </div>
       ))
     }
   </div>
@@ -35,53 +40,84 @@ const { items, heading = s.faqHeading } = Astro.props;
   .faq {
     max-width: var(--max);
     margin: 0 auto;
-    padding: 0 24px 80px;
+    padding: 80px 24px;
   }
   h2 {
-    margin: 0 0 8px;
+    max-width: 12ch;
+    margin: 0 0 40px;
     color: var(--heading);
-    font-size: 30px;
-    font-weight: 700;
+    font-size: clamp(34px, 4.4vw, 50px);
+    font-weight: 600;
     letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .frame {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+    gap: 10px;
+    align-items: start;
+    padding: 10px;
+    border-radius: var(--r-card);
+    background: var(--bg-sunken);
   }
   .list {
-    border-top: 1px solid var(--border);
+    display: grid;
+    gap: 10px;
   }
   details {
-    border-bottom: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+  }
+  details[open] {
+    background: var(--surface);
   }
   summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    padding: 20px 0;
+    gap: 24px;
+    padding: 18px 20px;
     color: var(--heading);
-    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    line-height: 1.4;
     cursor: pointer;
     list-style: none;
   }
   summary::-webkit-details-marker {
     display: none;
   }
-  summary:hover {
-    color: var(--accent);
-  }
+  /* Plus that folds into a minus. */
   .icon {
-    flex-shrink: 0;
-    color: var(--muted);
-    font-size: 20px;
-    font-weight: 400;
-    line-height: 1;
-    transition: transform 0.15s ease;
+    position: relative;
+    flex: none;
+    width: 14px;
+    height: 14px;
   }
-  details[open] .icon {
-    transform: rotate(45deg);
+  .icon::before,
+  .icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 1.5px;
+    border-radius: 1px;
+    background: currentColor;
+    translate: -50% -50%;
+    transition: transform 0.36s var(--ease-roll);
+  }
+  .icon::after {
+    transform: rotate(90deg);
+  }
+  details[open] .icon::after {
+    transform: rotate(0deg);
   }
   details p {
-    margin: 0 0 22px;
-    max-width: 68ch;
-    font-size: 15px;
-    line-height: 1.6;
+    margin: 0;
+    padding: 0 20px 20px;
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.56;
   }
 </style>

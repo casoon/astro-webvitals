@@ -8,34 +8,45 @@ interface Props {
 const { href, variant = 'primary' } = Astro.props;
 ---
 
-<a class:list={['btn', variant]} href={href}><slot /></a>
+<a class:list={['btn', variant]} href={href}><span class="label"><slot /></span></a>
 
 <style>
+  /* Pill with a rolling label on hover, after hypercitations.com. */
   .btn {
-    display: inline-block;
-    padding: 10px 18px;
-    border-radius: 10px;
-    font-size: 14.5px;
+    --roll: 2.6em;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 47px;
+    padding: 10px 25px;
+    overflow: hidden;
+    border-radius: 30px;
+    font-size: 15px;
     font-weight: 500;
-    line-height: 1.5;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .label {
+    display: block;
+    text-shadow: 0 var(--roll) 0 currentColor;
+    transition: transform 0.4s var(--ease-roll);
+  }
+  .btn:hover .label,
+  .btn:focus-visible .label {
+    transform: translateY(calc(-1 * var(--roll)));
   }
   .primary {
-    border: 1px solid var(--heading);
-    background: var(--heading);
-    color: var(--bg);
-  }
-  .primary:hover {
-    color: var(--bg);
-    opacity: 0.88;
+    background: linear-gradient(180deg, var(--accent-top) 0%, var(--accent-fill) 25%, var(--accent-fill) 100%);
+    color: #fff;
   }
   .secondary {
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--heading);
+    background: linear-gradient(180deg, #363636 0%, #000 25%, #000 100%);
+    color: #fff;
   }
+  .primary:hover,
   .secondary:hover {
-    border-color: var(--border-strong);
-    color: var(--heading);
+    color: #fff;
   }
   .quiet {
     padding-inline: 0;

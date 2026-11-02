@@ -30,6 +30,17 @@ const text = (markup: string, font: string, fontfile: string, width: number) =>
     .png()
     .toBuffer();
 
+/** Largest name size whose single line fits the card, so a long name shrinks instead of wrapping. */
+async function nameBlock(name: string, width: number): Promise<Buffer> {
+  const markup = `<span foreground="${HEADING}" weight="600">${escapeMarkup(name)}</span>`;
+  const sizes = [96, 80, 68, 58, 50];
+  for (const size of sizes) {
+    const block = await text(markup, `Onest ${size}`, SANS, width * 4);
+    if (((await sharp(block).metadata()).width ?? 0) <= width) return block;
+  }
+  return text(markup, `Onest ${sizes[sizes.length - 1]}`, SANS, width);
+}
+
 /** The project's 1200×630 Open Graph image: name, tagline and description, address. */
 export async function renderOgImage(config: ResolvedConfig, site: URL): Promise<Buffer> {
   const accent = config.accent?.dark ?? ACCENT;
@@ -52,12 +63,7 @@ export async function renderOgImage(config: ResolvedConfig, site: URL): Promise<
 
   const [eyebrow, name, tagline, description, host] = await Promise.all([
     text(span(MUTED, 'CASOON Open Source'), 'JetBrains Mono 26', MONO, 1000),
-    text(
-      `<span foreground="${HEADING}" weight="600">${escapeMarkup(config.name)}</span>`,
-      'Onest 96',
-      SANS,
-      WIDTH - 2 * X
-    ),
+    nameBlock(config.name, WIDTH - 2 * X),
     config.tagline && text(span(HEADING, config.tagline), 'Onest 44', SANS, WIDTH - 2 * X),
     text(
       span(TEXT, clip(config.description, config.tagline ? 150 : 140)),
@@ -68,14 +74,15 @@ export async function renderOgImage(config: ResolvedConfig, site: URL): Promise<
     text(span(MUTED, address), 'JetBrains Mono 24', MONO, 640),
   ]);
   const size = async (image: Buffer) => sharp(image).metadata();
+  const nameBottom = 128 + ((await size(name)).height ?? 0) + 16;
   const taglineHeight = tagline ? ((await size(tagline)).height ?? 0) + 24 : 0;
 
   return sharp(background)
     .composite([
       { input: eyebrow, left: X, top: 76 },
       { input: name, left: X, top: 128 },
-      ...(tagline ? [{ input: tagline, left: X, top: 268 }] : []),
-      { input: description, left: X, top: 268 + taglineHeight },
+      ...(tagline ? [{ input: tagline, left: X, top: nameBottom }] : []),
+      { input: description, left: X, top: nameBottom + taglineHeight },
       { input: logo, left: X, top: HEIGHT - 92 },
       { input: host, left: WIDTH - X - ((await size(host)).width ?? 0), top: HEIGHT - 80 },
     ])

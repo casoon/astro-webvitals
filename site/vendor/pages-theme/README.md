@@ -65,12 +65,12 @@ export const collections = { docs: docsCollection() };
 | --- | --- | --- |
 | `name`, `description`, `repo` | – | Header, meta tags, GitHub links, JSON-LD |
 | `tagline` | – | A few words for the start page's `<title>` and the OG image; see „Search engines" |
-| `website` | – | The project's landing page (`https://judge.casoon.de`): header, footer, JSON-LD `sameAs` |
+| `website` | – | The project's landing page (`https://example.com`): header, footer, JSON-LD `sameAs` |
 | `catalog` | repository name | Slug of the project's entry on casoon.dev (`#projekt-<slug>`), linked in the footer; `false` for none |
 | `version` | the project's manifest | Header badge, "Docs for vX"; see „Version" | 
 | `license` | `MIT` | SPDX id for footer and JSON-LD; `false` for proprietary code names no licence |
 | `branch` | `main` | "Edit this page" links |
-| `accent` | CASOON petrol | `{ light, dark }` project colour; needs 4.5:1 on `#f6f6f5` and `#101010` |
+| `accent` | CASOON petrol | `{ light, dark }` project colour; needs 4.5:1 on `#f4f1eb` and `#151412` |
 | `packages` | `[]` | Registry and API-doc links in the footer |
 | `docsGroups` | `{}` | Sidebar groups: folder in `docs/` → label, in order. Root pages join the first group |
 | `changelog` | `../CHANGELOG.md` | Path relative to `site/`, or `false` |

@@ -21,7 +21,7 @@ export interface CasoonPagesOptions {
   description: string;
   /** A few words for the start page's `<title>` and the OG image: "<name> – <tagline> | CASOON". */
   tagline?: string;
-  /** The project's own landing page, e.g. "https://judge.casoon.de". Linked in header and footer. */
+  /** The project's own landing page, e.g. "https://example.com". Linked in header and footer. */
   website?: string;
   /** Slug of the project's entry on casoon.dev (`#projekt-<slug>`), or false. Default: repository name. */
   catalog?: string | false;

@@ -8,27 +8,27 @@
 :root {
   color-scheme: light;
   /* Warm ground after hypercitations.com: paper, sand bands, sunken frames. */
-  --bg: #f3f1ec;
-  --bg-deep: #e3ded3;
-  --bg-sunken: #dbd8ce;
+  --bg: #f4f1eb;
+  --bg-deep: #e4ded2;
+  --bg-sunken: #dcd7cc;
   --surface: #fff;
   --glass: rgb(255 255 255 / 0.62);
-  --border: #d6d1c5;
-  --border-strong: #c9c3b5;
-  --shadow-hard: #ccc9c0;
-  --text: #454545;
-  --heading: #000;
-  --muted: #5e5e5e;
-  --brand: #c33b18;
-  --brand-soft: rgb(238 72 29 / 0.1);
-  --accent: #c33b18;
+  --border: #d7d1c4;
+  --border-strong: #cac3b4;
+  --shadow-hard: #cdc8be;
+  --text: #44423f;
+  --heading: #11100e;
+  --muted: #5c5a56;
+  --brand: #c13a1a;
+  --brand-soft: rgb(236 74 32 / 0.1);
+  --accent: #c13a1a;
   --accent-soft: color-mix(in srgb, var(--accent) 10%, transparent);
-  --accent-fill: #d6411a;
-  --accent-top: #e65f3e;
-  --accent-edge: #f59a80;
-  --ink: #000;
-  --ink-top: #363636;
-  --ink-edge: #5a5a5a;
+  --accent-fill: #d4421d;
+  --accent-top: #e46140;
+  --accent-edge: #f39b82;
+  --ink: #11100e;
+  --ink-top: #383532;
+  --ink-edge: #5b5854;
   --code-bg: #fff;
   --shadow: 0 4px 8px rgb(0 0 0 / 0.15);
   --shadow-lift: 0 21px 27px rgb(0 0 0 / 0.25);
@@ -65,8 +65,8 @@
   --ansi-15: #fff;
 
   /* Inverted hero ground (Hero tone="invert"): dark in both themes. */
-  --invert-bg: #000;
-  --invert-accent: #f2805f;
+  --invert-bg: #11100e;
+  --invert-accent: #f0815f;
 
   /* Syntax highlighting (Shiki "css-variables" theme). */
   --astro-code-foreground: var(--text);
@@ -85,25 +85,25 @@
 /* Dark: explicit choice, or system preference when nothing is stored. Keep both blocks identical. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #141413;
-  --bg-deep: #1c1b19;
-  --bg-sunken: #24221f;
-  --surface: #1f1e1c;
-  --glass: rgb(31 30 28 / 0.72);
+  --bg: #151412;
+  --bg-deep: #1d1b18;
+  --bg-sunken: #25221e;
+  --surface: #201e1b;
+  --glass: rgb(32 30 27 / 0.72);
   --border: rgb(255 255 255 / 0.11);
   --border-strong: rgb(255 255 255 / 0.2);
   --shadow-hard: rgb(0 0 0 / 0.5);
-  --text: #c9c6bf;
-  --heading: #f3f1ec;
-  --muted: #9a968d;
-  --brand: #f2805f;
-  --brand-soft: rgb(242 128 95 / 0.12);
-  --accent: #f2805f;
-  --ink: #f3f1ec;
+  --text: #cac6be;
+  --heading: #f4f1eb;
+  --muted: #9b968c;
+  --brand: #f0815f;
+  --brand-soft: rgb(240 129 95 / 0.12);
+  --accent: #f0815f;
+  --ink: #f4f1eb;
   --ink-top: #fff;
-  --ink-edge: #8f8b82;
-  --code-bg: #1c1b19;
-  --term-bg: #0c0c0b;
+  --ink-edge: #908b81;
+  --code-bg: #1d1b18;
+  --term-bg: #0d0c0a;
   --shadow: 0 4px 8px rgb(0 0 0 / 0.4);
   --shadow-lift: 0 21px 27px rgb(0 0 0 / 0.55);
 }
@@ -111,25 +111,25 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #141413;
-    --bg-deep: #1c1b19;
-    --bg-sunken: #24221f;
-    --surface: #1f1e1c;
-    --glass: rgb(31 30 28 / 0.72);
+    --bg: #151412;
+    --bg-deep: #1d1b18;
+    --bg-sunken: #25221e;
+    --surface: #201e1b;
+    --glass: rgb(32 30 27 / 0.72);
     --border: rgb(255 255 255 / 0.11);
     --border-strong: rgb(255 255 255 / 0.2);
     --shadow-hard: rgb(0 0 0 / 0.5);
-    --text: #c9c6bf;
-    --heading: #f3f1ec;
-    --muted: #9a968d;
-    --brand: #f2805f;
-    --brand-soft: rgb(242 128 95 / 0.12);
-    --accent: #f2805f;
-    --ink: #f3f1ec;
+    --text: #cac6be;
+    --heading: #f4f1eb;
+    --muted: #9b968c;
+    --brand: #f0815f;
+    --brand-soft: rgb(240 129 95 / 0.12);
+    --accent: #f0815f;
+    --ink: #f4f1eb;
     --ink-top: #fff;
-    --ink-edge: #8f8b82;
-    --code-bg: #1c1b19;
-    --term-bg: #0c0c0b;
+    --ink-edge: #908b81;
+    --code-bg: #1d1b18;
+    --term-bg: #0d0c0a;
     --shadow: 0 4px 8px rgb(0 0 0 / 0.4);
     --shadow-lift: 0 21px 27px rgb(0 0 0 / 0.55);
   }

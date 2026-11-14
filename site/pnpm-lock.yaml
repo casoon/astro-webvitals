@@ -12,8 +12,8 @@ importers:
         specifier: ^0.21.0
         version: 0.21.0(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))
       '@casoon/pages-theme':
-        specifier: ^0.12.12
-        version: 0.12.12(@astrojs/markdown-satteri@0.4.1)(@types/node@24.13.4)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))
+        specifier: ^0.12.14
+        version: 0.12.14(@astrojs/markdown-satteri@0.4.1)(@types/node@24.13.4)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))
       astro:
         specifier: ^7.3.2
         version: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1)
@@ -218,8 +218,8 @@ packages:
       astro:
         optional: true
 
-  '@casoon/pages-theme@0.12.12':
-    resolution: {integrity: sha512-O5QQ+6ZneTNtIE2pLOgJvFchRYOSFPmpZUSJ9sbXQkbF+24oakFto0Gc/edACoec0VhjQZ395DdmYCh9b23N2g==}
+  '@casoon/pages-theme@0.12.14':
+    resolution: {integrity: sha512-L9/oWzsLvoqZQMrX4mj0mo1XUS1omAZ9gK0N5XSbf15UkN1HJlIOoeyE+tFaaZBMIo8OBQMULtCYXUYruHSjUw==}
     peerDependencies:
       astro: ^7.3.2
 
@@ -2089,7 +2089,7 @@ snapshots:
     optionalDependencies:
       astro: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1)
 
-  '@casoon/pages-theme@0.12.12(@astrojs/markdown-satteri@0.4.1)(@types/node@24.13.4)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))':
+  '@casoon/pages-theme@0.12.14(@astrojs/markdown-satteri@0.4.1)(@types/node@24.13.4)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))':
     dependencies:
       '@astrojs/mdx': 8.1.2(@astrojs/markdown-satteri@0.4.1)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1))
       astro: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.4)(yaml@2.9.1)

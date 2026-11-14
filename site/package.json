@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@casoon/chartlet": "^0.21.0",
-    "@casoon/pages-theme": "^0.12.12",
+    "@casoon/pages-theme": "^0.12.14",
     "astro": "^7.3.2"
   },
   "devDependencies": {

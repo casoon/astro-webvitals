@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Dashboard:** `webVitalsDashboard({ sitemapPass: false })` hides **Run sitemap pass** on sites where not every page renders the component. Details: [Dashboard options](https://casoon.github.io/astro-webvitals/docs/reference/options/#webvitalsdashboard-options).
+
 ### Changed
 
 - **Pages:** the dashboard screenshot on the start page shows two pages of this site instead of local test pages.
+- **Pages:** the live demo records into a live dashboard and links it.
+
+### Fixed
+
+- **Dashboard:** the "needs improvement" colour meets 4.5:1 contrast in the light theme.
 
 ## [0.5.1] - 2026-11-23
 

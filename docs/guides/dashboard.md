@@ -34,6 +34,6 @@ The integration injects a prerendered route at `/__web-vitals`, marked `noindex,
 
 **Run sitemap pass** opens every page listed in `sitemap.xml` (under the site's `base`) in the current tab, waits briefly for each page to settle, and returns to the dashboard with local measurements and page checks.
 
-The explicitly started pass bypasses normal sampling. Consent and Do Not Track still apply. Its progress is kept in `sessionStorage` while it runs. Every page in the sitemap must render `<WebVitals dashboard />`, otherwise the pass stops there.
+The explicitly started pass bypasses normal sampling. Consent and Do Not Track still apply. Its progress is kept in `sessionStorage` while it runs. Every page in the sitemap must render `<WebVitals dashboard />`, otherwise the pass stops there. If only some pages do, hide the button with `webVitalsDashboard({ sitemapPass: false })`.
 
 Measurements from one browser on one machine are not representative field data. The pass complements a build-time audit; it doesn't replace it.

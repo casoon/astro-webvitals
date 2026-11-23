@@ -1,5 +1,10 @@
 ---
+declare const __CASOON_WEBVITALS_SITEMAP_PASS__: boolean | undefined;
+
 const title = "Web Vitals dashboard";
+// Set by webVitalsDashboard({ sitemapPass }); true when the define is missing.
+const sitemapPassEnabled =
+  typeof __CASOON_WEBVITALS_SITEMAP_PASS__ === "undefined" || __CASOON_WEBVITALS_SITEMAP_PASS__;
 ---
 
 <!doctype html>
@@ -23,7 +28,7 @@ const title = "Web Vitals dashboard";
         --accent-soft: #e8eeff;
         --good: #18794e;
         --good-soft: #e5f5ec;
-        --needs-improvement: #a86200;
+        --needs-improvement: #9a5a00;
         --needs-improvement-soft: #fff1dc;
         --poor: #bd3030;
         --poor-soft: #fde8e8;
@@ -129,10 +134,10 @@ const title = "Web Vitals dashboard";
         <div class="actions">
           <p class="summary" id="summary" aria-live="polite"></p>
           <div class="action-buttons">
-            <button class="button primary" id="sitemap-pass" type="button">Run sitemap pass</button>
+            {sitemapPassEnabled && <button class="button primary" id="sitemap-pass" type="button">Run sitemap pass</button>}
             <button class="button" id="clear" type="button">Clear local data</button>
           </div>
-          <p class="pass-note" id="pass-note">Loads every sitemap page in this tab and returns here. This is local QA data, not representative user data.</p>
+          <p class="pass-note" id="pass-note">{sitemapPassEnabled ? "Loads every sitemap page in this tab and returns here. " : ""}This is local QA data, not representative user data.</p>
         </div>
       </header>
       <main>
@@ -150,7 +155,7 @@ const title = "Web Vitals dashboard";
 
       const content = document.querySelector<HTMLDivElement>("#content")!;
       const clear = document.querySelector<HTMLButtonElement>("#clear")!;
-      const sitemapPass = document.querySelector<HTMLButtonElement>("#sitemap-pass")!;
+      const sitemapPass = document.querySelector<HTMLButtonElement>("#sitemap-pass");
       const passNote = document.querySelector<HTMLParagraphElement>("#pass-note")!;
       const summary = document.querySelector<HTMLParagraphElement>("#summary")!;
 
@@ -331,7 +336,7 @@ const title = "Web Vitals dashboard";
         render();
       });
 
-      sitemapPass.addEventListener("click", async () => {
+      if (sitemapPass) sitemapPass.addEventListener("click", async () => {
         sitemapPass.disabled = true;
         passNote.textContent = "Reading sitemap…";
         try {

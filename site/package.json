@@ -23,5 +23,10 @@
     "onlyBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "casoonPagesCheck": {
+    "skip": [
+      "__web-vitals/"
+    ]
   }
 }

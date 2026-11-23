@@ -5,6 +5,11 @@ export interface WebVitalsDashboardOptions {
 	route?: string;
 	/** Disable route injection without removing the integration from config. */
 	enabled?: boolean;
+	/**
+	 * Show the "Run sitemap pass" button. Turn it off when not every sitemap
+	 * page renders `<WebVitals dashboard />`, since the pass stops there.
+	 */
+	sitemapPass?: boolean;
 }
 
 /**
@@ -24,8 +29,17 @@ export function webVitalsDashboard(
 	return {
 		name: "@casoon/astro-webvitals/dashboard",
 		hooks: {
-			"astro:config:setup": ({ injectRoute }) => {
+			"astro:config:setup": ({ injectRoute, updateConfig }) => {
 				if (options.enabled === false) return;
+				updateConfig({
+					vite: {
+						define: {
+							__CASOON_WEBVITALS_SITEMAP_PASS__: JSON.stringify(
+								options.sitemapPass !== false,
+							),
+						},
+					},
+				});
 				injectRoute({
 					pattern: route,
 					entrypoint: new URL("./dashboard.astro", import.meta.url),

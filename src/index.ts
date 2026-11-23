@@ -35,14 +35,28 @@ export interface WebVitalsMetric {
 		largestShiftValue?: number;
 		interactionType?: string;
 	};
-	/** Page URL where metric was measured */
+	/** Page the metric belongs to: origin + path, or the full URL with `fullUrl` */
 	url: string;
 	/** Timestamp when metric was captured */
 	timestamp: number;
-	/** User agent string */
-	userAgent: string;
-	/** Optional target element for interaction metrics */
-	target?: string;
+}
+
+/**
+ * Body of every request sent to `endpoint`. A report holds the metrics of
+ * one page; retries resend it unchanged, so `reportId` identifies duplicates.
+ */
+export interface WebVitalsReport {
+	/** Unique per report, unchanged across retries */
+	reportId: string;
+	metrics: WebVitalsMetric[];
+	sessionId: string;
+	userId?: string;
+	/** When the report was first built (ms since epoch) */
+	timestamp: number;
+	/** Page the metrics belong to (same as each metric's `url`) */
+	url: string;
+	/** Only present with `includeUserAgent` */
+	userAgent?: string;
 }
 
 /**
@@ -104,7 +118,7 @@ export interface WebVitalsProps {
 	highlightAccessibility?: boolean;
 	/** Enable extended metrics (Long Tasks, Memory, Network) */
 	extendedMetrics?: boolean;
-	/** Enable smart detection (rage clicks, dead clicks) */
+	/** @deprecated Has no effect and will be removed in 1.0 */
 	smartDetection?: boolean;
 	/** Performance budget thresholds */
 	performanceBudget?: PerformanceBudget;
@@ -126,8 +140,12 @@ export interface WebVitalsProps {
 	retryFailedMetrics?: boolean;
 	/** Respect the browser's Do Not Track preference */
 	respectDnt?: boolean;
-	/** Explicit consent gate for initializing collection */
+	/** Consent gate; with `false`, collection waits for `setWebVitalsConsent(true)` */
 	consent?: boolean;
 	/** Store a bounded history for the local Web Vitals dashboard */
 	dashboard?: boolean;
+	/** Report the full URL including query and fragment instead of origin + path */
+	fullUrl?: boolean;
+	/** Add the browser's user agent string to every report */
+	includeUserAgent?: boolean;
 }

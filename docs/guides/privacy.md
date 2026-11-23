@@ -16,19 +16,21 @@ One exception applies to development only: with `debug`, the SEO inspection send
 
 ## What is sent
 
-Each batch contains the metrics, a session ID, the page URL (`window.location.href`, including query string and fragment), the user agent string and a timestamp. The session ID is random for each page load and not stored, unless you pass your own `sessionId`. A `userId` is only included when you pass one. See the [payload](../endpoint/#payload).
+Each report contains the metrics, a report ID, a session ID, the page URL and a timestamp. The session ID is random for each page load and not stored, unless you pass your own `sessionId`. A `userId` is only included when you pass one. See the [payload](../endpoint/#payload).
 
-If you don't need them, drop the query string or the user agent on the server before storing.
+The page URL is origin and path only: query strings and fragments often carry search terms, tokens or campaign IDs, so they are dropped in the browser. Set `fullUrl` if you need them. The user agent string is only added with `includeUserAgent`.
 
-`attribution` adds CSS selectors and resource URLs to LCP, CLS and INP reports. Review your pages before enabling it: selectors and URLs can contain personal data.
+`attribution` adds CSS selectors and resource URLs to LCP, CLS and INP reports; resource URLs lose their query string as well unless `fullUrl` is set. Review your pages before enabling it: selectors can contain personal data.
 
 ## Collection gates
 
-`initWebVitals` checks, in this order, before it registers any observer or listener:
+The client checks, in this order, before it registers any observer:
 
-1. `consent` – when `false`, nothing is initialized.
-2. `respectDnt` – when `true` and the browser sends Do Not Track (`navigator.doNotTrack === '1'`), nothing is initialized.
+1. Consent – the `consent` prop, or the last `setWebVitalsConsent()` call in this document, which wins over the prop.
+2. `respectDnt` – when `true` and the browser sends Do Not Track (`navigator.doNotTrack === '1'`) or Global Privacy Control (`navigator.globalPrivacyControl === true`), nothing is collected.
 3. `sampleRate` – a random number per page load decides; only an explicitly started [sitemap pass](../dashboard/) bypasses sampling, never the two gates above.
+
+The gates are checked again after every navigation with Astro's ClientRouter, with the props rendered on the new page.
 
 ```astro
 <WebVitals
@@ -39,15 +41,28 @@ If you don't need them, drop the query string or the user agent on the server be
 />
 ```
 
-### Consent on static pages
+### Consent at runtime
 
-`consent` is a prop, so its value is fixed where the page is rendered. On a server-rendered page you can derive it from the request, for example from a consent cookie. On a prerendered page it is fixed at build time, so a consent choice made later in the browser does not change it. For per-visitor consent, render the page on request, or render the component only when consent was given:
+On a prerendered page the `consent` prop is fixed at build time. Render the component with `consent={false}` and pass the visitor's choice from your consent manager:
 
 ```astro
-{hasAnalyticsConsent && <WebVitals endpoint="/api/analytics/vitals" />}
+<WebVitals endpoint="/api/analytics/vitals" consent={false} />
+
+<script>
+  import { setWebVitalsConsent } from '@casoon/astro-webvitals/consent';
+
+  // Call it on every full page load, e.g. from your consent manager's ready callback.
+  setWebVitalsConsent(hasAnalyticsConsent());
+</script>
 ```
 
-With `consent={false}` the scripts are still on the page and the module is loaded; it returns before collecting anything. Not rendering the component loads nothing.
+- `setWebVitalsConsent(true)` starts collection, subject to `respectDnt` and `sampleRate`. It may run before the component's script; the choice is picked up on start.
+- `setWebVitalsConsent(false)` stops recording and sending at once, deletes buffered metrics and reports queued for retry, and removes the debug overlay. Web Vitals observers cannot be unregistered; what they report afterwards is dropped.
+- The choice is not stored by the package and lasts for the current document, ClientRouter navigations included. Your consent manager remains the source of truth.
+
+On a server-rendered page you can also derive the prop from the request, for example from a consent cookie. With `consent={false}` the scripts are on the page and the module is loaded, but it collects nothing. Not rendering the component loads nothing.
+
+The [live demo](../../../demo/) starts without consent and shows the reports it sends after you allow measurement.
 
 ## Props are public
 
@@ -57,7 +72,7 @@ Every prop is serialized into the page as configuration – see the [production 
 
 | Key | Storage | When | Limit |
 | --- | --- | --- | --- |
-| `casoon-webvitals-failed-metrics` | `localStorage` | `retryFailedMetrics` | 50 entries |
+| `casoon-webvitals-failed-reports` | `localStorage` | `retryFailedMetrics` | 20 reports, 24 hours |
 | `casoon-webvitals-dashboard-metrics` | `localStorage` | `dashboard` | 200 entries |
 | `casoon-webvitals-dashboard-page-audits` | `localStorage` | `dashboard` | 100 entries |
 | `casoon-webvitals-sitemap-pass` | `sessionStorage` | during a sitemap pass | – |

@@ -10,17 +10,56 @@ function metaContent(selector: string): string {
 	);
 }
 
+/**
+ * `issue` is a defect a browser or assistive technology runs into;
+ * `advice` is a recommendation whose absence can be intentional.
+ */
 function check(
 	name: string,
 	passes: boolean,
 	passDetail: string,
-	issueDetail: string,
+	failDetail: string,
+	failState: "issue" | "advice" = "issue",
 ): PageAuditCheck {
 	return {
 		name,
-		state: passes ? "pass" : "issue",
-		detail: passes ? passDetail : issueDetail,
+		state: passes ? "pass" : failState,
+		detail: passes ? passDetail : failDetail,
 	};
+}
+
+const MAIN_SELECTOR = "main, [role='main']";
+
+/**
+ * A skip link is any same-page link whose target is, contains or sits inside
+ * the main landmark — `#main`, `#content` or any other id. Without a main
+ * landmark there is nothing to verify it against.
+ */
+function skipLinkCheck(): PageAuditCheck {
+	if (!document.querySelector(MAIN_SELECTOR)) {
+		return {
+			name: "Skip link",
+			state: "info",
+			detail: "Not checked: no main landmark",
+		};
+	}
+	const hasSkipLink = Array.from(
+		document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
+	).some((link) => {
+		const id = decodeURIComponent(link.getAttribute("href")?.slice(1) ?? "");
+		const target = id ? document.getElementById(id) : null;
+		return Boolean(
+			target &&
+				(target.closest(MAIN_SELECTOR) || target.querySelector(MAIN_SELECTOR)),
+		);
+	});
+	return check(
+		"Skip link",
+		hasSkipLink,
+		"Links to main content",
+		"No link to main content",
+		"advice",
+	);
 }
 
 function hasAccessibleName(element: Element): boolean {
@@ -97,9 +136,16 @@ export function inspectCurrentPage(): StoredPageAudit {
 			canonicals.length === 1 && canonical.length > 0,
 			"Present",
 			canonicals.length === 0 ? "Missing" : "Missing or duplicated",
+			"advice",
 		),
 		check("Language", lang.length > 0, lang || "Present", "Missing html lang"),
-		check("H1", h1Count === 1, "One heading", `${h1Count} headings found`),
+		check(
+			"H1",
+			h1Count === 1,
+			"One heading",
+			`${h1Count} headings found`,
+			"advice",
+		),
 		check(
 			"Open Graph",
 			["og:title", "og:description", "og:image"].every((property) =>
@@ -107,13 +153,9 @@ export function inspectCurrentPage(): StoredPageAudit {
 			),
 			"Title, description and image present",
 			"Title, description or image missing",
+			"advice",
 		),
-		check(
-			"Skip link",
-			Boolean(document.querySelector('a[href="#main"]')),
-			"Present",
-			"Missing link to main content",
-		),
+		skipLinkCheck(),
 		check(
 			"Image alt",
 			missingAlt === 0,

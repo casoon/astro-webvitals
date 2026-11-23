@@ -36,10 +36,14 @@ Supported browsers report individual main-thread tasks of at least 50ms as `Long
 />
 ```
 
-The component flushes on `visibilitychange` and `pagehide` and prefers `sendBeacon`. The optional retry queue keeps at most 50 failed entries in `localStorage` and sends them on a later page load; it only applies to `fetch` requests and is disabled by default.
+The component flushes on `visibilitychange`, `pagehide` and before ClientRouter navigations; see [Delivery](../endpoint/#delivery) for when it uses `fetch` and when `sendBeacon`.
+
+The optional retry queue is disabled by default. With it, a report that failed temporarily (network error, HTTP 408, 429 or 5xx, refused beacon) is stored unchanged in `localStorage` – with its original page URL, session and `reportId` – and sent again after 5 seconds, then after 20 seconds, on the same page or a later page load. After three attempts in all, or after 24 hours, it is dropped. At most 20 reports are kept. A report the endpoint rejected with another status is not retried. Withdrawing consent deletes the queue.
 
 ## Soft navigations
 
-`trackSoftNavigations` includes soft navigations reported by the browser, an experimental feature of `web-vitals`. Leave it off unless you are testing it.
+`trackSoftNavigations` includes soft navigations reported by the browser, an experimental feature of `web-vitals`; their metrics carry the URL of the navigated-to page. Leave it off unless you are testing it.
+
+Astro's ClientRouter works without it: the component runs once per document, re-reads its props from each new page, re-checks consent and moves the debug overlay and console dock onto the new page.
 
 Consent and Do Not Track are covered in [Privacy](../privacy/).

@@ -15,10 +15,10 @@ order: 1
 | `batchReporting` | `boolean` | `true` | Collect metrics and send them together. |
 | `batchInterval` | `number` | `5000` | Milliseconds between batch sends. |
 | `maxBatchSize` | `number` | `10` | Entries that trigger an immediate send. Rounded down, at least 1. |
-| `headers` | `Record<string, string>` | `{}` | Extra request headers; switches from `sendBeacon` to `fetch`. Public – never put secrets here. |
+| `headers` | `Record<string, string>` | `{}` | Extra request headers; `fetch` is then used on unload as well, since beacons carry no headers. Public – never put secrets here. |
 | `sessionId` | `string` | random per page load | Session ID in the payload. |
 | `userId` | `string` | – | User ID in the payload. |
-| `retryFailedMetrics` | `boolean` | `false` | Keep up to 50 failed entries in `localStorage` and retry on a later page load. |
+| `retryFailedMetrics` | `boolean` | `false` | Store reports that failed temporarily in `localStorage` (up to 20, 24 hours) and send them again with backoff, three attempts in all. |
 | `attribution` | `boolean` | `false` | Add diagnostic context to LCP, CLS and INP reports. |
 | `trackLongTasks` | `boolean` | `false` | Report main-thread tasks of 50ms or longer as `LongTask`. |
 | `trackSoftNavigations` | `boolean` | `false` | Include experimental browser-detected soft navigations. |
@@ -28,10 +28,17 @@ order: 1
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `consent` | `boolean` | `true` | When `false`, the client initializes nothing. |
-| `respectDnt` | `boolean` | `false` | Initialize nothing when the browser sends Do Not Track. |
+| `consent` | `boolean` | `true` | When `false`, nothing is collected until `setWebVitalsConsent(true)` is called. |
+| `respectDnt` | `boolean` | `false` | Collect nothing when the browser sends Do Not Track or Global Privacy Control. |
 
-See [Privacy](../../guides/privacy/) for how the gates behave on static pages.
+See [Privacy](../../guides/privacy/) for runtime consent.
+
+### Payload
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fullUrl` | `boolean` | `false` | Report the full page URL with query string and fragment instead of origin and path. |
+| `includeUserAgent` | `boolean` | `false` | Add `navigator.userAgent` to every report. |
 
 ### Local dashboard
 
@@ -50,7 +57,7 @@ See [Privacy](../../guides/privacy/) for how the gates behave on static pages.
 | `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'bottom-right'` | Overlay position on desktop. |
 | `performanceBudget` | `{ LCP?, CLS?, FCP?, TTFB?, INP? }` | `2500`, `0.1`, `1800`, `800`, `200` | Thresholds for the overlay indicators only. |
 | `extendedMetrics` | `boolean` | `false` | Show browser memory and network information in the overlay, where supported. |
-| `smartDetection` | `boolean` | `false` | Kept for compatibility; currently has no effect. |
+| `smartDetection` | `boolean` | `false` | Deprecated, has no effect; removed in 1.0. |
 
 In `astro dev` the component renders only with `trackInDev`, `debug`, `consoleDock`, `highlightAccessibility` or `dashboard`. In a production build it always renders.
 

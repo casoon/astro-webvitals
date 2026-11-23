@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./WebVitals.astro": "./src/WebVitals.astro",
-    "./integration": "./src/integration.ts"
+    "./integration": "./src/integration.ts",
+    "./consent": "./src/client/consent.ts"
   },
   "files": [
     "src",
@@ -23,7 +24,7 @@
     "format": "biome format --write src",
     "check": "biome check src",
     "check:fix": "biome check --write src",
-    "prepublishOnly": "pnpm run check && pnpm run build"
+    "prepublishOnly": "pnpm run check && pnpm run build && pnpm run test"
   },
   "scripts-info": {
     "build": "Baut das Paket (führt den Type-Check aus)",
@@ -34,7 +35,7 @@
     "format": "Formatiert src/ mit Biome",
     "check": "Prüft src/ mit Biome auf Lint-/Formatfehler",
     "check:fix": "Behebt Biome-Lint-/Formatfehler in src/ automatisch",
-    "prepublishOnly": "Prüft und baut das Paket vor dem Veröffentlichen"
+    "prepublishOnly": "Prüft, baut und testet das Paket vor dem Veröffentlichen"
   },
   "packageManager": "pnpm@9.15.0",
   "keywords": [
@@ -45,7 +46,6 @@
     "performance",
     "core-web-vitals",
     "lcp",
-    "fid",
     "cls",
     "performance-monitoring",
     "analytics",
@@ -71,16 +71,16 @@
     "astro": "^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.8",
-    "astro": "^7.2.0",
-    "jsdom": "^26.1.0",
+    "@biomejs/biome": "^2.6.8",
+    "astro": "^7.4.13",
+    "jsdom": "^31.0.1",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.0"
+    "vitest": "^5.1.1"
   },
   "engines": {
     "node": ">=18.17.0"
   },
   "dependencies": {
-    "web-vitals": "^6.1.0"
+    "web-vitals": "^6.2.3"
   }
 }

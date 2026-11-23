@@ -13,6 +13,7 @@ Published on npm as [`@casoon/astro-webvitals`](https://www.npmjs.com/package/@c
 | `@casoon/astro-webvitals` | `WebVitals`, `webVitalsDashboard`, types |
 | `@casoon/astro-webvitals/WebVitals.astro` | the component as default export |
 | `@casoon/astro-webvitals/integration` | `webVitalsDashboard`, `WebVitalsDashboardOptions` |
+| `@casoon/astro-webvitals/consent` | `setWebVitalsConsent`, for client scripts |
 
 Import the integration from `/integration` in `astro.config`, so the config doesn't load the `.astro` component.
 
@@ -23,7 +24,9 @@ Import the integration from `/integration` in `astro.config`, so the config does
 | `WebVitals` | Astro component | Measures and reports; add once per page, before `</body>`. |
 | `webVitalsDashboard(options?)` | Astro integration | Injects the [local dashboard](../../guides/dashboard/) route. |
 | `WebVitalsProps` | type | Props of `WebVitals`. |
-| `WebVitalsMetric` | type | One reported metric: `name`, `value`, `delta`, `id`, `rating`, `navigationType`, `attribution`, `url`, `timestamp`, `userAgent`. |
+| `setWebVitalsConsent(granted)` | function | Grants or withdraws consent at runtime, see [Privacy](../../guides/privacy/#consent-at-runtime). |
+| `WebVitalsMetric` | type | One reported metric: `name`, `value`, `delta`, `id`, `rating`, `navigationType`, `attribution`, `url`, `timestamp`. |
+| `WebVitalsReport` | type | The body of one request, see [payload](../../guides/endpoint/#payload). |
 | `PerformanceBudget` | type | Overlay thresholds for LCP, CLS, FCP, TTFB and INP. |
 | `ExtendedMetrics` | type | Memory and connection information shown by the overlay. |
 | `WebVitalsDashboardOptions` | type | `route` and `enabled`, see [Options](../options/#webvitalsdashboard-options). |
@@ -51,3 +54,8 @@ The request payload is described in [Reporting to an endpoint](../../guides/endp
 | --- | --- | --- |
 | `window.__WEBVITALS_CONFIG__` | the client module | Resolved props, parsed from the component's JSON config element. |
 | `window.__CASOON_WEBVITALS_INITIALIZED__` | the client | Prevents a second initialization when the component renders twice. |
+| `window.__WEBVITALS_CONSENT__` | `setWebVitalsConsent()` | The last consent choice in this document. |
+
+## Consent event
+
+`setWebVitalsConsent(granted)` dispatches `webvitals:consent` on `window` with `{ granted }` as `detail`. Dispatching the event yourself has the same effect.

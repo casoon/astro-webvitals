@@ -92,6 +92,8 @@ const title = "Web Vitals dashboard";
       .audit-check { max-width: 100%; border-radius: 999px; padding: .22rem .5rem; background: var(--surface); color: var(--muted); font-size: .7rem; line-height: 1.3; }
       .audit-check.pass { background: var(--good-soft); color: var(--good); }
       .audit-check.issue { background: var(--poor-soft); color: var(--poor); }
+      .audit-check.advice { background: var(--needs-improvement-soft); color: var(--needs-improvement); }
+      .metric-p75 { color: var(--muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
       .audit-metadata { margin-top: .85rem; color: var(--muted); font-size: .75rem; }
       .audit-metadata summary { width: fit-content; cursor: pointer; color: var(--ink); font-weight: 700; }
       .metadata-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .35rem .75rem; margin: .6rem 0 0; }
@@ -100,7 +102,7 @@ const title = "Web Vitals dashboard";
 
       @media (max-width: 42rem) {
         .masthead { flex-direction: column; gap: 1.25rem; }
-        .actions { justify-items: start; }
+        .actions { justify-items: start; min-width: 0; }
         .action-buttons { justify-content: start; }
         .pass-note { text-align: left; }
         .route-header { align-items: flex-start; flex-direction: column; gap: .25rem; }
@@ -168,12 +170,15 @@ const title = "Web Vitals dashboard";
         const title = document.createElement("h3");
         title.textContent = "Page checks";
         const issueCount = audit.checks.filter((check) => check.state === "issue").length;
+        const adviceCount = audit.checks.filter((check) => check.state === "advice").length;
         const passCount = audit.checks.filter((check) => check.state === "pass").length;
         const summary = document.createElement("p");
         summary.className = "audit-summary";
-        summary.textContent = issueCount
-          ? `${issueCount} issue${issueCount === 1 ? "" : "s"} · ${passCount} passed`
-          : `${passCount} checks passed`;
+        summary.textContent = [
+          issueCount ? `${issueCount} issue${issueCount === 1 ? "" : "s"}` : "",
+          adviceCount ? `${adviceCount} recommendation${adviceCount === 1 ? "" : "s"}` : "",
+          `${passCount} passed`,
+        ].filter(Boolean).join(" · ");
         heading.append(title, summary);
 
         const checks = document.createElement("ul");
@@ -210,9 +215,25 @@ const title = "Web Vitals dashboard";
         return auditSection;
       }
 
+      /** Nearest-rank 75th percentile, the statistic Google uses for Core Web Vitals. */
+      function p75(values: number[]): number {
+        const sorted = [...values].sort((a, b) => a - b);
+        return sorted[Math.ceil(sorted.length * 0.75) - 1];
+      }
+
       function render() {
+        const stored = readDashboardMetrics();
+        // A metric instance (id) can be reported several times; its last value counts.
+        const finalById = new Map<string, Metric>();
+        for (const metric of stored) finalById.set(`${metric.url}:${metric.name}:${metric.id}`, metric);
+        const samples = new Map<string, number[]>();
+        for (const metric of finalById.values()) {
+          const key = `${metric.url}:${metric.name}`;
+          samples.set(key, [...(samples.get(key) ?? []), metric.value]);
+        }
+
         const latest = new Map<string, Metric>();
-        for (const metric of readDashboardMetrics()) {
+        for (const metric of stored) {
           const key = `${metric.url}:${metric.name}`;
           const previous = latest.get(key);
           if (!previous || metric.timestamp > previous.timestamp) latest.set(key, metric);
@@ -285,7 +306,15 @@ const title = "Web Vitals dashboard";
             captured.dateTime = new Date(metric.timestamp).toISOString();
             captured.textContent = new Date(metric.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             footer.append(rating, captured);
-            item.append(name, value, footer);
+            item.append(name, value);
+            const values = samples.get(`${metric.url}:${metric.name}`) ?? [];
+            if (values.length > 1) {
+              const percentile = document.createElement("span");
+              percentile.className = "metric-p75";
+              percentile.textContent = `p75 ${formatMetric({ ...metric, value: p75(values) })} · ${values.length} loads`;
+              item.append(percentile);
+            }
+            item.append(footer);
             list.append(item);
           }
           const audit = latestAudits.get(url);
@@ -305,7 +334,8 @@ const title = "Web Vitals dashboard";
         sitemapPass.disabled = true;
         passNote.textContent = "Reading sitemap…";
         try {
-          const response = await fetch("/sitemap.xml", { cache: "no-store" });
+          // Respect Astro's `base`, e.g. a site served from /docs/.
+          const response = await fetch(`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}sitemap.xml`, { cache: "no-store" });
           if (!response.ok) throw new Error(`Sitemap returned ${response.status}`);
           const xml = await response.text();
           const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]

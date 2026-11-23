@@ -36,13 +36,13 @@
     },
     {
       "name": "Open Graph",
-      "state": "issue",
+      "state": "advice",
       "detail": "Title, description or image missing"
     },
     {
       "name": "Skip link",
       "state": "pass",
-      "detail": "Present"
+      "detail": "Links to main content"
     },
     {
       "name": "Image alt",

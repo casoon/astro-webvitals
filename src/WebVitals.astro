@@ -78,8 +78,7 @@ export interface Props {
 	extendedMetrics?: boolean;
 
 	/**
-	 * Enable smart detection (rage clicks, dead clicks)
-	 * @default false
+	 * @deprecated Has no effect and will be removed in 1.0.
 	 */
 	smartDetection?: boolean;
 
@@ -130,11 +129,29 @@ export interface Props {
 	/** Do not initialize when the browser has enabled Do Not Track */
 	respectDnt?: boolean;
 
-	/** Explicit consent gate for all collection and reporting */
+	/**
+	 * Consent gate for all collection and reporting. With `false` nothing is
+	 * collected until `setWebVitalsConsent(true)` is called at runtime.
+	 * @default true
+	 */
 	consent?: boolean;
 
 	/** Store a bounded history for the local Web Vitals dashboard */
 	dashboard?: boolean;
+
+	/**
+	 * Report the full page URL including query string and fragment. By
+	 * default only origin and path are sent, since queries often carry
+	 * search terms, tokens or campaign IDs.
+	 * @default false
+	 */
+	fullUrl?: boolean;
+
+	/**
+	 * Add `navigator.userAgent` to every report.
+	 * @default false
+	 */
+	includeUserAgent?: boolean;
 }
 
 const {
@@ -162,6 +179,8 @@ const {
 	respectDnt = false,
 	consent = true,
 	dashboard = false,
+	fullUrl = false,
+	includeUserAgent = false,
 } = Astro.props;
 
 const isDev = import.meta.env.DEV;
@@ -216,6 +235,8 @@ const config = {
 	respectDnt,
 	consent,
 	dashboard,
+	fullUrl,
+	includeUserAgent,
 };
 
 // The config travels as inert JSON (not an executable inline script), so pages
@@ -229,12 +250,9 @@ const serializedConfig = serializeBridgedConfig(config);
   <script type="module">
     import { initWebVitals } from './client/index';
     import { readBridgedConfig } from './client/bridge';
+    // Runs once per document; ClientRouter navigations are handled inside
+    // initWebVitals (astro:after-swap reads the new page's config).
     window.__WEBVITALS_CONFIG__ = readBridgedConfig();
-    // Keep the global current across ClientRouter navigations, as the former
-    // inline config script did; initialization itself still happens once.
-    document.addEventListener('astro:after-swap', () => {
-      window.__WEBVITALS_CONFIG__ = readBridgedConfig() ?? window.__WEBVITALS_CONFIG__;
-    });
     if (window.__WEBVITALS_CONFIG__) initWebVitals(window.__WEBVITALS_CONFIG__);
   </script>
 )}

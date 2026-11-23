@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Pages:** the dashboard screenshot on the start page shows two pages of this site instead of local test pages.
+
 ## [0.5.1] - 2026-11-23
 
 ### Changed

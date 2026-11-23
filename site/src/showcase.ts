@@ -32,7 +32,7 @@ interface Chunk {
 }
 interface Check {
   name: string;
-  state: 'pass' | 'issue' | 'info';
+  state: 'pass' | 'issue' | 'advice' | 'info';
   detail: string;
 }
 interface Issue {

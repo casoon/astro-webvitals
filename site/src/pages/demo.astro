@@ -1,0 +1,268 @@
+---
+import { WebVitals } from '@casoon/astro-webvitals';
+import { Callout, Demo } from '@casoon/pages-theme/components';
+import Base from '@casoon/pages-theme/layouts/Base.astro';
+import { url } from '@casoon/pages-theme/url';
+
+// The package itself, built into this page from the repository (site/package.json links
+// it). GitHub Pages cannot receive POST requests, so the script below answers requests to
+// this endpoint in the browser and shows their body instead of sending them.
+const endpoint = url('demo/report');
+---
+
+<Base
+  title="Live demo"
+  description="@casoon/astro-webvitals running in this page: consent-gated collection, the debug overlay and the exact reports your endpoint would receive."
+>
+  <div class="page">
+    <h1>Live demo</h1>
+    <p class="lead">
+      This page renders <code>&lt;WebVitals consent=&#123;false&#125; debug endpoint=… /&gt;</code>.
+      Until you allow measurement, no observer runs and nothing is recorded. Afterwards the
+      debug overlay opens and every report the component sends appears below, byte for byte.
+    </p>
+
+    <Callout type="note">
+      Nothing leaves your browser: requests to <code>{endpoint}</code> are answered on this
+      page, because GitHub Pages cannot store them. On your site they go to your own route.
+    </Callout>
+
+    <Demo
+      title="Consent, measurement, report"
+      lead="Allow measurement, then click, scroll or switch tabs: LCP and INP are finalised by your input, and a batch is sent every three seconds."
+    >
+      <div class="demo" data-endpoint={endpoint}>
+        <div class="controls">
+          <button type="button" class="button primary" data-consent="true">Allow measurement</button>
+          <button type="button" class="button" data-consent="false" disabled>Withdraw consent</button>
+          <a class="button" href={`${url('demo/')}?q=private-search#section`}>Reload with a query string</a>
+        </div>
+        <p class="status" id="demo-status" aria-live="polite">Waiting for consent — nothing is measured.</p>
+
+        <div class="panels">
+          <section aria-labelledby="demo-metrics-heading">
+            <h3 id="demo-metrics-heading">Metrics in this page</h3>
+            <p class="hint">From the <code>webvitals:metric</code> event.</p>
+            <ul class="metrics" id="demo-metrics"><li class="empty">None yet.</li></ul>
+          </section>
+          <section aria-labelledby="demo-report-heading">
+            <h3 id="demo-report-heading">Last report to the endpoint</h3>
+            <p class="hint" id="demo-report-meta">No report sent yet.</p>
+            <pre class="report" id="demo-report" tabindex="0" aria-label="Last report body as JSON">{'{ }'}</pre>
+          </section>
+        </div>
+
+        <WebVitals
+          consent={false}
+          debug
+          endpoint={endpoint}
+          batchInterval={3000}
+          position="bottom-right"
+        />
+
+        <script>
+          import { setWebVitalsConsent } from '@casoon/astro-webvitals/consent';
+
+          const endpointPath = new URL(
+            document.querySelector('[data-demo] .demo')!.getAttribute('data-endpoint')!,
+            location.href,
+          ).pathname;
+          const status = document.getElementById('demo-status')!;
+          const metricsList = document.getElementById('demo-metrics')!;
+          const report = document.getElementById('demo-report')!;
+          const reportMeta = document.getElementById('demo-report-meta')!;
+          const [allow, withdraw] = document.querySelectorAll<HTMLButtonElement>('[data-consent]');
+          let reports = 0;
+
+          function showReport(body: string, transport: string) {
+            reports += 1;
+            const payload = JSON.parse(body);
+            report.textContent = JSON.stringify(payload, null, 2);
+            reportMeta.textContent = `Report ${reports} via ${transport}: ${payload.metrics.length} metric${payload.metrics.length === 1 ? '' : 's'}, ${new Blob([body]).size} bytes.`;
+          }
+
+          // Stand-in for your endpoint; every other request is untouched.
+          const realFetch = window.fetch.bind(window);
+          window.fetch = (input, init) => {
+            const target = new URL(input instanceof Request ? input.url : String(input), location.href);
+            if (target.pathname !== endpointPath) return realFetch(input, init);
+            showReport(String(init?.body ?? ''), 'fetch');
+            return Promise.resolve(new Response(null, { status: 204 }));
+          };
+          const realBeacon = navigator.sendBeacon?.bind(navigator);
+          navigator.sendBeacon = (target, data) => {
+            if (new URL(String(target), location.href).pathname !== endpointPath)
+              return realBeacon ? realBeacon(target, data) : false;
+            if (data instanceof Blob) void data.text().then((body) => showReport(body, 'sendBeacon'));
+            return true;
+          };
+
+          const values = new Map<string, string>();
+          window.addEventListener('webvitals:metric', (event) => {
+            const metric = (event as CustomEvent<{ name: string; value: number; rating?: string }>).detail;
+            const value = metric.name === 'CLS' ? metric.value.toFixed(3) : `${Math.round(metric.value)} ms`;
+            values.set(metric.name, `${value}${metric.rating ? ` · ${metric.rating.replace('-', ' ')}` : ''}`);
+            metricsList.replaceChildren(
+              ...[...values].map(([name, text]) => {
+                const item = document.createElement('li');
+                const label = document.createElement('strong');
+                label.textContent = name;
+                item.append(label, ` ${text}`);
+                return item;
+              }),
+            );
+          });
+
+          function setConsent(granted: boolean) {
+            setWebVitalsConsent(granted);
+            allow.disabled = granted;
+            withdraw.disabled = !granted;
+            status.textContent = granted
+              ? 'Measuring. The debug overlay is open in the corner; reports follow every three seconds.'
+              : 'Consent withdrawn: recording stopped, buffered and queued reports deleted, overlay closed.';
+          }
+          allow.addEventListener('click', () => setConsent(true));
+          withdraw.addEventListener('click', () => setConsent(false));
+        </script>
+      </div>
+    </Demo>
+
+    <h2>What to look for</h2>
+    <ul class="notes">
+      <li>
+        <strong>Before consent</strong> nothing runs: no overlay, no metrics, no report. The same
+        holds for <code>respectDnt</code> with Do Not Track or Global Privacy Control.
+      </li>
+      <li>
+        <strong>The report's <code>url</code></strong> is origin and path. Reload with a query
+        string: <code>?q=private-search#section</code> does not appear unless the site sets
+        <code>fullUrl</code>. There is no user agent unless it sets <code>includeUserAgent</code>.
+      </li>
+      <li>
+        <strong><code>reportId</code></strong> stays the same if a report has to be retried, so your
+        endpoint can drop duplicates; each metric also keeps the stable <code>id</code> and the
+        <code>delta</code> from web-vitals.
+      </li>
+      <li>
+        <strong>Withdrawing consent</strong> stops recording at once and removes the overlay;
+        the observers stay registered but everything they report is dropped.
+      </li>
+    </ul>
+    <p>
+      <a class="inline" href={url('docs/guides/privacy/')}>Privacy and consent</a> ·
+      <a class="inline" href={url('docs/guides/endpoint/')}>Reporting to an endpoint</a>
+    </p>
+  </div>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: 28px;
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+  .page > h1 {
+    margin: 0;
+  }
+  .page > .lead,
+  .page > p {
+    max-width: 68ch;
+    margin: -16px 0 0;
+    color: var(--muted);
+  }
+  .page > h2 {
+    margin: 20px 0 0;
+  }
+  .notes {
+    display: grid;
+    gap: 10px;
+    max-width: 72ch;
+    margin: -12px 0 0;
+    padding-left: 1.2em;
+  }
+  .demo {
+    display: grid;
+    gap: 16px;
+    padding: 20px;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .button.primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-contrast, #fff);
+  }
+  .button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .status {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .panels {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    align-items: start;
+  }
+  .panels section {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .panels h3 {
+    margin: 0;
+    font-size: 15px;
+  }
+  .hint {
+    margin: 4px 0 12px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .metrics {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .metrics .empty {
+    color: var(--muted);
+  }
+  .report {
+    max-height: 360px;
+    margin: 0;
+    overflow: auto;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre;
+  }
+</style>

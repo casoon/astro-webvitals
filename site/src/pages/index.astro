@@ -107,16 +107,19 @@ const latestRelease = pages.changelog
     <h2 id="how-heading">From a page load to your endpoint</h2>
     <div class="text">
       <p>
-        Consent, Do Not Track and the sample rate are checked in the browser on every page load.
-        If one of them says no, no observer is registered and nothing is measured.
+        Consent, Do Not Track or Global Privacy Control and the sample rate are checked in the
+        browser on every page load. If one of them says no, no observer is registered and nothing
+        is measured. Consent can also be given or withdrawn later, from your consent banner.
       </p>
       <p>
-        Otherwise the metrics come from Google’s web-vitals library, are collected in a batch and
-        sent when the page is hidden, with <code>sendBeacon</code> where the browser allows it.
+        Otherwise the metrics come from Google’s web-vitals library and are sent in batches: one
+        report per page, with origin and path but no query string, and a <code>reportId</code>
+        that a retry keeps, so your endpoint stores each report once.
       </p>
     </div>
     <Diagram name="reporting" format="svg" narrow={{ width: 380, height: 760 }} />
     <div class="links">
+      <Button href={url('demo/')}>Try the live demo</Button>
       <Button href={url('docs/guides/endpoint/')} variant="secondary">Reporting to an endpoint</Button>
       <Button href={url('docs/guides/privacy/')} variant="secondary">Privacy and consent</Button>
     </div>
@@ -175,7 +178,7 @@ const latestRelease = pages.changelog
       },
       {
         q: 'Where do the metrics go?',
-        a: "Every reported metric is emitted locally as a webvitals:metric browser event, which you can listen for without an HTTP endpoint. If you pass an endpoint prop, metrics are also batched and sent there with sendBeacon where the browser allows it.",
+        a: "Every reported metric is emitted locally as a webvitals:metric browser event, which you can listen for without an HTTP endpoint. If you pass an endpoint prop, metrics are also batched and sent there: with fetch while the page is visible, with sendBeacon when it is hidden.",
       },
       {
         q: 'What does the local dashboard show?',

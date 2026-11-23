@@ -17,11 +17,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
       # The showcase reads fixtures captured by examples/capture.mjs and committed in
-      # examples/output/, so the package itself is not built here.
+      # examples/output/. The live demo (site/src/pages/demo.astro) renders the package
+      # from this checkout via `link:..`, so its dependencies are installed below.
 
       # The root package.json pins pnpm 9 for the package; the site has its own manifest.
       - uses: pnpm/action-setup@v6
@@ -34,6 +36,9 @@ jobs:
           node-version: 22
 
       - uses: actions/configure-pages@v6
+
+      - name: Install package dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build site
         working-directory: site

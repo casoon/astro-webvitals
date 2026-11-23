@@ -14,6 +14,7 @@ export default defineConfig({
       tagline: 'Web Vitals monitoring for Astro',
       repo: 'casoon/astro-webvitals',
       license: 'MIT',
+      demo: 'Live demo',
       packages: [{ label: 'npm', href: 'https://www.npmjs.com/package/@casoon/astro-webvitals' }],
       docsGroups: {
         'getting-started': 'Getting started',

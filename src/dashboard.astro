@@ -74,8 +74,9 @@ const title = "Web Vitals dashboard";
       .route-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; border-bottom: 1px solid var(--line); background: var(--surface-raised); }
       h2 { max-width: 100%; margin: 0; overflow-wrap: anywhere; font-size: .92rem; font-weight: 700; letter-spacing: -.01em; }
       .route-count { flex: 0 0 auto; color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
-      .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1px; margin: 0; padding: 0; list-style: none; background: var(--line); }
-      .metric { display: grid; gap: .35rem; min-height: 8.2rem; padding: 1rem 1.15rem; background: var(--surface); }
+      /* Each cell draws its right and bottom divider, so an incomplete last row leaves surface, not a grey block. The negative margins push the outer dividers under the route's border, where its overflow clips them. */
+      .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); margin: 0 -1px -1px 0; padding: 0; list-style: none; }
+      .metric { display: grid; gap: .35rem; min-height: 8.2rem; padding: 1rem 1.15rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
       .metric-name { color: var(--muted); font-size: .73rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
       .metric-value { font-size: clamp(1.45rem, 2.5vw, 2rem); font-weight: 760; font-variant-numeric: tabular-nums; letter-spacing: -.04em; line-height: 1; }
       .metric-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: auto; }

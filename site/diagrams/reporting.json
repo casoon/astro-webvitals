@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "type": "flow",
   "title": "From a page load to your endpoint",
-  "description": "On every page load the component first checks consent, Do Not Track and the sample rate in the browser; if a gate closes, nothing is measured. Otherwise Google's web-vitals library measures LCP, CLS, INP, FCP and TTFB. Every metric is dispatched as a webvitals:metric browser event and, when an endpoint is set, collected in a batch that is flushed when the batch is full, after the batch interval or when the page is hidden. Reports go out with fetch while the page is visible and with sendBeacon when it is hidden; temporary failures can be retried with the same report.",
+  "description": "On every page load the component first checks consent, Do Not Track and the sample rate in the browser; if a gate closes, nothing is measured. Otherwise Google's web-vitals library measures LCP, CLS, INP, FCP and TTFB. Every Web Vital is dispatched as a webvitals:metric browser event and, when an endpoint is set, collected in a batch that is flushed when the batch is full, after the batch interval or when the page is hidden. Reports go out with fetch while the page is visible and with sendBeacon when it is hidden; temporary failures can be retried with the same report.",
   "source": "src/client/index.ts (initWebVitals), src/client/metrics/vitals.ts (publishMetric), src/client/reporting.ts (recordMetric, flushMetrics, sendMetrics, deliver)",
   "width": 1240,
   "height": 300,

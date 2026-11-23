@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Pages:** the project site uses the current shared theme (0.17.0).
+- **Pages:** the start page links the live demo from the hero, shows screenshots of 0.5.0 and states what is tested (Astro 7), how duplicates are dropped and what the dashboard records.
 
 
 ## [0.5.0] - 2026-11-23

@@ -1,77 +1,65 @@
 {
-  "entry": "WebVitals.astro_astro_type_script_index_0_lang.DH73zi6S.js",
+  "entry": "WebVitals.astro_astro_type_script_index_0_lang.BAGxc8fz.js",
   "chunks": [
     {
-      "file": "dashboard.astro_astro_type_script_index_0_lang.YQl8rvJm.js",
+      "file": "dashboard.astro_astro_type_script_index_0_lang.WnZ1-yAq.js",
       "loading": "dashboard",
-      "bytes": 4422,
-      "gzip": 1655
+      "bytes": 5003,
+      "gzip": 1855
     },
     {
-      "file": "debug-overlay.AnaxBXTr.js",
+      "file": "accessibility.DJxUOT13.js",
       "loading": "dynamic",
-      "bytes": 50448,
-      "gzip": 11845
+      "bytes": 50694,
+      "gzip": 11996
     },
     {
-      "file": "web-vitals.attribution.DHzNuYO-.js",
+      "file": "web-vitals.attribution.CGcOm5tp.js",
       "loading": "dynamic",
-      "bytes": 15130,
-      "gzip": 5359
+      "bytes": 15190,
+      "gzip": 5382
     },
     {
-      "file": "web-vitals.aFU_-Wi7.js",
+      "file": "web-vitals.viX3FQND.js",
       "loading": "dynamic",
-      "bytes": 8616,
-      "gzip": 3205
+      "bytes": 8624,
+      "gzip": 3209
     },
     {
-      "file": "console-dock.BoMlDZOJ.js",
+      "file": "console-dock.BMHMxad7.js",
       "loading": "dynamic",
-      "bytes": 5894,
-      "gzip": 1967
+      "bytes": 5888,
+      "gzip": 1956
     },
     {
-      "file": "console-capture.DtYr6z5_.js",
+      "file": "console-capture.KckgFOy8.js",
       "loading": "dynamic",
-      "bytes": 925,
-      "gzip": 526
+      "bytes": 908,
+      "gzip": 524
     },
     {
-      "file": "long-tasks.B1yVKtFj.js",
+      "file": "long-tasks.C8FHGpBY.js",
       "loading": "dynamic",
       "bytes": 415,
-      "gzip": 308
+      "gzip": 306
     },
     {
-      "file": "responsive.YUVfLXyV.js",
+      "file": "responsive.SzAzvztz.js",
       "loading": "dynamic",
-      "bytes": 354,
-      "gzip": 273
+      "bytes": 337,
+      "gzip": 264
     },
     {
-      "file": "seo.CtMWT1Iw.js",
-      "loading": "dynamic",
-      "bytes": 185,
-      "gzip": 160
-    },
-    {
-      "file": "accessibility.Bg7i2yAT.js",
-      "loading": "dynamic",
-      "bytes": 107,
-      "gzip": 118
-    },
-    {
-      "file": "WebVitals.astro_astro_type_script_index_0_lang.DH73zi6S.js",
+      "file": "WebVitals.astro_astro_type_script_index_0_lang.BAGxc8fz.js",
       "loading": "static",
-      "bytes": 10928,
-      "gzip": 4064
+      "bytes": 14490,
+      "gzip": 5449
     },
     {
-      "file": "sitemap-pass.D1sv_KO0.js",
+      "file": "sitemap-pass.BEEaOlgm.js",
       "loading": "static",
-      "bytes": 1776,
-      "gzip": 672
+      "bytes": 1737,
+      "gzip": 661
     }
   ]
 }

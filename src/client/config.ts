@@ -25,6 +25,7 @@ export interface BridgedConfig {
 	checkAccessibility: boolean;
 	highlightAccessibility: boolean;
 	extendedMetrics: boolean;
+	/** @deprecated Has no effect; removed in 1.0. */
 	smartDetection: boolean;
 	performanceBudget: Required<PerformanceBudget>;
 	headers: Record<string, string>;
@@ -39,6 +40,8 @@ export interface BridgedConfig {
 	respectDnt: boolean;
 	consent: boolean;
 	dashboard: boolean;
+	fullUrl: boolean;
+	includeUserAgent: boolean;
 }
 
 export interface WebVitalsConfig extends BridgedConfig {

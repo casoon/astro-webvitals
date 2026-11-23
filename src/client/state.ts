@@ -28,6 +28,8 @@ export interface MetricEntry {
 	rating?: "good" | "needs-improvement" | "poor";
 	navigationType?: string;
 	attribution?: MetricAttribution;
+	/** Page the metric belongs to (origin + path unless `fullUrl`). */
+	url: string;
 	timestamp: number;
 }
 
@@ -94,6 +96,16 @@ export interface SeoInfo {
 }
 
 export interface WebVitalsState {
+	/** Collection has started once in this document (listeners registered). */
+	started: boolean;
+	/** Metrics are recorded and sent; false while consent is missing or withdrawn. */
+	active: boolean;
+	/** Consent set at runtime with setWebVitalsConsent(); wins over the prop. */
+	consentOverride: boolean | undefined;
+	/** URL of the full page load; metrics without their own URL belong to it. */
+	documentUrl: string;
+	/** Identifies this full page load in navigation timing metric ids. */
+	pageLoadId: string;
 	vitals: Record<string, number>;
 	wcagIssues: WcagIssue[];
 	metricsBuffer: MetricEntry[];
@@ -121,6 +133,11 @@ export interface WebVitalsState {
 }
 
 export const state: WebVitalsState = {
+	started: false,
+	active: false,
+	consentOverride: undefined,
+	documentUrl: typeof window !== "undefined" ? window.location.href : "",
+	pageLoadId: "",
 	vitals: {},
 	wcagIssues: [],
 	metricsBuffer: [],

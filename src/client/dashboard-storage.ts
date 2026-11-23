@@ -6,13 +6,11 @@ export const DASHBOARD_PAGE_AUDITS_STORAGE_KEY =
 const MAX_STORED_METRICS = 200;
 const MAX_STORED_PAGE_AUDITS = 100;
 
-export interface StoredMetric extends MetricEntry {
-	url: string;
-}
+export type StoredMetric = MetricEntry;
 
 export interface PageAuditCheck {
 	name: string;
-	state: "pass" | "issue" | "info";
+	state: "pass" | "issue" | "advice" | "info";
 	detail: string;
 }
 
@@ -32,7 +30,7 @@ export interface StoredPageAudit {
 export function persistDashboardMetric(metric: MetricEntry): void {
 	try {
 		const stored = readDashboardMetrics();
-		stored.push({ ...metric, url: window.location.href });
+		stored.push(metric);
 		window.localStorage.setItem(
 			DASHBOARD_STORAGE_KEY,
 			JSON.stringify(stored.slice(-MAX_STORED_METRICS)),

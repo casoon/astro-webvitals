@@ -7,11 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking
+
+- **Reporting:** reports carry the page URL as origin and path only, without query string and fragment, and no user agent; opt back in with `fullUrl` and `includeUserAgent`. See [What is sent](https://casoon.github.io/astro-webvitals/docs/guides/privacy/#what-is-sent).
+- **Reporting:** each request is one report for one page with a `reportId` that stays the same across retries, and every metric carries its `url`. The retry queue moved to a new storage key; entries of the old queue are discarded. See [Payload](https://casoon.github.io/astro-webvitals/docs/guides/endpoint/#payload).
+
+### Added
+
+- **Consent:** `setWebVitalsConsent()` from `@casoon/astro-webvitals/consent` grants or withdraws consent at runtime; with `consent={false}` collection starts once consent is given, and withdrawing it stops collection and deletes buffered and queued reports. See [Consent at runtime](https://casoon.github.io/astro-webvitals/docs/guides/privacy/#consent-at-runtime).
+- **Consent:** `respectDnt` also honours Global Privacy Control.
+- **Dashboard:** metric cards show the 75th percentile and the number of loads once a route has two or more.
+- **Dashboard:** page checks distinguish issues from recommendations and from checks that could not be evaluated.
+- **Project page:** a [live demo](https://casoon.github.io/astro-webvitals/demo/) runs the component in the page and shows every report it sends.
+
 ### Changed
 
+- **Reporting:** reports are sent with `fetch` while the page is visible and with `sendBeacon` only when it is hidden, so failed responses can be detected. See [Delivery](https://casoon.github.io/astro-webvitals/docs/guides/endpoint/#delivery).
+- **Reporting:** with `retryFailedMetrics`, only temporary failures (network error, HTTP 408, 429, 5xx) are retried, with backoff and at most three attempts; other rejected reports are dropped. See [Reliable delivery](https://casoon.github.io/astro-webvitals/docs/guides/diagnostics/#reliable-delivery).
+- **ClientRouter:** after each navigation the component applies the props of the new page, re-checks consent and moves the debug overlay and console dock onto the new page.
+- **Dependencies:** `web-vitals` 6.2.3.
+- **Contributors:** `prepublishOnly` runs the tests as well; Biome, Vitest, jsdom and Astro updated.
 - **Pages:** the project site uses the current shared theme (0.16.4).
 - **Project page:** the start page shows real captures of the local dashboard and the debug overlay and a diagram of the way from a page load to your endpoint; the endpoint code and the component output moved to the [documentation](https://casoon.github.io/astro-webvitals/docs/getting-started/quickstart/) and the [showcase](https://casoon.github.io/astro-webvitals/showcase/).
 - **Project page:** the footer follows the page's language instead of a hardcoded German, and the start page now carries a release teaser and an FAQ (theme 0.11.1).
+
+### Deprecated
+
+- **Component:** `smartDetection` has no effect and will be removed in 1.0.
+
+### Fixed
+
+- **Reporting:** HTTP error responses were treated as delivered; a retry rebuilt the report from the page open at that time, so old metrics could be attributed to the wrong page and session.
+- **Reporting:** metrics measured before a ClientRouter navigation were reported with the URL of the page navigated to; they now belong to the page that was loaded.
+- **ClientRouter:** props of later pages were ignored and the debug overlay disappeared after the first navigation.
+- **Debug overlay:** the header showed a different performance score than the ring ([#9](https://github.com/casoon/astro-webvitals/issues/9)); both now use the Web Vitals ratings only.
+- **Dashboard:** no horizontal overflow at a 400 px viewport ([#9](https://github.com/casoon/astro-webvitals/issues/9)).
+- **Dashboard:** the skip-link check accepts any same-page link into the `main` landmark, such as `#content`, not only `#main`.
+- **Dashboard:** the sitemap pass reads `sitemap.xml` under the site's `base`.
 
 ## [0.4.11] - 2026-10-27
 

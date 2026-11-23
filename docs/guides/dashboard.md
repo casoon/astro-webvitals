@@ -26,14 +26,14 @@ The integration injects a prerendered route at `/__web-vitals`, marked `noindex,
 
 ## What it shows
 
-- The latest value per metric and route, from this browser. `dashboard` keeps up to 200 metrics.
-- The [page checks](../accessibility/#dashboard-page-checks) for each visited page, up to 100 snapshots.
+- The latest value per metric and route, from this browser, and – once a route has two or more loads – the 75th percentile and the number of loads. Google rates Core Web Vitals at the 75th percentile too, but a handful of loads from one browser is no field data. `dashboard` keeps up to 200 metrics.
+- The [page checks](../accessibility/#dashboard-page-checks) for each visited page, up to 100 snapshots, as issues, recommendations, passes and checks that could not be evaluated.
 - A button to clear the local history.
 
 ## Sitemap pass
 
-**Run sitemap pass** opens every page listed in `/sitemap.xml` in the current tab, waits briefly for each page to settle, and returns to the dashboard with local measurements and page checks.
+**Run sitemap pass** opens every page listed in `sitemap.xml` (under the site's `base`) in the current tab, waits briefly for each page to settle, and returns to the dashboard with local measurements and page checks.
 
-The explicitly started pass bypasses normal sampling. Consent and Do Not Track still apply. Its progress is kept in `sessionStorage` while it runs.
+The explicitly started pass bypasses normal sampling. Consent and Do Not Track still apply. Its progress is kept in `sessionStorage` while it runs. Every page in the sitemap must render `<WebVitals dashboard />`, otherwise the pass stops there.
 
 Measurements from one browser on one machine are not representative field data. The pass complements a build-time audit; it doesn't replace it.

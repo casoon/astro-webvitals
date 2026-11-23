@@ -7,7 +7,7 @@
 import type { Metric, MetricWithAttribution } from "web-vitals";
 
 import { config } from "../config";
-import { type ReportableMetric, recordMetric } from "../reporting";
+import { type ReportableMetric, recordMetric, reportUrl } from "../reporting";
 import { type MetricAttribution, state } from "../state";
 
 export function publishMetric(metric: ReportableMetric): void {
@@ -30,6 +30,13 @@ function reportMetric(metric: Metric | MetricWithAttribution): void {
 		rating: metric.rating,
 		navigationType: metric.navigationType,
 		attribution: getAttribution(metric),
+		// Hard-navigation metrics (including CLS and INP collected across later
+		// ClientRouter navigations) belong to the page that was loaded, as in
+		// CrUX. Only browser-reported soft navigations carry their own URL.
+		url:
+			metric.navigationType === "soft-navigation"
+				? metric.navigationURL
+				: undefined,
 	});
 }
 
@@ -44,7 +51,10 @@ function getAttribution(
 			("largestShiftTarget" in attribution && attribution.largestShiftTarget) ||
 			("interactionTarget" in attribution && attribution.interactionTarget) ||
 			undefined,
-		url: "url" in attribution ? attribution.url : undefined,
+		url:
+			"url" in attribution && attribution.url
+				? reportUrl(attribution.url)
+				: undefined,
 		largestShiftTime:
 			"largestShiftTime" in attribution
 				? attribution.largestShiftTime

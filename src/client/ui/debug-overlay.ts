@@ -61,6 +61,29 @@ export function getMetricRating(key: string, value: number) {
 	}
 }
 
+const SCORED_METRICS = ["LCP", "CLS", "INP", "FCP", "TTFB"];
+
+/**
+ * The one performance score the overlay shows (header badge and ring):
+ * 100 minus 15 per poor and 8 per needs-improvement Web Vital, based on the
+ * official thresholds. Unmeasured metrics do not count.
+ */
+export function computePerformanceScore(): {
+	score: number;
+	measuredCount: number;
+} {
+	let score = 100;
+	let measuredCount = 0;
+	for (const key of SCORED_METRICS) {
+		if (typeof state.vitals[key] !== "number") continue;
+		measuredCount++;
+		const { rating } = getMetricRating(key, state.vitals[key]);
+		if (rating === "poor") score -= 15;
+		else if (rating === "needs improvement") score -= 8;
+	}
+	return { score: Math.max(0, Math.min(100, score)), measuredCount };
+}
+
 // Render radial gauge SVG
 export function renderRadialGauge(score: number, size = 80): string {
 	const radius = (size - 8) / 2;
@@ -273,20 +296,8 @@ export function getVitalsContent(): string {
 	// Navigation timing metrics
 	const navMetrics = ["DNS", "TCP", "DOM", "LOAD"];
 
-	// Calculate overall score for radial gauge
-	let score = 100;
-	let measuredCount = 0;
+	const { score, measuredCount } = computePerformanceScore();
 	const hasLCP = typeof state.vitals.LCP === "number";
-
-	["LCP", "CLS", "INP", "FCP", "TTFB"].forEach((key) => {
-		if (typeof state.vitals[key] === "number") {
-			measuredCount++;
-			const rating = getMetricRating(key, state.vitals[key]);
-			if (rating.rating === "poor") score -= 15;
-			else if (rating.rating === "needs improvement") score -= 8;
-		}
-	});
-	score = Math.max(0, Math.min(100, score));
 
 	let html = "";
 
@@ -925,16 +936,10 @@ export function updateDebugOverlay(): void {
 
 	const metricsCount = Object.keys(state.vitals).length;
 	const issuesCount = state.wcagIssues.length;
-	const performanceBudget = config.performanceBudget as Record<string, number>;
 
-	// Calculate overall score
-	let score = 100;
-	if (state.vitals.LCP > performanceBudget.LCP) score -= 20;
-	if (state.vitals.CLS > performanceBudget.CLS) score -= 20;
-	if (state.vitals.FCP > performanceBudget.FCP) score -= 10;
-	if (state.vitals.TTFB > performanceBudget.TTFB) score -= 10;
-	if (issuesCount > 0) score -= Math.min(20, issuesCount * 5);
-	score = Math.max(0, score);
+	// Same score as the ring in the Vitals tab; accessibility issues are
+	// counted separately on their tab, not mixed into performance.
+	const { score } = computePerformanceScore();
 
 	const scoreColor =
 		score >= 80 ? "#10B981" : score >= 60 ? "#F59E0B" : "#EF4444";
@@ -1128,7 +1133,7 @@ export function updateDebugOverlay(): void {
 					}
 
           ${
-						config.extendedMetrics || config.smartDetection
+						config.extendedMetrics
 							? `
             <button data-webvitals-action="setWebVitalsTab" data-webvitals-arg="details" style="
               background: none;

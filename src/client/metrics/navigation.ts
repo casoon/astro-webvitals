@@ -17,7 +17,7 @@ function recordNavigationMetric(name: string, value: number): void {
 		name,
 		value,
 		delta: value,
-		id: `${config.finalSessionId}-${name}`,
+		id: `${state.pageLoadId}-${name}`,
 		navigationType: "navigate",
 	});
 }

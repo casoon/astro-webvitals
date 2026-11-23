@@ -14,9 +14,14 @@ import { WebVitals } from '@casoon/astro-webvitals';
 <WebVitals
   endpoint="/api/analytics/vitals"
   sampleRate={0.1}
-  consent={hasAnalyticsConsent}
+  consent={false}
   respectDnt={true}
 />
+
+<script>
+  import { setWebVitalsConsent } from '@casoon/astro-webvitals/consent';
+  setWebVitalsConsent(hasAnalyticsConsent());
+</script>
 ```
 
 ## Diagnostic mode for selected pages

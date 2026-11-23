@@ -48,10 +48,38 @@ describe("page audit", () => {
 		expect(checks).toEqual(
 			expect.arrayContaining([
 				expect.objectContaining({ name: "Title", state: "issue" }),
-				expect.objectContaining({ name: "H1", state: "issue" }),
+				expect.objectContaining({ name: "H1", state: "advice" }),
+				expect.objectContaining({ name: "Open Graph", state: "advice" }),
 				expect.objectContaining({ name: "Image alt", state: "issue" }),
+				expect.objectContaining({ name: "Skip link", state: "info" }),
 				expect.objectContaining({ name: "Structured data", state: "info" }),
 			]),
 		);
+	});
+
+	const skipLink = () =>
+		inspectCurrentPage().checks.find((check) => check.name === "Skip link");
+
+	it("accepts a skip link to any id that leads into the main landmark", () => {
+		document.body.innerHTML = `
+      <a href="#content">Skip to content</a>
+      <div id="content"><main><h1>Page</h1></main></div>
+    `;
+		expect(skipLink()?.state).toBe("pass");
+
+		document.body.innerHTML = `
+      <a href="#start">Skip</a>
+      <div role="main"><h1 id="start">Page</h1></div>
+    `;
+		expect(skipLink()?.state).toBe("pass");
+	});
+
+	it("recommends a skip link when no same-page link reaches main", () => {
+		document.body.innerHTML = `
+      <a href="#footer">To footer</a>
+      <main><h1>Page</h1></main>
+      <footer id="footer"></footer>
+    `;
+		expect(skipLink()?.state).toBe("advice");
 	});
 });

@@ -34,21 +34,23 @@ Keep `checkAccessibility` tied to development. In a production build it would lo
 
 ## Dashboard page checks
 
-With `dashboard`, every page records a snapshot for the [local dashboard](../dashboard/):
+With `dashboard`, every page records a snapshot for the [local dashboard](../dashboard/). A failed check is either an **issue** – something browsers or assistive technology run into – or a **recommendation**, whose absence can be deliberate. A check that cannot be evaluated on the page is shown as information.
 
-| Check | Passes when |
-| --- | --- |
-| Title | exactly one non-empty `<title>` |
-| Description | exactly one non-empty `meta name="description"` |
-| Canonical | exactly one `link rel="canonical"` with an `href` |
-| Language | `<html lang>` is set |
-| H1 | exactly one `h1` |
-| Open Graph | `og:title`, `og:description` and `og:image` are present |
-| Skip link | a link to `#main` exists |
-| Image alt | every `img` has an `alt` attribute |
-| Link text | every `a[href]` has text, `aria-label`, `aria-labelledby` or an image with `alt` |
-| Form labels | every control has a `<label>` or `aria-label` |
-| Structured data | informational; reports JSON-LD blocks that don't parse |
+| Check | Passes when | Otherwise |
+| --- | --- | --- |
+| Title | exactly one non-empty `<title>` | issue |
+| Description | exactly one non-empty `meta name="description"` | issue |
+| Canonical | exactly one `link rel="canonical"` with an `href` | recommendation |
+| Language | `<html lang>` is set | issue |
+| H1 | exactly one `h1` | recommendation |
+| Open Graph | `og:title`, `og:description` and `og:image` are present | recommendation |
+| Skip link | a same-page link (`#main`, `#content` or any id) targets, contains or sits inside the `main` landmark | recommendation; not checked without a `main` landmark |
+| Image alt | every `img` has an `alt` attribute | issue |
+| Link text | every `a[href]` has text, `aria-label`, `aria-labelledby` or an image with `alt` | issue |
+| Form labels | every control has a `<label>` or `aria-label` | issue |
+| Structured data | informational; reports JSON-LD blocks that don't parse | issue |
+
+These are text and attribute checks, not a semantic audit: an `alt` attribute can exist and still be useless.
 
 See the [page checks example](../../../showcase/page-checks/).
 

@@ -17,11 +17,12 @@ import { parseChangelog } from '@casoon/pages-theme/lib/changelog';
 import pages from 'virtual:casoon-pages/config';
 import { url } from '@casoon/pages-theme/url';
 import { readFile } from 'node:fs/promises';
-// Real captures with 0.5.0, 23 November 2026, headless Chromium against the demo build
-// (examples/demo/) plus two pages with <WebVitals dashboard />: a copy of
-// examples/pages/sample.html (/sale/) and a tidy variant of it (/about/), each loaded and
-// clicked a few times. dashboard.webp: the dashboard route at 1400 px; dashboard-narrow.webp:
-// its first page card at 400 px. overlay-*.webp: the debug overlay on /sale/.
+// Real captures, 23 November 2026, headless Chromium.
+// dashboard.webp (1400 px) and dashboard-narrow.webp (first page card at 400 px), 0.5.1:
+// a build of this site with <WebVitals dashboard /> added to the start page and the
+// quickstart, served under its real address; each page loaded and clicked a few times.
+// overlay-*.webp, 0.5.0: the debug overlay on a copy of examples/pages/sample.html, a page
+// with deliberate gaps, in the demo build (examples/demo/).
 // Retake them when the UI changes.
 import dashboardNarrow from '../assets/dashboard-narrow.webp?url';
 import dashboardShot from '../assets/dashboard.webp?url';
@@ -64,16 +65,16 @@ const latestRelease = pages.changelog
     <Button href={url('demo/')}>Try the live demo</Button>
     <figure slot="output" class="shot">
       <picture>
-        <source media="(max-width: 640px)" srcset={dashboardNarrow} width="800" height="940" />
+        <source media="(max-width: 640px)" srcset={dashboardNarrow} width="720" height="940" />
         <img
           src={dashboardShot}
           width="1400"
           height="950"
-          alt="Screenshot of the local Web Vitals dashboard: 2 pages, 16 latest metrics, 4 page issues. The card for /sale/ shows CLS, DNS, DOM, FCP, INP, LCP, TCP and TTFB, each with its p75 over 2 loads, and the page checks: 4 issues (description missing, 1 image without alt, 1 empty link, 1 unlabelled control), 1 recommendation (Open Graph incomplete) and 5 passed."
+          alt="Screenshot of the local Web Vitals dashboard: 2 pages, 12 latest metrics, 0 page issues. The card for the start page of this site shows CLS, DOM, FCP, INP, LCP and TTFB, each with its p75 over 3 loads and rated good, and 10 passed page checks; below it the card for the quickstart page."
         />
       </picture>
       <figcaption>
-        The local dashboard after a few visits to two example pages in one browser: QA data, not field data. The <a class="inline" href={url('demo/')}>live demo</a> shows the overlay and the reports in this site.
+        The local dashboard after a few visits to two pages of this site in one browser: QA data, not field data. The <a class="inline" href={url('demo/')}>live demo</a> shows the overlay and the reports in this site.
       </figcaption>
     </figure>
   </Hero>

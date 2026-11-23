@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-23
+
 ### Breaking
 
 - **Reporting:** reports carry the page URL as origin and path only, without query string and fragment, and no user agent; opt back in with `fullUrl` and `includeUserAgent`. See [What is sent](https://casoon.github.io/astro-webvitals/docs/guides/privacy/#what-is-sent).

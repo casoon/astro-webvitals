@@ -17,7 +17,7 @@ const endpoint = url('demo/report');
   <div class="page">
     <h1>Live demo</h1>
     <p class="lead">
-      This page renders <code>&lt;WebVitals consent=&#123;false&#125; debug endpoint=… /&gt;</code>.
+      This page renders <code>&lt;WebVitals consent=&#123;false&#125; debug dashboard endpoint=… /&gt;</code>.
       Until you allow measurement, no observer runs and nothing is recorded. Afterwards the
       debug overlay opens and every report the component sends appears below, byte for byte.
     </p>
@@ -36,6 +36,7 @@ const endpoint = url('demo/report');
           <button type="button" class="button primary" data-consent="true">Allow measurement</button>
           <button type="button" class="button" data-consent="false" disabled>Withdraw consent</button>
           <a class="button" href={`${url('demo/')}?q=private-search#section`}>Reload with a query string</a>
+          <a class="button" href={url('__web-vitals/')}>Open the dashboard</a>
         </div>
         <p class="status" id="demo-status" aria-live="polite">Waiting for consent — nothing is measured.</p>
 
@@ -55,6 +56,7 @@ const endpoint = url('demo/report');
         <WebVitals
           consent={false}
           debug
+          dashboard
           endpoint={endpoint}
           batchInterval={3000}
           position="bottom-right"
@@ -142,6 +144,12 @@ const endpoint = url('demo/report');
         <strong><code>reportId</code></strong> stays the same if a report has to be retried, so your
         endpoint can drop duplicates; each metric also keeps the stable <code>id</code> and the
         <code>delta</code> from web-vitals.
+      </li>
+      <li>
+        <strong>The <a class="inline" href={url('__web-vitals/')}>dashboard</a></strong> keeps
+        the metrics and page checks of this page in your browser's storage. Consent is not
+        stored, so allow measurement again after a reload to add another load and see the p75;
+        <em>Clear local data</em> removes everything.
       </li>
       <li>
         <strong>Withdrawing consent</strong> stops recording at once and removes the overlay;

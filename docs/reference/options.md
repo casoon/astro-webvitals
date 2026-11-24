@@ -71,3 +71,4 @@ import { webVitalsDashboard } from '@casoon/astro-webvitals/integration';
 | --- | --- | --- | --- |
 | `route` | `string` | `'/__web-vitals'` | Path of the injected dashboard. Must start with `/`, otherwise the integration throws. |
 | `enabled` | `boolean` | `true` | `false` skips the route without removing the integration. |
+| `sitemapPass` | `boolean` | `true` | `false` hides **Run sitemap pass**, for sites where not every sitemap page renders `<WebVitals dashboard />`. |

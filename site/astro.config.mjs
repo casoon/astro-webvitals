@@ -1,4 +1,5 @@
 // @ts-check
+import { webVitalsDashboard } from '@casoon/astro-webvitals/integration';
 import casoonPages from '@casoon/pages-theme';
 import { defineConfig } from 'astro/config';
 
@@ -22,5 +23,8 @@ export default defineConfig({
         reference: 'Reference',
       },
     }),
+    // The live demo's dashboard. Only /demo/ renders the component, so the sitemap pass
+    // would stop on the first theme page.
+    webVitalsDashboard({ sitemapPass: false }),
   ],
 });

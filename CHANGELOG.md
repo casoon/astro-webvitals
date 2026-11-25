@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Pages:** the project site uses the current shared theme (0.18.0).
+- **Pages:** the project site uses the current shared theme (0.19.0).
 
 
 ## [0.6.0] - 2026-11-24
